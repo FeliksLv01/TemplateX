@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Template name="simple_card" version="1.0" description="简单卡片示例">
+    <Column
+        id="root"
+        width="100%"
+        height="auto"
+        padding="16"
+        backgroundColor="#FFFFFF"
+        borderRadius="12">
+        
+        <!-- 标题 -->
+        <Text
+            id="title"
+            text="${item.title}"
+            fontSize="18"
+            fontWeight="bold"
+            textColor="#333333"
+            marginBottom="8"/>
+        
+        <!-- 描述 -->
+        <Text
+            id="description"
+            text="${item.description}"
+            fontSize="14"
+            textColor="#666666"
+            maxLines="2"/>
+        
+        <!-- 底部信息 -->
+        <Row
+            id="footer"
+            width="100%"
+            justifyContent="space-between"
+            alignItems="center"
+            marginTop="12">
+            
+            <Text
+                id="author"
+                text="作者: ${item.author}"
+                fontSize="12"
+                textColor="#999999"/>
+            
+            <Text
+                id="time"
+                text="${item.createTime}"
+                fontSize="12"
+                textColor="#999999"/>
+        </Row>
+    </Column>
+</Template>

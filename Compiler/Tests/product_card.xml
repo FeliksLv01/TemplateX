@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Template name="product_card" version="1.0" description="商品卡片">
+    <Column
+        id="card"
+        width="100%"
+        backgroundColor="white"
+        borderRadius="8"
+        overflow="hidden">
+        
+        <!-- 商品图片 -->
+        <Image
+            id="productImage"
+            src="${item.imageUrl}"
+            width="100%"
+            aspectRatio="1"
+            scaleType="cover"/>
+        
+        <!-- 商品信息 -->
+        <Column
+            id="info"
+            padding="12"
+            width="100%">
+            
+            <!-- 商品名称 -->
+            <Text
+                id="productName"
+                text="${item.name}"
+                fontSize="14"
+                fontWeight="medium"
+                textColor="#333333"
+                maxLines="2"
+                ellipsize="end"/>
+            
+            <!-- 价格行 -->
+            <Row
+                id="priceRow"
+                alignItems="baseline"
+                marginTop="8">
+                
+                <Text
+                    id="currency"
+                    text="¥"
+                    fontSize="12"
+                    fontWeight="bold"
+                    textColor="#FF4444"/>
+                
+                <Text
+                    id="price"
+                    text="${item.price}"
+                    fontSize="18"
+                    fontWeight="bold"
+                    textColor="#FF4444"
+                    marginLeft="2"/>
+                
+                <Text
+                    id="originalPrice"
+                    text="¥${item.originalPrice}"
+                    fontSize="12"
+                    textColor="#999999"
+                    textDecoration="line-through"
+                    marginLeft="8"/>
+            </Row>
+            
+            <!-- 销量和评分 -->
+            <Row
+                id="statsRow"
+                justifyContent="space-between"
+                marginTop="8">
+                
+                <Text
+                    id="sales"
+                    text="已售 ${item.sales}"
+                    fontSize="12"
+                    textColor="#999999"/>
+                
+                <Row alignItems="center">
+                    <Text
+                        id="rating"
+                        text="${item.rating}"
+                        fontSize="12"
+                        textColor="#FF9900"/>
+                    <Text
+                        text="分"
+                        fontSize="12"
+                        textColor="#999999"
+                        marginLeft="2"/>
+                </Row>
+            </Row>
+        </Column>
+    </Column>
+</Template>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Template name="user_profile" version="1.0" description="用户资料卡">
+    <Row
+        id="profile"
+        width="100%"
+        padding="16"
+        backgroundColor="#FFFFFF"
+        alignItems="center"
+        onClick="onProfileClick(${user.id})">
+        
+        <!-- 头像 -->
+        <Image
+            id="avatar"
+            src="${user.avatarUrl}"
+            width="64"
+            height="64"
+            borderRadius="32"
+            scaleType="cover"/>
+        
+        <!-- 用户信息 -->
+        <Column
+            id="userInfo"
+            flex="1"
+            marginLeft="12">
+            
+            <!-- 用户名行 -->
+            <Row alignItems="center">
+                <Text
+                    id="username"
+                    text="${user.name}"
+                    fontSize="16"
+                    fontWeight="bold"
+                    textColor="#333333"/>
+                
+                <!-- VIP 标识 -->
+                <View
+                    id="vipBadge"
+                    marginLeft="8"
+                    paddingHorizontal="6"
+                    paddingVertical="2"
+                    backgroundColor="#FFD700"
+                    borderRadius="4"
+                    hidden="${!user.isVip}">
+                    <Text
+                        text="VIP"
+                        fontSize="10"
+                        fontWeight="bold"
+                        textColor="#8B4513"/>
+                </View>
+            </Row>
+            
+            <!-- 简介 -->
+            <Text
+                id="bio"
+                text="${user.bio}"
+                fontSize="14"
+                textColor="#666666"
+                maxLines="1"
+                ellipsize="end"
+                marginTop="4"/>
+            
+            <!-- 统计数据 -->
+            <Row marginTop="8">
+                <Text
+                    text="粉丝 ${user.followers}"
+                    fontSize="12"
+                    textColor="#999999"/>
+                <Text
+                    text="关注 ${user.following}"
+                    fontSize="12"
+                    textColor="#999999"
+                    marginLeft="16"/>
+                <Text
+                    text="获赞 ${user.likes}"
+                    fontSize="12"
+                    textColor="#999999"
+                    marginLeft="16"/>
+            </Row>
+        </Column>
+        
+        <!-- 关注按钮 -->
+        <View
+            id="followBtn"
+            paddingHorizontal="16"
+            paddingVertical="8"
+            backgroundColor="${user.isFollowed ? '#EEEEEE' : '#FF4444'}"
+            borderRadius="20"
+            onClick="onFollowClick(${user.id})">
+            <Text
+                text="${user.isFollowed ? '已关注' : '关注'}"
+                fontSize="14"
+                fontWeight="medium"
+                textColor="${user.isFollowed ? '#666666' : '#FFFFFF'}"/>
+        </View>
+    </Row>
+</Template>

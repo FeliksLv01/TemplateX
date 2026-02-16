@@ -1,0 +1,216 @@
+{
+    "type": "flex",
+    "id": "home_card",
+    "style": {
+        "width": "100%",
+        "height": "auto",
+        "flexDirection": "column",
+        "padding": 16,
+        "backgroundColor": "#FFFFFF",
+        "cornerRadius": 12,
+        "shadowColor": "#000000",
+        "shadowOffset": [0, 2],
+        "shadowRadius": 8,
+        "shadowOpacity": 0.1
+    },
+    "children": [
+        {
+            "type": "flex",
+            "id": "header",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "flexDirection": "row",
+                "alignItems": "center"
+            },
+            "children": [
+                {
+                    "type": "image",
+                    "id": "avatar",
+                    "style": {
+                        "width": 48,
+                        "height": 48,
+                        "cornerRadius": 24
+                    },
+                    "props": {
+                        "src": "${user.avatar}",
+                        "contentMode": "scaleAspectFill"
+                    }
+                },
+                {
+                    "type": "flex",
+                    "id": "user_info",
+                    "style": {
+                        "height": "auto",
+                        "flexGrow": 1,
+                        "flexDirection": "column",
+                        "marginLeft": 12
+                    },
+                    "children": [
+                        {
+                            "type": "text",
+                            "id": "username",
+                            "style": {
+                                "width": "100%",
+                                "height": "auto",
+                                "fontSize": 16,
+                                "fontWeight": "bold",
+                                "textColor": "#333333"
+                            },
+                            "props": {
+                                "text": "${user.name}"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "id": "time",
+                            "style": {
+                                "width": "100%",
+                                "height": "auto",
+                                "marginTop": 4,
+                                "fontSize": 12,
+                                "textColor": "#999999"
+                            },
+                            "props": {
+                                "text": "${formatTime(post.createTime)}"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "button",
+                    "id": "follow_btn",
+                    "style": {
+                        "width": "auto",
+                        "height": 28,
+                        "paddingHorizontal": 16,
+                        "backgroundColor": "${user.isFollowed ? '#F0F0F0' : '#FF4757'}",
+                        "cornerRadius": 14,
+                        "fontSize": 12,
+                        "titleColor": "${user.isFollowed ? '#666666' : '#FFFFFF'}"
+                    },
+                    "props": {
+                        "title": "${user.isFollowed ? '已关注' : '关注'}"
+                    },
+                    "events": {
+                        "onClick": {
+                            "action": "follow",
+                            "params": {
+                                "userId": "${user.id}"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "text",
+            "id": "content",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "marginTop": 12,
+                "fontSize": 15,
+                "textColor": "#333333",
+                "lineHeight": 1.5,
+                "maxLines": 3
+            },
+            "props": {
+                "text": "${post.content}"
+            }
+        },
+        {
+            "type": "image",
+            "id": "cover",
+            "style": {
+                "width": "100%",
+                "height": 0,
+                "aspectRatio": 1.5,
+                "marginTop": 12,
+                "cornerRadius": 8
+            },
+            "props": {
+                "src": "${post.coverImage}",
+                "contentMode": "scaleAspectFill"
+            },
+            "bindings": {
+                "display": "${post.coverImage != null}"
+            }
+        },
+        {
+            "type": "flex",
+            "id": "action_bar",
+            "style": {
+                "width": "100%",
+                "height": 44,
+                "flexDirection": "row",
+                "marginTop": 12
+            },
+            "children": [
+                {
+                    "type": "button",
+                    "id": "like_btn",
+                    "style": {
+                        "flexGrow": 1,
+                        "alignSelf": "stretch",
+                        "fontSize": 13,
+                        "titleColor": "${post.isLiked ? '#FF4757' : '#666666'}"
+                    },
+                    "props": {
+                        "title": "${post.likeCount > 0 ? post.likeCount : ''} 点赞"
+                    },
+                    "events": {
+                        "onClick": {
+                            "action": "like",
+                            "params": {
+                                "postId": "${post.id}"
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "button",
+                    "id": "comment_btn",
+                    "style": {
+                        "flexGrow": 1,
+                        "alignSelf": "stretch",
+                        "fontSize": 13,
+                        "titleColor": "#666666"
+                    },
+                    "props": {
+                        "title": "${post.commentCount > 0 ? post.commentCount : ''} 评论"
+                    },
+                    "events": {
+                        "onClick": {
+                            "action": "comment",
+                            "params": {
+                                "postId": "${post.id}"
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "button",
+                    "id": "share_btn",
+                    "style": {
+                        "flexGrow": 1,
+                        "alignSelf": "stretch",
+                        "fontSize": 13,
+                        "titleColor": "#666666"
+                    },
+                    "props": {
+                        "title": "分享"
+                    },
+                    "events": {
+                        "onClick": {
+                            "action": "share",
+                            "params": {
+                                "postId": "${post.id}"
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

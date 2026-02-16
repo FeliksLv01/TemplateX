@@ -1,0 +1,27 @@
+# TemplateX Demo App Podfile
+# 用法：cd Example && pod install && open TemplateXDemo.xcworkspace
+
+platform :ios, '13.4'
+use_frameworks!
+inhibit_all_warnings!
+
+target 'TemplateXDemo' do
+  # 本地引用 TemplateX
+  pod 'TemplateX', :path => '../'
+  
+  pod 'LookinServer'
+  
+  # 如果需要单独引用依赖（通常不需要，TemplateX 会自动引入）
+  # pod 'YogaKit', '~> 2.0'
+  # pod 'Antlr4', '~> 4.13'
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.4'
+      # 消除 Xcode 15+ 的警告
+      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+    end
+  end
+end
