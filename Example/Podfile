@@ -9,11 +9,10 @@ target 'TemplateXDemo' do
   # 本地引用 TemplateX
   pod 'TemplateX', :path => '../'
   
-  pod 'LookinServer'
+  # TemplateXService - 提供 ImageLoader 实现（SDWebImage）
+  pod 'TemplateXService', :path => '../'
   
-  # 如果需要单独引用依赖（通常不需要，TemplateX 会自动引入）
-  # pod 'YogaKit', '~> 2.0'
-  # pod 'Antlr4', '~> 4.13'
+  pod 'LookinServer'
 end
 
 post_install do |installer|

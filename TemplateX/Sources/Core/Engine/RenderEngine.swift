@@ -9,11 +9,11 @@ import os.lock
 /// 2. 计算布局
 /// 3. 创建/更新视图
 /// 4. 支持增量更新（Diff）
-public final class RenderEngine {
+public final class TemplateXRenderEngine {
     
     // MARK: - 单例
     
-    public static let shared = RenderEngine()
+    public static let shared = TemplateXRenderEngine()
     
     // MARK: - 配置
     
@@ -203,10 +203,10 @@ public final class RenderEngine {
         let rootView: UIView
         if let session = session {
             rootView = session.measure("createView") {
-                createViewTree(component, isRoot: true)
+                createViewTree(component)
             }
         } else {
-            rootView = createViewTree(component, isRoot: true)
+            rootView = createViewTree(component)
         }
         let createViewTime = (CACurrentMediaTime() - createViewStart) * 1000
         
@@ -377,65 +377,23 @@ public final class RenderEngine {
     
     // MARK: - 布局
     
-    /// 应用布局结果到组件树（支持扁平化偏移累加）
-    ///
-    /// Yoga 返回的是相对于父节点的坐标。对于扁平化的父组件（没有创建 UIView），
-    /// 其子组件的 view 实际上被添加到了更上层的祖先视图中，所以需要累加扁平化父组件的偏移。
-    ///
-    /// 注意：此方法在 createViewTree() 之前调用，所以需要使用 canFlatten 来判断
-    /// 是否需要扁平化，并同时设置 isFlattened 标记。
+    /// 应用布局结果到组件树
     ///
     /// - Parameters:
     ///   - results: Yoga 计算的布局结果（相对坐标）
     ///   - component: 目标组件
-    ///   - parentOffset: 扁平化父组件的累计偏移
     private func applyLayoutResults(
         _ results: [String: LayoutResult],
-        to component: Component,
-        parentOffset: CGPoint = .zero
+        to component: Component
     ) {
         // 获取 Yoga 计算的相对坐标
-        guard let result = results[component.id] else {
-            // 如果没有布局结果，继续处理子组件
-            for child in component.children {
-                applyLayoutResults(results, to: child, parentOffset: parentOffset)
-            }
-            return
-        }
-        
-        // 计算当前组件应该累加到子组件的偏移
-        var offsetForChildren: CGPoint = .zero
-        
-        // 应用布局结果
-        var adjustedResult = result
-        
-        // 使用 canFlatten 判断（因为此方法在 createViewTree 之前调用，isFlattened 可能还未设置）
-        // 同时设置 isFlattened 标记，供后续 createViewTree 使用
-        let shouldFlatten = component.canFlatten
-        if shouldFlatten {
-            component.isFlattened = true
-            // 扁平化组件：不设置自己的 frame（因为没有 view）
-            // 但需要把自己的位置偏移传递给子组件
-            offsetForChildren = CGPoint(
-                x: parentOffset.x + result.frame.origin.x,
-                y: parentOffset.y + result.frame.origin.y
-            )
-            component.layoutResult = result  // 保留原始结果用于其他用途
-        } else {
-            component.isFlattened = false
-            // 非扁平化组件：累加父偏移到自己的 frame
-            if parentOffset != .zero {
-                adjustedResult.frame.origin.x += parentOffset.x
-                adjustedResult.frame.origin.y += parentOffset.y
-            }
-            component.layoutResult = adjustedResult
-            // 非扁平化组件的子组件不需要额外偏移
-            offsetForChildren = .zero
+        if let result = results[component.id] {
+            component.layoutResult = result
         }
         
         // 递归处理子组件
         for child in component.children {
-            applyLayoutResults(results, to: child, parentOffset: offsetForChildren)
+            applyLayoutResults(results, to: child)
         }
     }
     
@@ -472,36 +430,13 @@ public final class RenderEngine {
     
     // MARK: - 视图创建
     
-    /// 创建视图树（支持视图扁平化）
-    ///
-    /// 扁平化原理：
-    /// - 纯布局容器（无视觉效果、无事件）不创建真实 UIView
-    /// - 子组件直接添加到最近的非扁平化祖先视图
-    /// - 子组件的 frame 由 applyLayoutResults 统一处理偏移累加
+    /// 创建视图树
     ///
     /// - Parameters:
     ///   - component: 组件
-    /// - Returns: 创建的视图（扁平化组件返回临时容器）
-    private func createViewTree(_ component: Component, isRoot: Bool = false) -> UIView {
-        
-        // 检查是否可以扁平化（根节点永远不扁平化）
-        if !isRoot && component.canFlatten {
-            component.isFlattened = true
-            
-            // 创建一个临时容器来收集子视图（不会真正添加到视图层级）
-            let tempContainer = UIView()
-            tempContainer.isHidden = true  // 标记为临时容器
-            
-            for child in component.children {
-                let childView = createViewTree(child, isRoot: false)
-                tempContainer.addSubview(childView)
-            }
-            
-            // 返回临时容器，由父视图提取子视图
-            return tempContainer
-        }
-        
-        // 非扁平化：正常创建视图
+    /// - Returns: 创建的视图
+    private func createViewTree(_ component: Component) -> UIView {
+        // 创建或复用视图
         let view: UIView
         let createStart = CACurrentMediaTime()
         if let existingView = component.view {
@@ -523,28 +458,13 @@ public final class RenderEngine {
         view.componentType = component.type
         view.accessibilityIdentifier = component.id
         
-        // 注意：frame 偏移累加已在 applyLayoutResults 中统一处理
-        
         // 递归创建子视图
-        for (index, child) in component.children.enumerated() {
-            let result = createViewTree(child, isRoot: false)
-            
-            // 检查是否是扁平化产生的临时容器
-            if result.isHidden && result.componentType == nil {
-                // 提取临时容器中的所有子视图，添加到当前视图
+        for child in component.children {
+            let childView = createViewTree(child)
+            if childView.superview !== view {
                 let addStart = CACurrentMediaTime()
-                for subview in result.subviews {
-                    subview.removeFromSuperview()
-                    view.addSubview(subview)
-                }
+                view.addSubview(childView)
                 viewCreationStats.recordAddSubview(time: (CACurrentMediaTime() - addStart) * 1000)
-            } else {
-                // 正常添加子视图
-                if result.superview !== view {
-                    let addStart = CACurrentMediaTime()
-                    view.addSubview(result)
-                    viewCreationStats.recordAddSubview(time: (CACurrentMediaTime() - addStart) * 1000)
-                }
             }
         }
         
@@ -580,8 +500,14 @@ public final class RenderEngine {
     
     // MARK: - 工具方法
     
-    private func generateViewIdentifier(_ view: UIView) -> String {
+    /// 生成视图标识符
+    public func generateViewIdentifier(_ view: UIView) -> String {
         return "\(ObjectIdentifier(view))"
+    }
+    
+    /// 缓存组件（供外部使用，如预加载场景）
+    public func cacheComponent(_ component: Component, forViewId viewId: String) {
+        renderedComponents[viewId] = component
     }
 }
 
@@ -589,7 +515,7 @@ public final class RenderEngine {
 
 // MARK: - 便捷扩展
 
-extension RenderEngine {
+extension TemplateXRenderEngine {
     
     /// 快速创建视图
     public func createView(
@@ -620,11 +546,11 @@ extension RenderEngine {
 
 // MARK: - 异步渲染 API
 
-extension RenderEngine {
+extension TemplateXRenderEngine {
     
     /// 异步渲染引擎实例
-    public var asyncEngine: AsyncRenderEngine {
-        return AsyncRenderEngine.shared
+    public var asyncEngine: AsyncTemplateXRenderEngine {
+        return AsyncTemplateXRenderEngine.shared
     }
     
     /// 从 JSON 异步渲染视图
@@ -666,7 +592,7 @@ extension RenderEngine {
 // MARK: - Async/Await 支持 (iOS 13+)
 
 @available(iOS 13.0, *)
-extension RenderEngine {
+extension TemplateXRenderEngine {
     
     /// 使用 async/await 异步渲染 JSON
     public func render(
@@ -703,9 +629,9 @@ public final class RenderResult {
     
     public let view: UIView
     public let component: Component
-    private weak var engine: RenderEngine?
+    private weak var engine: TemplateXRenderEngine?
     
-    init(view: UIView, component: Component, engine: RenderEngine) {
+    init(view: UIView, component: Component, engine: TemplateXRenderEngine) {
         self.view = view
         self.component = component
         self.engine = engine
@@ -763,7 +689,7 @@ private struct PreparedRender {
     let layoutResults: [String: LayoutResult]
 }
 
-extension RenderEngine {
+extension TemplateXRenderEngine {
     
     /// 批量并发渲染
     /// 
@@ -1030,7 +956,7 @@ public struct HeightCalculationResult {
     public var isSuccess: Bool { error == nil }
 }
 
-extension RenderEngine {
+extension TemplateXRenderEngine {
     
     // MARK: - 模板缓存渲染（Cell 场景）
     
@@ -1354,5 +1280,123 @@ extension RenderEngine {
         // 插入新条目
         heightCache[key] = height
         heightCacheOrder.append(key)
+    }
+}
+
+// MARK: - Pipeline 渲染 API
+
+extension TemplateXRenderEngine {
+    
+    /// 创建渲染管道
+    /// 
+    /// 用于需要 SyncFlush 机制的场景，如 TemplateXView
+    /// 
+    /// - Returns: 新的 RenderPipeline 实例
+    func createPipeline() -> RenderPipeline {
+        return RenderPipelinePool.shared.acquire()
+    }
+    
+    /// 归还渲染管道到池中
+    /// 
+    /// - Parameter pipeline: 要归还的管道
+    func releasePipeline(_ pipeline: RenderPipeline) {
+        RenderPipelinePool.shared.release(pipeline)
+    }
+    
+    /// 使用管道渲染（同步，支持 SyncFlush）
+    /// 
+    /// 这是一个便捷方法，内部创建管道、启动渲染、等待完成
+    /// 
+    /// 流程：
+    /// 1. 后台执行 parse + bind + layout
+    /// 2. 生成 UI 操作入队
+    /// 3. SyncFlush 等待后台完成并执行 UI 操作
+    /// 
+    /// - Parameters:
+    ///   - json: 模板 JSON
+    ///   - data: 绑定数据
+    ///   - containerSize: 容器尺寸
+    ///   - timeoutMs: SyncFlush 超时时间（毫秒）
+    /// - Returns: 渲染的视图
+    public func renderWithPipeline(
+        json: [String: Any],
+        data: [String: Any]? = nil,
+        containerSize: CGSize,
+        timeoutMs: Int = 100
+    ) -> UIView? {
+        let pipeline = createPipeline()
+        pipeline.config.syncFlushTimeoutMs = timeoutMs
+        pipeline.config.enableViewReuse = config.enableViewReuse
+        pipeline.config.enablePerformanceMonitor = config.enablePerformanceMonitor
+        
+        // 启动渲染
+        pipeline.start(json: json, data: data, containerSize: containerSize)
+        
+        // SyncFlush 等待并执行
+        let view = pipeline.syncFlush()
+        
+        // 缓存组件
+        if let view = view, let component = pipeline.rootComponent {
+            let viewId = generateViewIdentifier(view)
+            renderedComponents[viewId] = component
+        }
+        
+        // 归还管道
+        releasePipeline(pipeline)
+        
+        return view
+    }
+    
+    /// 使用管道渲染（使用缓存的模板原型）
+    /// 
+    /// 适用于 Cell 场景，结合模板原型缓存和 SyncFlush 机制
+    /// 
+    /// - Parameters:
+    ///   - json: 模板 JSON
+    ///   - templateId: 模板标识符（缓存 key）
+    ///   - data: 绑定数据
+    ///   - containerSize: 容器尺寸
+    ///   - timeoutMs: SyncFlush 超时时间（毫秒）
+    /// - Returns: 渲染的视图
+    public func renderWithPipelineCache(
+        json: [String: Any],
+        templateId: String,
+        data: [String: Any]? = nil,
+        containerSize: CGSize,
+        timeoutMs: Int = 100
+    ) -> UIView? {
+        // 获取或创建模板原型
+        let prototype: Component
+        if let cached = componentTemplateCache[templateId] {
+            prototype = cached
+        } else {
+            guard let parsed = templateParser.parse(json: json) else {
+                return nil
+            }
+            componentTemplateCache[templateId] = parsed
+            prototype = parsed
+        }
+        
+        let pipeline = createPipeline()
+        pipeline.config.syncFlushTimeoutMs = timeoutMs
+        pipeline.config.enableViewReuse = config.enableViewReuse
+        pipeline.config.enablePerformanceMonitor = config.enablePerformanceMonitor
+        
+        // 使用原型启动渲染
+        pipeline.startWithPrototype(prototype: prototype, data: data, containerSize: containerSize)
+        
+        // SyncFlush 等待并执行
+        let view = pipeline.syncFlush()
+        
+        // 缓存组件
+        if let view = view, let component = pipeline.rootComponent {
+            let viewId = generateViewIdentifier(view)
+            renderedComponents[viewId] = component
+        }
+        
+        // 归还管道
+        releasePipeline(pipeline)
+        
+        return view
     }
 }

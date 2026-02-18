@@ -18,12 +18,7 @@ class LayoutDemoViewController: UIViewController {
         
         setupScrollView()
         prepareDemoTemplates()
-        
-        // 使用批量并发渲染
-        let renderStart = CACurrentMediaTime()
-        addLayoutDemosBatch()
-        let renderTime = (CACurrentMediaTime() - renderStart) * 1000
-        TXLogger.trace("LayoutDemoViewController.viewDidLoad: render=\(String(format: "%.2f", renderTime))ms")
+        addLayoutDemos()
     }
     
     private func setupScrollView() {
@@ -206,28 +201,11 @@ class LayoutDemoViewController: UIViewController {
         ))
     }
     
-    /// 使用批量并发渲染所有 Demo
-    private func addLayoutDemosBatch() {
+    /// 使用 TemplateXView 添加所有 Demo
+    private func addLayoutDemos() {
         let containerWidth = UIScreen.main.bounds.width - 32
         
-        // 1. 构建批量渲染任务
-        let tasks = demoTemplates.map { demo in
-            BatchRenderTask(
-                id: demo.template["id"] as? String ?? UUID().uuidString,
-                json: demo.template,
-                data: nil,
-                containerSize: CGSize(width: containerWidth, height: demo.height)
-            )
-        }
-        
-        // 2. 批量并发渲染（同步版本，适合 viewDidLoad）
-        let results = RenderEngine.shared.renderBatchSync(tasks)
-        
-        // 3. 添加到 UI（串行）
-        let uiStart = CACurrentMediaTime()
-        for (index, result) in results.enumerated() {
-            let demo = demoTemplates[index]
-            
+        for demo in demoTemplates {
             // 标题
             let titleLabel = UILabel()
             titleLabel.text = demo.title
@@ -235,21 +213,33 @@ class LayoutDemoViewController: UIViewController {
             titleLabel.textColor = .secondaryLabel
             stackView.addArrangedSubview(titleLabel)
             
-            // 容器
-            let container = UIView()
-            container.backgroundColor = .systemBackground
-            container.layer.cornerRadius = 8
-            container.translatesAutoresizingMaskIntoConstraints = false
-            container.heightAnchor.constraint(equalToConstant: demo.height).isActive = true
-            stackView.addArrangedSubview(container)
-            
-            // 添加渲染好的视图
-            if let view = result.view {
-                container.addSubview(view)
+            // 使用 Builder 模式创建 TemplateXView
+            let templateView = TemplateXView { builder in
+                builder.config = TemplateXConfig { config in
+                    config.enablePerformanceMonitor = true
+                    config.enableSyncFlush = true
+                }
+                builder.screenSize = UIScreen.main.bounds.size
             }
+            
+            // 设置布局模式
+            templateView.preferredLayoutWidth = containerWidth
+            templateView.preferredLayoutHeight = demo.height
+            templateView.layoutWidthMode = .exact
+            templateView.layoutHeightMode = .exact
+            
+            templateView.translatesAutoresizingMaskIntoConstraints = false
+            templateView.backgroundColor = .systemBackground
+            templateView.layer.cornerRadius = 8
+            
+            stackView.addArrangedSubview(templateView)
+            
+            // 设置高度约束
+            templateView.heightAnchor.constraint(equalToConstant: demo.height).isActive = true
+            
+            // 加载模板
+            templateView.loadTemplate(json: demo.template)
         }
-        let uiTime = (CACurrentMediaTime() - uiStart) * 1000
-        TXLogger.trace("addLayoutDemosBatch: UI setup=\(String(format: "%.2f", uiTime))ms")
     }
     
     private func makeBox(id: String, color: String, flex: Int) -> [String: Any] {

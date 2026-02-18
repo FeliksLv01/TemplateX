@@ -32,14 +32,6 @@ public protocol Component: AnyObject {
     /// 事件配置
     var events: [String: Any] { get set }
     
-    /// 是否被扁平化（跳过视图创建）
-    /// 扁平化的组件不会创建 UIView，其子组件直接添加到祖先视图
-    var isFlattened: Bool { get set }
-    
-    /// 是否可以被扁平化
-    /// 纯布局容器（无视觉效果、无事件）可以扁平化
-    var canFlatten: Bool { get }
-    
     // MARK: - Yoga 剪枝优化
     
     /// 关联的 Yoga 节点（用于增量布局优化）
@@ -109,48 +101,6 @@ open class BaseComponent: Component {
     
     /// 手势处理器
     private var gestureHandler: GestureHandler?
-    
-    // MARK: - 扁平化支持
-    
-    /// 是否被扁平化（跳过视图创建）
-    /// 扁平化的组件不会创建 UIView，其子组件直接添加到祖先视图
-    public var isFlattened: Bool = false
-    
-    /// 是否可以被扁平化
-    /// 纯布局容器（无视觉效果、无事件）可以扁平化以减少视图层级
-    ///
-    /// 扁平化条件：
-    /// 1. 组件类型为 "view" 或 "flex" 或 "container"（纯布局容器）
-    /// 2. 无背景色
-    /// 3. 无圆角
-    /// 4. 无边框
-    /// 5. 无阴影
-    /// 6. 不透明度为 1
-    /// 7. 无渐变背景
-    /// 8. 无事件绑定
-    /// 9. 不需要裁剪子视图
-    public var canFlatten: Bool {
-        // 只有纯布局容器类型可以扁平化
-        guard type == "view" || type == "flex" || type == "container" else {
-            return false
-        }
-        
-        // 有视觉效果的不能扁平化
-        if style.backgroundColor != nil { return false }
-        if style.cornerRadius > 0 { return false }
-        if style.borderWidth > 0 { return false }
-        if style.shadowOpacity > 0 { return false }
-        if style.opacity < 1 { return false }
-        if style.backgroundGradient != nil { return false }
-        
-        // 有事件的不能扁平化
-        if !events.isEmpty { return false }
-        
-        // 需要裁剪的不能扁平化（overflow: hidden）
-        if style.clipsToBounds { return false }
-        
-        return true
-    }
     
     // MARK: - Yoga 剪枝优化
     

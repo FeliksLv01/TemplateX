@@ -1,5 +1,6 @@
 import UIKit
 import TemplateX
+import TemplateXService
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -10,6 +11,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
+        
+        // 注册 ImageLoader（必须在使用 TemplateX 前注册）
+        TemplateX.registerImageLoader(SDWebImageLoader())
         
         // 预热 TemplateX 引擎（异步执行，不阻塞启动）
         DispatchQueue.global(qos: .userInitiated).async {

@@ -14,7 +14,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                      RenderEngine                       │
+│                      TemplateXRenderEngine                       │
 │                    (渲染引擎入口)                         │
 └────────────────┬────────────────────────────────────────┘
                  │
@@ -46,7 +46,31 @@ dependencies: [
 ### CocoaPods
 
 ```ruby
+# 核心库
 pod 'TemplateX'
+
+# Service 实现（必须注册 ImageLoader）
+pod 'TemplateXService'  # 默认包含 SDWebImage 图片加载器
+```
+
+**初始化（必须）**：
+
+```swift
+// AppDelegate.swift
+import TemplateX
+import TemplateXService
+
+func application(_ application: UIApplication, didFinishLaunchingWithOptions ...) -> Bool {
+    // 注册 ImageLoader（必须，否则 fatalError）
+    TemplateX.registerImageLoader(SDWebImageLoader())
+    
+    // 预热引擎（推荐）
+    DispatchQueue.global(qos: .userInitiated).async {
+        TemplateX.warmUp()
+    }
+    
+    return true
+}
 ```
 
 ## 快速开始
@@ -75,7 +99,7 @@ let template: [String: Any] = [
     ]
 ]
 
-let view = RenderEngine.shared.render(
+let view = TemplateXRenderEngine.shared.render(
     json: template,
     containerSize: CGSize(width: 375, height: 812)
 )
@@ -100,7 +124,7 @@ let data: [String: Any] = [
     "user": ["name": "Alice"]
 ]
 
-let view = RenderEngine.shared.render(
+let view = TemplateXRenderEngine.shared.render(
     json: template,
     data: data,
     containerSize: CGSize(width: 375, height: 100)
@@ -111,10 +135,10 @@ let view = RenderEngine.shared.render(
 
 ```swift
 // 首次渲染
-let view = RenderEngine.shared.render(json: template, data: initialData, containerSize: size)
+let view = TemplateXRenderEngine.shared.render(json: template, data: initialData, containerSize: size)
 
 // 增量更新（只更新变化的部分）
-RenderEngine.shared.update(view: view, data: newData, containerSize: size)
+TemplateXRenderEngine.shared.update(view: view, data: newData, containerSize: size)
 ```
 
 ### 4. 条件显示
@@ -399,7 +423,7 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions ...
 
 ```swift
 // 使用模板缓存渲染
-let view = RenderEngine.shared.renderWithCache(
+let view = TemplateXRenderEngine.shared.renderWithCache(
     json: template,
     templateId: "my_cell",  // 缓存 key
     data: data,
@@ -407,7 +431,7 @@ let view = RenderEngine.shared.renderWithCache(
 )
 
 // 计算高度（带缓存）
-let height = RenderEngine.shared.calculateHeight(
+let height = TemplateXRenderEngine.shared.calculateHeight(
     json: template,
     templateId: "my_cell",
     data: data,
@@ -420,7 +444,7 @@ let height = RenderEngine.shared.calculateHeight(
 
 ```swift
 // 启用性能监控
-RenderEngine.shared.config.enablePerformanceMonitor = true
+TemplateXRenderEngine.shared.config.enablePerformanceMonitor = true
 
 // 查看性能日志
 // [TemplateX][Trace] render: total=3.2ms | parse=0.8ms | layout=1.2ms | create=1.2ms
@@ -429,7 +453,7 @@ RenderEngine.shared.config.enablePerformanceMonitor = true
 ### 4. 性能配置
 
 ```swift
-let engine = RenderEngine.shared
+let engine = TemplateXRenderEngine.shared
 
 // 启用 Yoga 增量布局（默认开启）
 YogaLayoutEngine.shared.enableIncrementalLayout = true
@@ -748,25 +772,116 @@ func application(...) {
 ## 项目结构
 
 ```
-TemplateX/
-├── Sources/
-│   ├── TemplateX.swift              # 主入口
-│   ├── Core/
-│   │   ├── Engine/                  # 渲染引擎
-│   │   ├── Template/                # 模板解析
-│   │   ├── Layout/                  # 布局系统
-│   │   ├── Expression/              # 表达式引擎
-│   │   ├── Binding/                 # 数据绑定
-│   │   ├── Diff/                    # Diff 算法
-│   │   ├── Event/                   # 事件系统
-│   │   ├── Directive/               # 指令处理
-│   │   ├── Cache/                   # 缓存系统
-│   │   └── Performance/             # 性能监控
-│   └── Components/                  # 组件实现
+TemplateX/                           # Git 仓库根目录
+├── TemplateX/                       # 核心库
+│   └── Sources/
+│       ├── TemplateX.swift          # 主入口
+│       ├── Core/
+│       │   ├── Engine/              # 渲染引擎
+│       │   ├── Template/            # 模板解析
+│       │   ├── Layout/              # 布局系统
+│       │   ├── Expression/          # 表达式引擎
+│       │   ├── Binding/             # 数据绑定
+│       │   ├── Diff/                # Diff 算法
+│       │   ├── Event/               # 事件系统
+│       │   ├── Cache/               # 缓存系统
+│       │   └── Performance/         # 性能监控
+│       ├── Components/              # 组件实现
+│       └── Service/                 # Service 协议层
+│           ├── ServiceRegistry.swift
+│           ├── ImageLoader/         # ImageLoader 协议
+│           └── LogProvider/         # LogProvider 协议 + 默认实现
+├── TemplateXService/                # Service 实现层
+│   ├── Image/                       # SDWebImage 实现
+│   │   └── SDWebImageLoader.swift
+│   └── Log/                         # Console 日志实现
+│       └── ConsoleLogProvider.swift
 ├── Compiler/                        # XML 编译器（开发工具，不打包）
-├── Tests/                           # 测试用例
 ├── Example/                         # 示例 App
-└── Scripts/                         # 脚本工具
+├── Tests/                           # 测试用例
+├── TemplateX.podspec                # 核心库 podspec
+└── TemplateXService.podspec         # Service 实现 podspec
+```
+
+## Service 架构
+
+TemplateX 采用 Service 架构，将外部依赖（如图片加载、日志）抽象为协议，由上层注入实现。
+
+### 架构图
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                      TemplateX                          │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐  │
+│  │ RenderEngine│  │ Components  │  │ ServiceRegistry │  │
+│  └─────────────┘  └─────────────┘  └────────┬────────┘  │
+│                                             │           │
+│          ┌──────────────────────────────────┤           │
+│          │                                  │           │
+│  ┌───────▼───────┐              ┌───────────▼────────┐  │
+│  │TemplateX      │              │TemplateX           │  │
+│  │ImageLoader    │              │LogProvider         │  │
+│  │(协议)         │              │(协议+默认实现)       │  │
+│  └───────────────┘              └────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+                    │                        │
+                    ▼                        ▼
+┌─────────────────────────────────────────────────────────┐
+│                   TemplateXService                      │
+│  ┌───────────────────┐          ┌────────────────────┐  │
+│  │ SDWebImageLoader  │          │ ConsoleLogProvider │  │
+│  │ (SDWebImage实现)   │          │ (print实现)         │  │
+│  └───────────────────┘          └────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+```
+
+### ImageLoader（必须注册）
+
+图片加载器协议，用于加载网络图片和本地图片。**必须在使用 TemplateX 前注册**，否则会 fatalError。
+
+```swift
+// 协议定义
+public protocol TemplateXImageLoader: AnyObject {
+    func loadImage(url: String, placeholder: String?, into imageView: UIImageView, completion: ((UIImage?) -> Void)?)
+    func cancelLoad(for imageView: UIImageView)
+    func prefetchImages(urls: [String])
+    func clearCache(type: ImageCacheType)
+}
+
+// 注册（AppDelegate）
+TemplateX.registerImageLoader(SDWebImageLoader())
+```
+
+### LogProvider（可选，有默认实现）
+
+日志提供者协议。**有默认实现**（DefaultLogProvider），iOS 14+ 使用 `os.Logger`，iOS 14 以下静默。
+
+```swift
+// 协议定义
+public protocol TemplateXLogProvider: AnyObject {
+    func log(level: TXLogLevel, message: String, file: String, function: String, line: Int)
+}
+
+// 可选：注册自定义实现
+TemplateX.registerLogProvider(ConsoleLogProvider())
+```
+
+### 自定义 Service 实现
+
+如果不想使用 SDWebImage，可以自己实现 `TemplateXImageLoader`：
+
+```swift
+// 使用 Kingfisher 实现
+class KingfisherImageLoader: TemplateXImageLoader {
+    func loadImage(url: String, placeholder: String?, into imageView: UIImageView, completion: ((UIImage?) -> Void)?) {
+        imageView.kf.setImage(with: URL(string: url), placeholder: UIImage(named: placeholder ?? ""))
+        // ...
+    }
+    // 实现其他方法...
+}
+
+// 注册
+TemplateX.registerImageLoader(KingfisherImageLoader())
 ```
 
 ## XML 编译器

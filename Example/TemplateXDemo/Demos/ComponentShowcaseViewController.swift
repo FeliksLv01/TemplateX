@@ -6,7 +6,6 @@ class ComponentShowcaseViewController: UIViewController {
     
     private var scrollView: UIScrollView!
     private var stackView: UIStackView!
-    private var hasRendered = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -15,18 +14,7 @@ class ComponentShowcaseViewController: UIViewController {
         view.backgroundColor = .systemGroupedBackground
         
         setupScrollView()
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        // 只渲染一次，且在 title 显示后异步执行
-        guard !hasRendered else { return }
-        hasRendered = true
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.addComponentDemos()
-        }
+        addComponentDemos()
     }
     
     private func setupScrollView() {
@@ -49,12 +37,14 @@ class ComponentShowcaseViewController: UIViewController {
             stackView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 16),
             stackView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16),
             stackView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16),
-            stackView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -16),
+            stackView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: 16),
             stackView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -32)
         ])
     }
     
     private func addComponentDemos() {
+        let containerWidth = UIScreen.main.bounds.width - 32
+        
         // 1. Text 组件
         addSection(title: "Text 文本组件")
         addDemo(
@@ -124,7 +114,8 @@ class ComponentShowcaseViewController: UIViewController {
                     ]
                 ]
             ],
-            height: 160
+            height: 160,
+            containerWidth: containerWidth
         )
         
         // 2. Button 组件
@@ -181,7 +172,8 @@ class ComponentShowcaseViewController: UIViewController {
                     ]
                 ]
             ],
-            height: 180
+            height: 180,
+            containerWidth: containerWidth
         )
         
         // 3. Input 组件
@@ -240,7 +232,8 @@ class ComponentShowcaseViewController: UIViewController {
                     ]
                 ]
             ],
-            height: 180
+            height: 180,
+            containerWidth: containerWidth
         )
         
         // 4. Image 组件
@@ -285,7 +278,8 @@ class ComponentShowcaseViewController: UIViewController {
                     ]
                 ]
             ],
-            height: 112
+            height: 112,
+            containerWidth: containerWidth
         )
         
         // 5. 样式属性
@@ -356,12 +350,13 @@ class ComponentShowcaseViewController: UIViewController {
                     ]
                 ]
             ],
-            height: 210
+            height: 210,
+            containerWidth: containerWidth
         )
         
         // 6. List 列表组件
         addSection(title: "List 列表组件")
-        addListDemo()
+        addListDemo(containerWidth: containerWidth)
     }
     
     private func addSection(title: String) {
@@ -372,22 +367,32 @@ class ComponentShowcaseViewController: UIViewController {
         stackView.addArrangedSubview(label)
     }
     
-    private func addDemo(template: [String: Any], height: CGFloat) {
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-        container.heightAnchor.constraint(equalToConstant: height).isActive = true
-        stackView.addArrangedSubview(container)
-        
-        let containerWidth = UIScreen.main.bounds.width - 32
-        if let view = RenderEngine.shared.render(
-            json: template,
-            containerSize: CGSize(width: containerWidth, height: height)
-        ) {
-            container.addSubview(view)
+    private func addDemo(template: [String: Any], height: CGFloat, containerWidth: CGFloat) {
+        // 使用 Builder 模式创建 TemplateXView
+        let templateView = TemplateXView { builder in
+            builder.config = TemplateXConfig { config in
+                config.enablePerformanceMonitor = true
+                config.enableSyncFlush = true
+            }
+            builder.screenSize = UIScreen.main.bounds.size
         }
+        
+        // 设置布局模式
+        templateView.preferredLayoutWidth = containerWidth
+        templateView.preferredLayoutHeight = height
+        templateView.layoutWidthMode = .exact
+        templateView.layoutHeightMode = .exact
+        
+        templateView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.addArrangedSubview(templateView)
+        
+        templateView.heightAnchor.constraint(equalToConstant: height).isActive = true
+        
+        // 加载模板
+        templateView.loadTemplate(json: template)
     }
     
-    private func addListDemo() {
+    private func addListDemo(containerWidth: CGFloat) {
         let items = [
             ["id": "1", "title": "Apple", "subtitle": "iPhone 15 Pro", "price": "¥8999"],
             ["id": "2", "title": "Samsung", "subtitle": "Galaxy S24 Ultra", "price": "¥9999"],
@@ -494,25 +499,33 @@ class ComponentShowcaseViewController: UIViewController {
             "items": items
         ]
         
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-        // 移除固定高度约束，让内容自适应
-        stackView.addArrangedSubview(container)
+        // List 固定高度：5 个 item * 72（每个 item 高度约 72pt）
+        let listHeight: CGFloat = 360
         
-        let containerWidth = UIScreen.main.bounds.width - 32
-        if let view = RenderEngine.shared.render(
-            json: template,
-            data: data,
-            containerSize: CGSize(width: containerWidth, height: .nan)
-        ) {
-            container.addSubview(view)
-            view.translatesAutoresizingMaskIntoConstraints = false
-            NSLayoutConstraint.activate([
-                view.topAnchor.constraint(equalTo: container.topAnchor),
-                view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-                view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-                view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-            ])
+        // 使用 Builder 模式创建 TemplateXView，直接使用 frame 布局
+        let templateView = TemplateXView { builder in
+            builder.config = TemplateXConfig { config in
+                config.enablePerformanceMonitor = true
+                config.enableSyncFlush = true
+            }
+            builder.screenSize = UIScreen.main.bounds.size
         }
+        
+        // 设置布局模式 - 固定宽高
+        templateView.preferredLayoutWidth = containerWidth
+        templateView.preferredLayoutHeight = listHeight
+        templateView.layoutWidthMode = .exact
+        templateView.layoutHeightMode = .exact
+        
+        // 使用 frame 布局，高度固定
+        templateView.frame = CGRect(x: 0, y: 0, width: containerWidth, height: listHeight)
+        templateView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.addArrangedSubview(templateView)
+        
+        // 高度约束
+        templateView.heightAnchor.constraint(equalToConstant: listHeight).isActive = true
+        
+        // 加载模板
+        templateView.loadTemplate(json: template, data: data)
     }
 }

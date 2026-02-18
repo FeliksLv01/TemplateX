@@ -197,10 +197,19 @@ class PerformanceDemoViewController: UIViewController {
             "style": ["width": 200, "height": 100, "backgroundColor": "#007AFF", "cornerRadius": 8]
         ]
         
-        _ = RenderEngine.shared.render(
-            json: template,
-            containerSize: CGSize(width: 375, height: 200)
-        )
+        // 使用 Builder 模式创建 TemplateXView
+        let templateView = TemplateXView { builder in
+            builder.config = TemplateXConfig.highPerformance
+            builder.screenSize = UIScreen.main.bounds.size
+        }
+        
+        templateView.preferredLayoutWidth = 375
+        templateView.preferredLayoutHeight = 200
+        templateView.layoutWidthMode = .exact
+        templateView.layoutHeightMode = .exact
+        
+        templateView.loadTemplate(json: template)
+        templateView.syncFlush()
     }
     
     private func performComplexLayoutRender() {
@@ -245,10 +254,19 @@ class PerformanceDemoViewController: UIViewController {
             "children": makeChildren(depth: 3)
         ]
         
-        _ = RenderEngine.shared.render(
-            json: template,
-            containerSize: CGSize(width: 375, height: 800)
-        )
+        // 使用 Builder 模式创建 TemplateXView
+        let templateView = TemplateXView { builder in
+            builder.config = TemplateXConfig.highPerformance
+            builder.screenSize = UIScreen.main.bounds.size
+        }
+        
+        templateView.preferredLayoutWidth = 375
+        templateView.preferredLayoutHeight = 800
+        templateView.layoutWidthMode = .exact
+        templateView.layoutHeightMode = .atMost
+        
+        templateView.loadTemplate(json: template)
+        templateView.syncFlush()
     }
     
     private func performDataBindingRender() {
@@ -274,14 +292,22 @@ class PerformanceDemoViewController: UIViewController {
             }
         ]
         
-        _ = RenderEngine.shared.render(
-            json: template,
-            data: data,
-            containerSize: CGSize(width: 375, height: 400)
-        )
+        // 使用 Builder 模式创建 TemplateXView
+        let templateView = TemplateXView { builder in
+            builder.config = TemplateXConfig.highPerformance
+            builder.screenSize = UIScreen.main.bounds.size
+        }
+        
+        templateView.preferredLayoutWidth = 375
+        templateView.preferredLayoutHeight = 400
+        templateView.layoutWidthMode = .exact
+        templateView.layoutHeightMode = .atMost
+        
+        templateView.loadTemplate(json: template, data: data)
+        templateView.syncFlush()
     }
     
-    private var cachedView: UIView?
+    private var cachedTemplateView: TemplateXView?
     private var updateCounter = 0
     
     private func performIncrementalUpdate() {
@@ -305,15 +331,20 @@ class PerformanceDemoViewController: UIViewController {
             ]
         ]
         
-        let containerSize = CGSize(width: 375, height: 100)
-        
         // 首次渲染或获取缓存
-        if cachedView == nil {
-            cachedView = RenderEngine.shared.render(
-                json: template,
-                data: ["count": 0, "timestamp": ""],
-                containerSize: containerSize
-            )
+        if cachedTemplateView == nil {
+            cachedTemplateView = TemplateXView { builder in
+                builder.config = TemplateXConfig.highPerformance
+                builder.screenSize = UIScreen.main.bounds.size
+            }
+            
+            cachedTemplateView?.preferredLayoutWidth = 375
+            cachedTemplateView?.preferredLayoutHeight = 100
+            cachedTemplateView?.layoutWidthMode = .exact
+            cachedTemplateView?.layoutHeightMode = .exact
+            
+            cachedTemplateView?.loadTemplate(json: template, data: ["count": 0, "timestamp": ""])
+            cachedTemplateView?.syncFlush()
         }
         
         // 增量更新
@@ -323,8 +354,6 @@ class PerformanceDemoViewController: UIViewController {
             "timestamp": Date().description
         ]
         
-        if let view = cachedView {
-            RenderEngine.shared.update(view: view, data: data, containerSize: containerSize)
-        }
+        cachedTemplateView?.updateData(data)
     }
 }

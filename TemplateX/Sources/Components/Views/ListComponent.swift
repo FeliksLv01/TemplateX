@@ -78,6 +78,9 @@ public final class ListComponent: BaseComponent, ComponentFactory {
     /// 加载更多阈值（距离底部多少时触发）
     public var loadMoreThreshold: CGFloat = 100
     
+    /// 预加载管理器（Lynx 风格优化）
+    public var preloadManager: ListPreloadManager?
+    
     // MARK: - Private
     
     private weak var collectionView: UICollectionView?
@@ -112,7 +115,7 @@ public final class ListComponent: BaseComponent, ComponentFactory {
         cloned.estimatedItemHeight = self.estimatedItemHeight
         cloned.loadMoreThreshold = self.loadMoreThreshold
         
-        // 注意: 不在这里递归克隆子组件，由 RenderEngine.cloneComponentTree 统一处理
+        // 注意: 不在这里递归克隆子组件，由 TemplateXRenderEngine.cloneComponentTree 统一处理
         
         return cloned
     }
@@ -345,13 +348,25 @@ private class ListDataSource: NSObject, UICollectionViewDataSource {
             let cellSize = calculateCellSize(collectionView: collectionView, component: component)
             let templateId = component.cellTemplateId ?? "list_cell_\(component.id)"
             
-            cell.configure(
-                with: cellTemplate,
-                templateId: templateId,
-                data: itemData,
-                index: indexPath.item,
-                containerSize: cellSize
-            )
+            // 尝试使用预加载的视图
+            if let preloadManager = component.preloadManager,
+               let (preloadedView, preloadedComponent) = preloadManager.dequeuePreloadedView(for: indexPath.item) {
+                // 使用预加载的视图
+                cell.configureWithPreloaded(
+                    view: preloadedView,
+                    component: preloadedComponent,
+                    templateId: templateId
+                )
+            } else {
+                // 常规渲染
+                cell.configure(
+                    with: cellTemplate,
+                    templateId: templateId,
+                    data: itemData,
+                    index: indexPath.item,
+                    containerSize: cellSize
+                )
+            }
         } else {
             TXLogger.warning("[ListDataSource] cellForItemAt: no cellTemplate found")
         }
@@ -417,6 +432,30 @@ private class ListDelegate: NSObject, UICollectionViewDelegate, UICollectionView
         
         // 检查是否需要加载更多
         checkLoadMore(scrollView)
+        
+        // 触发预加载
+        triggerPreload(scrollView)
+    }
+    
+    /// 触发预加载
+    private func triggerPreload(_ scrollView: UIScrollView) {
+        guard let component = component,
+              let collectionView = scrollView as? UICollectionView,
+              let preloadManager = component.preloadManager else { return }
+        
+        // 获取可见范围
+        let visibleIndexPaths = collectionView.indexPathsForVisibleItems.sorted { $0.item < $1.item }
+        guard let first = visibleIndexPaths.first?.item,
+              let last = visibleIndexPaths.last?.item else { return }
+        
+        let visibleRange = first..<(last + 1)
+        
+        // 触发预加载
+        preloadManager.handleScroll(
+            scrollView: scrollView,
+            visibleRange: visibleRange,
+            dataSource: component.dataSource
+        )
     }
     
     private func checkLoadMore(_ scrollView: UIScrollView) {
@@ -466,7 +505,17 @@ private class ListDelegate: NSObject, UICollectionViewDelegate, UICollectionView
         // 计算 Cell 宽度
         let itemWidth = calculateItemWidth(collectionView: collectionView, component: component)
         
-        // 如果有 Cell 模板，使用 RenderEngine 计算实际高度
+        // 优先使用预加载管理器的高度缓存（性能最优）
+        if let preloadManager = component.preloadManager,
+           let cachedHeight = preloadManager.cachedHeight(for: indexPath.item) {
+            if component.direction == .vertical {
+                return CGSize(width: itemWidth, height: cachedHeight)
+            } else {
+                return CGSize(width: cachedHeight, height: itemWidth)
+            }
+        }
+        
+        // 如果有 Cell 模板，使用 TemplateXRenderEngine 计算实际高度
         if let cellTemplate = component.cellTemplate,
            indexPath.item < component.dataSource.count {
             
@@ -483,8 +532,8 @@ private class ListDelegate: NSObject, UICollectionViewDelegate, UICollectionView
             
             let templateId = component.cellTemplateId ?? "list_cell_\(component.id)"
             
-            // 使用 RenderEngine 计算高度（带缓存）
-            let height = RenderEngine.shared.calculateHeight(
+            // 使用 TemplateXRenderEngine 计算高度（带缓存）
+            let height = TemplateXRenderEngine.shared.calculateHeight(
                 json: cellTemplate.rawDictionary,
                 templateId: templateId,
                 data: context,
@@ -534,7 +583,7 @@ private class ListDelegate: NSObject, UICollectionViewDelegate, UICollectionView
 
 /// 模板渲染 Cell
 /// 
-/// 使用 RenderEngine 进行模板渲染和更新：
+/// 使用 TemplateXRenderEngine 进行模板渲染和更新：
 /// - 首次渲染：使用 renderWithCache() 创建视图
 /// - Cell 复用：使用 quickUpdate() 快速更新数据
 public class TemplateXCell: UICollectionViewCell {
@@ -598,7 +647,7 @@ public class TemplateXCell: UICollectionViewCell {
             contentRootView?.removeFromSuperview()
             
             // 首次渲染或模板变化：使用缓存渲染
-            if let view = RenderEngine.shared.renderWithCache(
+            if let view = TemplateXRenderEngine.shared.renderWithCache(
                 json: template.rawDictionary,
                 templateId: templateId,
                 data: context,
@@ -615,7 +664,7 @@ public class TemplateXCell: UICollectionViewCell {
         } else {
             // Cell 复用：使用 quickUpdate 快速更新数据
             if let view = contentRootView {
-                RenderEngine.shared.quickUpdate(
+                TemplateXRenderEngine.shared.quickUpdate(
                     view: view,
                     data: context,
                     containerSize: containerSize
@@ -634,6 +683,37 @@ public class TemplateXCell: UICollectionViewCell {
             index: index,
             containerSize: contentView.bounds.size
         )
+    }
+    
+    /// 使用预加载的视图配置 Cell
+    ///
+    /// 当 ListPreloadManager 预先创建了视图时使用此方法，
+    /// 可以跳过 parse/bind/layout/createView 阶段，直接使用预创建的视图
+    ///
+    /// - Parameters:
+    ///   - view: 预加载的视图
+    ///   - component: 预加载的组件
+    ///   - templateId: 模板标识符
+    public func configureWithPreloaded(
+        view: UIView,
+        component: Component,
+        templateId: String
+    ) {
+        // 移除旧视图
+        contentRootView?.removeFromSuperview()
+        
+        // 使用预加载的视图
+        contentView.addSubview(view)
+        view.frame = contentView.bounds
+        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        contentRootView = view
+        currentTemplateId = templateId
+        
+        // 缓存组件（用于后续 quickUpdate）
+        let viewId = TemplateXRenderEngine.shared.generateViewIdentifier(view)
+        TemplateXRenderEngine.shared.cacheComponent(component, forViewId: viewId)
+        
+        TXLogger.verbose("[TemplateXCell] configureWithPreloaded: using preloaded view")
     }
 }
 
@@ -669,7 +749,7 @@ public final class GridComponent: BaseComponent, ComponentFactory {
         cloned.style = self.style.clone()
         cloned.events = self.events
         
-        // 注意: 不在这里递归克隆子组件，由 RenderEngine.cloneComponentTree 统一处理
+        // 注意: 不在这里递归克隆子组件，由 TemplateXRenderEngine.cloneComponentTree 统一处理
         
         return cloned
     }

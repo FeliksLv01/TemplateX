@@ -43,59 +43,74 @@ TemplateX 是一个高性能的 iOS DSL 动态化渲染框架，支持通过 JSO
 ## 目录结构
 
 ```
-TemplateX/
-├── Sources/
-│   ├── TemplateX.swift              # 入口 API
-│   ├── Core/
-│   │   ├── Engine/
-│   │   │   ├── RenderEngine.swift       # 核心渲染引擎
-│   │   │   └── AsyncRenderEngine.swift  # 异步渲染引擎
-│   │   ├── Layout/
-│   │   │   ├── YogaLayoutEngine.swift   # Yoga 布局引擎封装
-│   │   │   ├── YogaCBridge.swift        # Yoga C API 桥接
-│   │   │   ├── YogaNodePool.swift       # Yoga 节点池
-│   │   │   ├── AsyncLayoutEngine.swift  # 异步布局引擎
-│   │   │   └── LayoutTypes.swift        # 布局类型定义
-│   │   ├── Template/
-│   │   │   ├── TemplateParser.swift     # 模板解析器 + 缓存
-│   │   │   ├── JSONWrapper.swift        # JSON 封装工具
-│   │   │   └── StyleParser.swift        # 样式批量解析器（性能优化）
-│   │   ├── Binding/
-│   │   │   └── DataBindingManager.swift # 数据绑定管理
-│   │   ├── Expression/
-│   │   │   └── ExpressionEngine.swift   # 表达式引擎
-│   │   ├── Diff/
-│   │   │   ├── ViewDiffer.swift         # Diff 算法
-│   │   │   ├── DiffPatcher.swift        # Patch 应用
-│   │   │   └── ViewRecyclePool.swift    # 视图回收池
-│   │   ├── Cache/
-│   │   │   ├── ComponentPool.swift      # 组件池
-│   │   │   └── LRUCache.swift           # LRU 缓存
-│   │   ├── Event/
-│   │   │   ├── EventManager.swift       # 事件管理
-│   │   │   └── GestureHandler.swift     # 手势处理
-│   │   └── Performance/
-│   │       ├── PerformanceMonitor.swift # 性能监控
-│   │       └── PreRenderOptimizer.swift # 预渲染优化
-│   ├── Components/
-│   │   ├── Component.swift              # 组件协议 + 基类 + 注册表
-│   │   ├── Views/
-│   │   │   ├── ViewComponent.swift      # 基础视图
-│   │   │   ├── TextComponent.swift      # 文本
-│   │   │   ├── ImageComponent.swift     # 图片
-│   │   │   ├── ButtonComponent.swift    # 按钮
-│   │   │   ├── InputComponent.swift     # 输入框
-│   │   │   ├── ScrollComponent.swift    # 滚动视图
-│   │   │   └── ListComponent.swift      # 列表
-│   │   └── Layouts/
-│   │       └── FlexLayoutComponent.swift # Flex 布局容器
+TemplateX/                               # Git 仓库根目录
+├── TemplateX/                           # 核心库
+│   └── Sources/
+│       ├── TemplateX.swift              # 入口 API
+│       ├── Core/
+│       │   ├── Engine/
+│       │   │   ├── RenderEngine.swift       # 核心渲染引擎
+│       │   │   └── AsyncRenderEngine.swift  # 异步渲染引擎
+│       │   ├── Layout/
+│       │   │   ├── YogaLayoutEngine.swift   # Yoga 布局引擎封装
+│       │   │   ├── YogaCBridge.swift        # Yoga C API 桥接
+│       │   │   ├── YogaNodePool.swift       # Yoga 节点池
+│       │   │   ├── AsyncLayoutEngine.swift  # 异步布局引擎
+│       │   │   └── LayoutTypes.swift        # 布局类型定义
+│       │   ├── Template/
+│       │   │   ├── TemplateParser.swift     # 模板解析器 + 缓存
+│       │   │   ├── JSONWrapper.swift        # JSON 封装工具
+│       │   │   └── StyleParser.swift        # 样式批量解析器（性能优化）
+│       │   ├── Binding/
+│       │   │   └── DataBindingManager.swift # 数据绑定管理
+│       │   ├── Expression/
+│       │   │   └── ExpressionEngine.swift   # 表达式引擎
+│       │   ├── Diff/
+│       │   │   ├── ViewDiffer.swift         # Diff 算法
+│       │   │   ├── DiffPatcher.swift        # Patch 应用
+│       │   │   └── ViewRecyclePool.swift    # 视图回收池
+│       │   ├── Cache/
+│       │   │   ├── ComponentPool.swift      # 组件池
+│       │   │   └── LRUCache.swift           # LRU 缓存
+│       │   ├── Event/
+│       │   │   ├── EventManager.swift       # 事件管理
+│       │   │   └── GestureHandler.swift     # 手势处理
+│       │   └── Performance/
+│       │       ├── PerformanceMonitor.swift # 性能监控
+│       │       └── PreRenderOptimizer.swift # 预渲染优化
+│       ├── Components/
+│       │   ├── Component.swift              # 组件协议 + 基类 + 注册表
+│       │   ├── Views/
+│       │   │   ├── ViewComponent.swift      # 基础视图
+│       │   │   ├── TextComponent.swift      # 文本
+│       │   │   ├── ImageComponent.swift     # 图片
+│       │   │   ├── ButtonComponent.swift    # 按钮
+│       │   │   ├── InputComponent.swift     # 输入框
+│       │   │   ├── ScrollComponent.swift    # 滚动视图
+│       │   │   └── ListComponent.swift      # 列表
+│       │   └── Layouts/
+│       │       └── FlexLayoutComponent.swift # Flex 布局容器
+│       └── Service/                         # Service 协议层
+│           ├── ServiceRegistry.swift        # DI 容器
+│           ├── ImageLoader/
+│           │   └── TemplateXImageLoader.swift  # 图片加载协议
+│           └── LogProvider/
+│               ├── TemplateXLogProvider.swift  # 日志协议
+│               ├── DefaultLogProvider.swift    # 默认实现（os.Logger）
+│               └── TXLogger.swift              # 日志门面类
+├── TemplateXService/                    # Service 实现层
+│   ├── Image/
+│   │   └── SDWebImageLoader.swift       # SDWebImage 实现
+│   └── Log/
+│       └── ConsoleLogProvider.swift     # Console 日志实现
 ├── Compiler/                            # XML 编译器（开发工具，不打包到库）
 │   └── ...                              
 ├── Example/
 │   └── TemplateXDemo/                   # 示例 App
 ├── Tests/
 │   └── ...                              # 单元测试
-└── TemplateX.podspec
+├── TemplateX.podspec                    # 核心库 podspec
+└── TemplateXService.podspec             # Service 实现 podspec
 ```
 
 ---
@@ -359,21 +374,7 @@ ExpressionEngine.shared.registerFunctions([func1, func2, func3])
     - **减少字典查找**：原逐属性查询 40+ 次 → 现一次遍历
     - **消除重复类型转换**：在分发时直接处理类型
 
-12. **视图扁平化（View Flattening）**
-    - **原理**：纯布局容器（无视觉效果、无事件）不创建真实 UIView
-    - **效果**：减少 UIView 层级和数量，降低内存占用和渲染开销
-    - **扁平化条件**（`canFlatten` 计算属性）：
-      - 组件类型为 `view`/`flex`/`container`
-      - 无背景色、无圆角、无边框、无阴影
-      - 不透明度为 1、无渐变背景
-      - 无事件绑定、不需要裁剪子视图
-    - **实现方式**：
-      - 扁平化组件标记 `isFlattened = true`
-      - 子组件直接添加到最近的非扁平化祖先视图
-      - 子组件的 frame 累加父组件的偏移量
-    - **影响范围**：RenderEngine、AsyncRenderEngine、DiffPatcher
-
-13. **Yoga 剪枝优化（Incremental Layout）**
+12. **Yoga 剪枝优化（Incremental Layout）**
     - **原理**：复用组件上缓存的 YGNode，只在样式变化时重新计算布局
     - **效果**：二次布局计算跳过未变化的节点，Yoga 内部会 skip clean 节点
     - **开关**：`YogaLayoutEngine.shared.enableIncrementalLayout = true`（默认开启）

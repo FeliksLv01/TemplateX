@@ -4,34 +4,49 @@ import TemplateX
 /// 基础渲染演示
 class BasicRenderDemoViewController: UIViewController {
     
-    private var containerView: UIView!
+    private var templateView: TemplateXView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = .systemGroupedBackground
         
-        setupContainerView()
+        setupTemplateView()
         renderTemplate()
     }
     
-    private func setupContainerView() {
-        containerView = UIView()
-        containerView.backgroundColor = .systemBackground
-        containerView.layer.cornerRadius = 12
-        containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        containerView.layer.shadowRadius = 8
-        containerView.layer.shadowOpacity = 0.1
-        containerView.translatesAutoresizingMaskIntoConstraints = false
+    private func setupTemplateView() {
+        // 使用 Builder 模式创建 TemplateXView
+        templateView = TemplateXView { builder in
+            builder.config = TemplateXConfig { config in
+                config.enablePerformanceMonitor = true
+                config.enableSyncFlush = true
+            }
+            builder.screenSize = UIScreen.main.bounds.size
+            builder.fontScale = 1.0
+        }
         
-        view.addSubview(containerView)
+        // 设置布局模式
+        templateView.preferredLayoutWidth = UIScreen.main.bounds.width - 32
+        templateView.preferredLayoutHeight = 200
+        templateView.layoutWidthMode = .exact
+        templateView.layoutHeightMode = .exact
+        
+        templateView.translatesAutoresizingMaskIntoConstraints = false
+        templateView.backgroundColor = .systemBackground
+        templateView.layer.cornerRadius = 12
+        templateView.layer.shadowColor = UIColor.black.cgColor
+        templateView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        templateView.layer.shadowRadius = 8
+        templateView.layer.shadowOpacity = 0.1
+        
+        view.addSubview(templateView)
         
         NSLayoutConstraint.activate([
-            containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            containerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            containerView.heightAnchor.constraint(equalToConstant: 200)
+            templateView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            templateView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            templateView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            templateView.heightAnchor.constraint(equalToConstant: 200)
         ])
     }
     
@@ -101,17 +116,7 @@ class BasicRenderDemoViewController: UIViewController {
             ]
         ]
         
-        // 渲染
-        let containerSize = CGSize(
-            width: UIScreen.main.bounds.width - 32,
-            height: 200
-        )
-        
-        if let renderedView = RenderEngine.shared.render(
-            json: template,
-            containerSize: containerSize
-        ) {
-            containerView.addSubview(renderedView)
-        }
+        // 使用 TemplateXView 加载模板
+        templateView.loadTemplate(json: template)
     }
 }

@@ -93,6 +93,20 @@ public final class TemplateLoader {
         return loadFromFile(url: url)
     }
     
+    /// 从 Bundle 加载模板 JSON 字典
+    public func loadJSONFromBundle(name: String, bundle: Bundle = .main) -> [String: Any]? {
+        guard let url = bundle.url(forResource: name, withExtension: "json") else {
+            TXLogger.error("Template not found in bundle: \(name)")
+            return nil
+        }
+        guard let data = try? Data(contentsOf: url),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            TXLogger.error("Failed to parse JSON: \(name)")
+            return nil
+        }
+        return json
+    }
+    
     /// 从文件路径加载模板
     public func loadFromFile(path: String) -> Component? {
         let url = URL(fileURLWithPath: path)
@@ -213,5 +227,19 @@ public final class TemplateCache {
         os_unfair_lock_lock(&unfairLock)
         defer { os_unfair_lock_unlock(&unfairLock) }
         return cache.count
+    }
+    
+    /// 裁剪缓存到指定数量
+    ///
+    /// 按 LRU 顺序移除最旧的条目，直到缓存数量 <= count
+    /// - Parameter count: 目标缓存数量
+    public func trimToCount(_ count: Int) {
+        os_unfair_lock_lock(&unfairLock)
+        defer { os_unfair_lock_unlock(&unfairLock) }
+        
+        while cache.count > count && !accessOrder.isEmpty {
+            let oldest = accessOrder.removeFirst()
+            cache.removeValue(forKey: oldest)
+        }
     }
 }

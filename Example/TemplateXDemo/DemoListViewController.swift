@@ -44,7 +44,7 @@ class DemoListViewController: UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         
         // 配置引擎
-        RenderEngine.shared.config.enablePerformanceMonitor = true
+        TemplateXRenderEngine.shared.config.enablePerformanceMonitor = true
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

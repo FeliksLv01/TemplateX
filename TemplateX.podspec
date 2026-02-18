@@ -9,6 +9,7 @@ Pod::Spec.new do |s|
     - 视图树 Diff 和复用
     - XML 开发态编译为 JSON 运行态
     - 事件系统和数据绑定
+    - Service 层可插拔（ImageLoader、LogProvider）
   DESC
 
   s.homepage         = 'https://github.com/FeliksLv01/TemplateX'
@@ -19,16 +20,12 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '13.4'
   s.swift_version = '5.7'
   
-  s.static_framework = true
+  s.frameworks = 'UIKit', 'Foundation'
 
-  # 源文件
-  s.source_files = 'Sources/**/*.swift'
+  # 核心 + Service 协议层（包含默认 LogProvider）
+  s.source_files = 'TemplateX/Sources/**/*.swift'
+  s.exclude_files = 'TemplateX/Sources/Core/Expression/Grammar/*.g4'
   
-  # 排除 ANTLR4 语法文件
-  s.exclude_files = 'Sources/Core/Expression/Grammar/*.g4'
-
   s.dependency 'Yoga', '~> 3.0'
   s.dependency 'Antlr4', '~> 4.13'
-  
-  s.frameworks = 'UIKit', 'Foundation'
 end

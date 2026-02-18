@@ -133,18 +133,16 @@ public final class ImageComponent: BaseComponent, ComponentFactory {
         }
     }
     
-    /// 加载图片
+    /// 加载图片（通过 ServiceRegistry.imageLoader）
     private func loadImage(into imageView: UIImageView) {
         guard !src.isEmpty else { return }
         
-        // 本地图片
-        if let localImage = UIImage(named: src) {
-            imageView.image = applyTintIfNeeded(localImage)
-            return
-        }
-        
-        // 网络图片 - 使用 ImageLoader
-        ImageLoader.shared.loadImage(url: src, placeholder: placeholder) { [weak imageView, weak self] image in
+        // 使用 ServiceRegistry 获取图片加载器
+        ServiceRegistry.shared.imageLoader.loadImage(
+            url: src,
+            placeholder: placeholder,
+            into: imageView
+        ) { [weak imageView, weak self] image in
             guard let imageView = imageView, let image = image else { return }
             imageView.image = self?.applyTintIfNeeded(image) ?? image
         }
@@ -199,70 +197,5 @@ public final class ImageComponent: BaseComponent, ComponentFactory {
         case "right": return .right
         default: return .scaleAspectFill
         }
-    }
-}
-
-// MARK: - 简单的图片加载器
-
-/// 图片加载器（简化版，实际项目应使用 SDWebImage 等）
-public final class ImageLoader {
-    
-    public static let shared = ImageLoader()
-    
-    /// 内存缓存
-    private let cache = NSCache<NSString, UIImage>()
-    
-    private init() {
-        cache.countLimit = 100
-        cache.totalCostLimit = 50 * 1024 * 1024  // 50MB
-    }
-    
-    /// 加载图片
-    public func loadImage(
-        url: String,
-        placeholder: String? = nil,
-        completion: @escaping (UIImage?) -> Void
-    ) {
-        // 检查缓存
-        if let cached = cache.object(forKey: url as NSString) {
-            DispatchQueue.main.async {
-                completion(cached)
-            }
-            return
-        }
-        
-        // 显示占位图
-        if let ph = placeholder, let phImage = UIImage(named: ph) {
-            DispatchQueue.main.async {
-                completion(phImage)
-            }
-        }
-        
-        // 加载网络图片
-        guard let imageURL = URL(string: url) else {
-            completion(nil)
-            return
-        }
-        
-        URLSession.shared.dataTask(with: imageURL) { [weak self] data, _, error in
-            guard let data = data, error == nil, let image = UIImage(data: data) else {
-                DispatchQueue.main.async {
-                    completion(nil)
-                }
-                return
-            }
-            
-            // 缓存
-            self?.cache.setObject(image, forKey: url as NSString, cost: data.count)
-            
-            DispatchQueue.main.async {
-                completion(image)
-            }
-        }.resume()
-    }
-    
-    /// 清除缓存
-    public func clearCache() {
-        cache.removeAllObjects()
     }
 }

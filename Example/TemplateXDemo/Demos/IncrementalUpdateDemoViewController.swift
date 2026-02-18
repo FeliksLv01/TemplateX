@@ -4,12 +4,70 @@ import TemplateX
 /// 增量更新演示
 class IncrementalUpdateDemoViewController: UIViewController {
     
-    private var containerView: UIView!
-    private var renderedView: UIView?
+    private var templateView: TemplateXView!
     private var logTextView: UITextView!
     
     private var counter = 0
     private var timer: Timer?
+    
+    // 统一 style 格式
+    private let template: [String: Any] = [
+        "type": "flex",
+        "id": "counter_card",
+        "style": [
+            "width": "100%",
+            "height": "100%",
+            "flexDirection": "column",
+            "justifyContent": "center",
+            "alignItems": "center",
+            "padding": 16,
+            "backgroundColor": "#FFFFFF"
+        ],
+        "children": [
+            [
+                "type": "text",
+                "id": "counter_label",
+                "style": [
+                    "width": "auto",
+                    "height": "auto",
+                    "fontSize": 14,
+                    "textColor": "#666666"
+                ],
+                "props": [
+                    "text": "计数器"
+                ]
+            ],
+            [
+                "type": "text",
+                "id": "counter_value",
+                "style": [
+                    "width": "auto",
+                    "height": "auto",
+                    "marginTop": 8,
+                    "fontSize": 48,
+                    "fontWeight": "bold",
+                    "textColor": "#007AFF"
+                ],
+                "props": [
+                    "text": "${count}"
+                ]
+            ],
+            [
+                "type": "text",
+                "id": "update_time",
+                "style": [
+                    "width": "auto",
+                    "height": "auto",
+                    "marginTop": 8,
+                    "fontSize": 12,
+                    "textColor": "#999999"
+                ],
+                "props": [
+                    "text": "${'更新时间: ' + timestamp}"
+                ]
+            ]
+        ]
+    ]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,12 +84,27 @@ class IncrementalUpdateDemoViewController: UIViewController {
     }
     
     private func setupUI() {
-        // 容器视图
-        containerView = UIView()
-        containerView.backgroundColor = .systemBackground
-        containerView.layer.cornerRadius = 12
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(containerView)
+        // 使用 Builder 模式创建 TemplateXView
+        templateView = TemplateXView { builder in
+            builder.config = TemplateXConfig { config in
+                config.enablePerformanceMonitor = true
+                config.enableSyncFlush = true
+            }
+            builder.screenSize = UIScreen.main.bounds.size
+            builder.fontScale = 1.0
+        }
+        
+        // 设置布局模式
+        templateView.preferredLayoutWidth = UIScreen.main.bounds.width - 32
+        templateView.preferredLayoutHeight = 150
+        templateView.layoutWidthMode = .exact
+        templateView.layoutHeightMode = .exact
+        
+        templateView.translatesAutoresizingMaskIntoConstraints = false
+        templateView.backgroundColor = .systemBackground
+        templateView.layer.cornerRadius = 12
+        
+        view.addSubview(templateView)
         
         // 控制按钮
         let startButton = UIButton(type: .system)
@@ -56,13 +129,13 @@ class IncrementalUpdateDemoViewController: UIViewController {
         view.addSubview(logTextView)
         
         NSLayoutConstraint.activate([
-            containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            containerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            containerView.heightAnchor.constraint(equalToConstant: 150),
+            templateView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            templateView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            templateView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            templateView.heightAnchor.constraint(equalToConstant: 150),
             
             startButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            startButton.topAnchor.constraint(equalTo: containerView.bottomAnchor, constant: 16),
+            startButton.topAnchor.constraint(equalTo: templateView.bottomAnchor, constant: 16),
             
             stopButton.leadingAnchor.constraint(equalTo: startButton.trailingAnchor, constant: 20),
             stopButton.centerYAnchor.constraint(equalTo: startButton.centerYAnchor),
@@ -75,84 +148,13 @@ class IncrementalUpdateDemoViewController: UIViewController {
     }
     
     private func renderTemplate() {
-        // 统一 style 格式
-        let template: [String: Any] = [
-            "type": "flex",
-            "id": "counter_card",
-            "style": [
-                "width": "100%",
-                "height": "100%",
-                "flexDirection": "column",
-                "justifyContent": "center",
-                "alignItems": "center",
-                "padding": 16,
-                "backgroundColor": "#FFFFFF"
-            ],
-            "children": [
-                [
-                    "type": "text",
-                    "id": "counter_label",
-                    "style": [
-                        "width": "auto",
-                        "height": "auto",
-                        "fontSize": 14,
-                        "textColor": "#666666"
-                    ],
-                    "props": [
-                        "text": "计数器"
-                    ]
-                ],
-                [
-                    "type": "text",
-                    "id": "counter_value",
-                    "style": [
-                        "width": "auto",
-                        "height": "auto",
-                        "marginTop": 8,
-                        "fontSize": 48,
-                        "fontWeight": "bold",
-                        "textColor": "#007AFF"
-                    ],
-                    "props": [
-                        "text": "${count}"
-                    ]
-                ],
-                [
-                    "type": "text",
-                    "id": "update_time",
-                    "style": [
-                        "width": "auto",
-                        "height": "auto",
-                        "marginTop": 8,
-                        "fontSize": 12,
-                        "textColor": "#999999"
-                    ],
-                    "props": [
-                        "text": "${'更新时间: ' + timestamp}"
-                    ]
-                ]
-            ]
-        ]
-        
-        let containerSize = CGSize(
-            width: UIScreen.main.bounds.width - 32,
-            height: 150
-        )
-        
         let data: [String: Any] = [
             "count": counter,
             "timestamp": currentTimestamp()
         ]
         
-        renderedView = RenderEngine.shared.render(
-            json: template,
-            data: data,
-            containerSize: containerSize
-        )
-        
-        if let view = renderedView {
-            containerView.addSubview(view)
-        }
+        // 使用 TemplateXView 加载模板
+        templateView.loadTemplate(json: template, data: data)
         
         appendLog("初始渲染完成")
     }
@@ -179,24 +181,14 @@ class IncrementalUpdateDemoViewController: UIViewController {
             "timestamp": currentTimestamp()
         ]
         
-        guard let view = renderedView else { return }
-        
         let startTime = CFAbsoluteTimeGetCurrent()
         
-        let containerSize = CGSize(
-            width: UIScreen.main.bounds.width - 32,
-            height: 150
-        )
-        
-        let operationCount = RenderEngine.shared.update(
-            view: view,
-            data: data,
-            containerSize: containerSize
-        )
+        // 使用 TemplateXView 的增量更新方法
+        templateView.updateData(data)
         
         let duration = (CFAbsoluteTimeGetCurrent() - startTime) * 1000
         
-        appendLog(String(format: "更新 #%d: %d 操作, %.2fms", counter, operationCount, duration))
+        appendLog(String(format: "更新 #%d: %.2fms", counter, duration))
     }
     
     private func currentTimestamp() -> String {

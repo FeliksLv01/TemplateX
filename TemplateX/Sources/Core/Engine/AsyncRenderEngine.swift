@@ -10,11 +10,11 @@ import UIKit
 /// - 支持任务取消（Cell 快速滑动场景）
 /// - 使用 RenderTask 封装任务，支持通过 taskId 取消
 /// - 在主线程 UI 操作前检查取消状态
-public final class AsyncRenderEngine {
+public final class AsyncTemplateXRenderEngine {
     
     // MARK: - Singleton
     
-    public static let shared = AsyncRenderEngine()
+    public static let shared = AsyncTemplateXRenderEngine()
     
     // MARK: - Configuration
     
@@ -156,7 +156,7 @@ public final class AsyncRenderEngine {
                     self.cancelledTaskCount += 1
                     let count = self.cancelledTaskCount
                     self.taskLock.unlock()
-                    TXLogger.debug("AsyncRenderEngine: task cancelled before UI creation, total cancelled: \(count)")
+                    TXLogger.debug("AsyncTemplateXRenderEngine: task cancelled before UI creation, total cancelled: \(count)")
                     #endif
                     return
                 }
@@ -574,7 +574,7 @@ public final class AsyncRenderEngine {
         activeTasks.removeAll()
         taskLock.unlock()
         
-        TXLogger.debug("AsyncRenderEngine: cancelled all tasks")
+        TXLogger.debug("AsyncTemplateXRenderEngine: cancelled all tasks")
     }
     
     /// 获取当前活跃任务数量
@@ -596,98 +596,37 @@ public final class AsyncRenderEngine {
     
     // MARK: - Private: 布局应用
     
-    /// 应用布局结果到组件树（支持扁平化偏移累加）
-    ///
-    /// Yoga 返回的是相对于父节点的坐标。对于扁平化的父组件（没有创建 UIView），
-    /// 其子组件的 view 实际上被添加到了更上层的祖先视图中，所以需要累加扁平化父组件的偏移。
-    ///
-    /// 注意：此方法在 createViewTree() 之前调用，所以需要使用 canFlatten 来判断
-    /// 是否需要扁平化，并同时设置 isFlattened 标记。
+    /// 应用布局结果到组件树
     ///
     /// - Parameters:
     ///   - results: Yoga 计算的布局结果（相对坐标）
     ///   - component: 目标组件
-    ///   - parentOffset: 扁平化父组件的累计偏移
     private func applyLayoutResults(
         _ results: [String: LayoutResult],
-        to component: Component,
-        parentOffset: CGPoint = .zero
+        to component: Component
     ) {
         // 获取 Yoga 计算的相对坐标
-        guard let result = results[component.id] else {
-            // 如果没有布局结果，继续处理子组件
-            for child in component.children {
-                applyLayoutResults(results, to: child, parentOffset: parentOffset)
-            }
-            return
-        }
-        
-        // 计算当前组件应该累加到子组件的偏移
-        var offsetForChildren: CGPoint = .zero
-        
-        // 应用布局结果
-        var adjustedResult = result
-        
-        // 使用 canFlatten 判断（因为此方法在 createViewTree 之前调用，isFlattened 可能还未设置）
-        // 同时设置 isFlattened 标记，供后续 createViewTree 使用
-        let shouldFlatten = component.canFlatten
-        if shouldFlatten {
-            component.isFlattened = true
-            // 扁平化组件：不设置自己的 frame（因为没有 view）
-            // 但需要把自己的位置偏移传递给子组件
-            offsetForChildren = CGPoint(
-                x: parentOffset.x + result.frame.origin.x,
-                y: parentOffset.y + result.frame.origin.y
-            )
-            component.layoutResult = result  // 保留原始结果用于其他用途
-        } else {
-            component.isFlattened = false
-            // 非扁平化组件：累加父偏移到自己的 frame
-            if parentOffset != .zero {
-                adjustedResult.frame.origin.x += parentOffset.x
-                adjustedResult.frame.origin.y += parentOffset.y
-            }
-            component.layoutResult = adjustedResult
-            // 非扁平化组件的子组件不需要额外偏移
-            offsetForChildren = .zero
+        if let result = results[component.id] {
+            component.layoutResult = result
         }
         
         // 递归处理子组件
         for child in component.children {
-            applyLayoutResults(results, to: child, parentOffset: offsetForChildren)
+            applyLayoutResults(results, to: child)
         }
     }
     
-    // MARK: - Private: 视图创建（必须主线程，支持扁平化）
+    // MARK: - Private: 视图创建（必须主线程）
     
-    /// 创建视图树（支持视图扁平化）
+    /// 创建视图树
     ///
-    /// 扁平化原理：
-    /// - 纯布局容器（无视觉效果、无事件）不创建真实 UIView
-    /// - 子组件直接添加到最近的非扁平化祖先视图
-    ///
-    /// 注意：此方法只创建视图层级，不处理布局偏移。
-    /// 布局偏移统一在 applyLayoutResults() 中处理。
+    /// - Parameters:
+    ///   - component: 组件
+    /// - Returns: 创建的视图
     private func createViewTree(_ component: Component) -> UIView {
         assert(Thread.isMainThread, "createViewTree must be called on main thread")
         
-        // 检查是否可以扁平化
-        if component.canFlatten {
-            component.isFlattened = true
-            
-            // 创建临时容器收集子视图
-            let tempContainer = UIView()
-            tempContainer.isHidden = true
-            
-            for child in component.children {
-                let childView = createViewTree(child)
-                tempContainer.addSubview(childView)
-            }
-            
-            return tempContainer
-        }
-        
-        // 非扁平化：正常创建视图
+        // 创建或复用视图
         let view: UIView
         if let existingView = component.view {
             view = existingView
@@ -707,19 +646,9 @@ public final class AsyncRenderEngine {
         
         // 递归创建子视图
         for child in component.children {
-            let result = createViewTree(child)
-            
-            // 检查是否是扁平化产生的临时容器
-            if result.isHidden && result.componentType == nil {
-                // 提取临时容器中的所有子视图
-                for subview in result.subviews {
-                    subview.removeFromSuperview()
-                    view.addSubview(subview)
-                }
-            } else {
-                if result.superview !== view {
-                    view.addSubview(result)
-                }
+            let childView = createViewTree(child)
+            if childView.superview !== view {
+                view.addSubview(childView)
             }
         }
         
@@ -828,7 +757,7 @@ private final class UnfairLock {
 // MARK: - Async/Await 支持 (iOS 13+)
 
 @available(iOS 13.0, *)
-extension AsyncRenderEngine {
+extension AsyncTemplateXRenderEngine {
     
     /// 使用 async/await 渲染 JSON
     public func render(
@@ -895,7 +824,7 @@ extension AsyncRenderEngine {
 /// 使用示例：
 /// ```swift
 /// // 方式1：使用 taskId 自动取消旧任务
-/// AsyncRenderEngine.shared.renderAsync(
+/// AsyncTemplateXRenderEngine.shared.renderAsync(
 ///     json: template,
 ///     data: itemData,
 ///     containerSize: cellSize,
@@ -905,7 +834,7 @@ extension AsyncRenderEngine {
 /// }
 ///
 /// // 方式2：手动管理任务
-/// let task = AsyncRenderEngine.shared.renderAsync(json: template, ...) { ... }
+/// let task = AsyncTemplateXRenderEngine.shared.renderAsync(json: template, ...) { ... }
 /// // 稍后取消
 /// task.cancel()
 /// ```
