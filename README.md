@@ -81,7 +81,7 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions ...
 import TemplateX
 
 let template: [String: Any] = [
-    "type": "flex",
+    "type": "container",
     "id": "card",
     "style": [
         "width": "100%",
@@ -145,7 +145,7 @@ TemplateXRenderEngine.shared.update(view: view, data: newData, containerSize: si
 
 ```swift
 let template: [String: Any] = [
-    "type": "flex",
+    "type": "container",
     "id": "card",
     "style": ["width": "100%", "flexDirection": "column"],
     "children": [
@@ -386,7 +386,7 @@ ExpressionEngine.shared.registerFunction(name: "formatPrice") { args in
     "props": {
         "items": "\${products}",  // 绑定数据源
         "itemTemplate": {
-            "type": "flex",
+            "type": "container",
             "style": { "padding": 16 },
             "children": [
                 {
@@ -708,7 +708,7 @@ func application(...) {
 
 ```json
 {
-    "type": "flex",
+    "type": "container",
     "style": { "flexDirection": "column", "gap": 8 },
     "children": [
         {
@@ -724,7 +724,7 @@ func application(...) {
             "props": { "text": "距您 ${formatDistance(item.distance)}" }
         },
         {
-            "type": "view",
+            "type": "container",
             "bindings": { "display": "${isVip()}" },
             "children": [
                 { "type": "text", "props": { "text": "VIP 专属" } }

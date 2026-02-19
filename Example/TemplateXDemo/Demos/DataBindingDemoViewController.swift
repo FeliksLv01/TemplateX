@@ -22,7 +22,7 @@ class DataBindingDemoViewController: UIViewController {
     
     // 用户信息卡片模板 - 统一 style 格式
     private let template: [String: Any] = [
-        "type": "flex",
+        "type": "container",
         "id": "user_card",
         "style": [
             "width": "100%",
@@ -34,7 +34,7 @@ class DataBindingDemoViewController: UIViewController {
         "children": [
             // 用户名 + VIP 标识
             [
-                "type": "flex",
+                "type": "container",
                 "id": "header",
                 "style": ["width": "100%", "height": "auto", "flexDirection": "row", "alignItems": "center"],
                 "children": [
@@ -92,12 +92,12 @@ class DataBindingDemoViewController: UIViewController {
             ],
             // 统计数据
             [
-                "type": "flex",
+                "type": "container",
                 "id": "stats_row",
                 "style": ["width": "100%", "height": "auto", "flexDirection": "row", "marginTop": 16],
                 "children": [
                     [
-                        "type": "flex",
+                        "type": "container",
                         "id": "followers_stat",
                         "style": ["flexGrow": 1, "flexDirection": "column", "alignItems": "center"],
                         "children": [
@@ -132,7 +132,7 @@ class DataBindingDemoViewController: UIViewController {
                         ]
                     ],
                     [
-                        "type": "flex",
+                        "type": "container",
                         "id": "following_stat",
                         "style": ["flexGrow": 1, "flexDirection": "column", "alignItems": "center"],
                         "children": [
@@ -167,7 +167,7 @@ class DataBindingDemoViewController: UIViewController {
                         ]
                     ],
                     [
-                        "type": "flex",
+                        "type": "container",
                         "id": "posts_stat",
                         "style": ["flexGrow": 1, "flexDirection": "column", "alignItems": "center"],
                         "children": [
@@ -220,7 +220,6 @@ class DataBindingDemoViewController: UIViewController {
         templateView = TemplateXView { builder in
             builder.config = TemplateXConfig { config in
                 config.enablePerformanceMonitor = true
-                config.enableSyncFlush = true
             }
             builder.screenSize = UIScreen.main.bounds.size
             builder.fontScale = 1.0

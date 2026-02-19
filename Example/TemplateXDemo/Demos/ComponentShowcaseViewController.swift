@@ -49,7 +49,7 @@ class ComponentShowcaseViewController: UIViewController {
         addSection(title: "Text 文本组件")
         addDemo(
             template: [
-                "type": "flex",
+                "type": "container",
                 "id": "text_demo",
                 "style": ["width": "100%", "height": "auto", "flexDirection": "column", "padding": 16, "backgroundColor": "#FFFFFF", "cornerRadius": 8],
                 "children": [
@@ -122,7 +122,7 @@ class ComponentShowcaseViewController: UIViewController {
         addSection(title: "Button 按钮组件")
         addDemo(
             template: [
-                "type": "flex",
+                "type": "container",
                 "id": "button_demo",
                 "style": ["width": "100%", "height": "auto", "flexDirection": "column", "padding": 16, "backgroundColor": "#FFFFFF", "cornerRadius": 8],
                 "children": [
@@ -180,7 +180,7 @@ class ComponentShowcaseViewController: UIViewController {
         addSection(title: "Input 输入框组件")
         addDemo(
             template: [
-                "type": "flex",
+                "type": "container",
                 "id": "input_demo",
                 "style": ["width": "100%", "height": "auto", "flexDirection": "column", "padding": 16, "backgroundColor": "#FFFFFF", "cornerRadius": 8],
                 "children": [
@@ -240,12 +240,12 @@ class ComponentShowcaseViewController: UIViewController {
         addSection(title: "Image 图片组件")
         addDemo(
             template: [
-                "type": "flex",
+                "type": "container",
                 "id": "image_demo",
                 "style": ["width": "100%", "height": "auto", "flexDirection": "row", "padding": 16, "backgroundColor": "#FFFFFF", "cornerRadius": 8],
                 "children": [
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "img_placeholder1",
                         "style": [
                             "width": 80,
@@ -255,7 +255,7 @@ class ComponentShowcaseViewController: UIViewController {
                         ]
                     ],
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "img_placeholder2",
                         "style": [
                             "width": 80,
@@ -266,7 +266,7 @@ class ComponentShowcaseViewController: UIViewController {
                         ]
                     ],
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "img_placeholder3",
                         "style": [
                             "width": 80,
@@ -286,13 +286,13 @@ class ComponentShowcaseViewController: UIViewController {
         addSection(title: "Style 样式属性")
         addDemo(
             template: [
-                "type": "flex",
+                "type": "container",
                 "id": "style_demo",
                 "style": ["width": "100%", "height": "auto", "flexDirection": "row", "flexWrap": "wrap", "padding": 16, "backgroundColor": "#FFFFFF", "cornerRadius": 8],
                 "children": [
                     // 渐变背景
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "gradient_box",
                         "style": [
                             "width": 80,
@@ -307,7 +307,7 @@ class ComponentShowcaseViewController: UIViewController {
                     ],
                     // 边框
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "border_box",
                         "style": [
                             "width": 80,
@@ -321,7 +321,7 @@ class ComponentShowcaseViewController: UIViewController {
                     ],
                     // 阴影
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "shadow_box",
                         "style": [
                             "width": 80,
@@ -337,7 +337,7 @@ class ComponentShowcaseViewController: UIViewController {
                     ],
                     // 透明度
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "opacity_box",
                         "style": [
                             "width": 80,
@@ -412,7 +412,7 @@ class ComponentShowcaseViewController: UIViewController {
             ],
             "props": [
                 "itemTemplate": [
-                    "type": "flex",
+                    "type": "container",
                     "id": "list_item",
                     "style": [
                         "width": "100%",
@@ -426,7 +426,7 @@ class ComponentShowcaseViewController: UIViewController {
                     "children": [
                         // 左侧图标
                         [
-                            "type": "view",
+                            "type": "container",
                             "id": "icon",
                             "style": [
                                 "width": 40,
@@ -437,7 +437,7 @@ class ComponentShowcaseViewController: UIViewController {
                         ],
                         // 中间信息
                         [
-                            "type": "flex",
+                            "type": "container",
                             "id": "info",
                             "style": [
                                 "flexGrow": 1,

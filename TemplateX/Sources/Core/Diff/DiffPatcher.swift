@@ -224,6 +224,13 @@ public final class DiffPatcher {
     
     /// 递归创建视图树（只创建视图，不计算布局）
     private func createViewTreeOnly(_ component: Component) -> UIView {
+        // 检查解析错误
+        if let baseComponent = component as? BaseComponent, let error = baseComponent.parseError {
+            let errorView = Self.createErrorView(for: error, componentType: component.type)
+            component.view = errorView
+            return errorView
+        }
+        
         // 创建或复用视图
         let view: UIView
         if config.enableViewRecycle, let recycledView = viewRecyclePool.dequeueView(forType: component.type) {
@@ -248,6 +255,43 @@ public final class DiffPatcher {
         }
         
         return view
+    }
+    
+    /// 创建错误视图
+    private static func createErrorView(for error: Error, componentType: String) -> UIView {
+        #if DEBUG
+        let container = UIView()
+        container.backgroundColor = UIColor.red.withAlphaComponent(0.3)
+        container.layer.borderColor = UIColor.red.cgColor
+        container.layer.borderWidth = 1
+        
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.font = UIFont.systemFont(ofSize: 10)
+        label.textColor = .red
+        label.textAlignment = .center
+        
+        if let decodingError = error as? DecodingError, case .keyNotFound(let key, _) = decodingError {
+            label.text = "[\(componentType)] Missing: \(key.stringValue)"
+        } else {
+            label.text = "[\(componentType)] Parse Error"
+        }
+        
+        container.addSubview(label)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 4),
+            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -4),
+            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 4),
+            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4)
+        ])
+        
+        return container
+        #else
+        let view = UIView()
+        view.isHidden = true
+        return view
+        #endif
     }
     
     // MARK: - Delete

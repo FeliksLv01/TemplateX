@@ -13,7 +13,7 @@ import UIKit
 /// // 从 JSON 字符串渲染
 /// let json = """
 /// {
-///   "type": "view",
+///   "type": "container",
 ///   "props": { "width": -1, "height": 100, "backgroundColor": "#FF0000" }
 /// }
 /// """

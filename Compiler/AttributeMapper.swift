@@ -9,14 +9,15 @@ public struct AttributeMapper {
     
     /// XML 标签名 → JSON 组件类型
     public static let componentTypeMap: [String: String] = [
-        // Flexbox 布局容器
-        "Flex": "flex",
-        "FlexLayout": "flex",
+        // Flexbox 布局容器（全部映射到 container）
+        "Flex": "container",
+        "FlexLayout": "container",
         "Container": "container",
-        "Box": "flex",
-        "Row": "flex",        // 水平 flex
-        "Column": "flex",     // 垂直 flex
-        "Stack": "flex",      // 层叠（使用 position: absolute）
+        "Box": "container",
+        "Row": "container",        // 水平 flex
+        "Column": "container",     // 垂直 flex
+        "Stack": "container",      // 层叠（使用 position: absolute）
+        "View": "container",
         
         // 滚动容器
         "ScrollView": "scroll",
@@ -25,7 +26,6 @@ public struct AttributeMapper {
         "RecyclerView": "list",
         
         // 基础视图
-        "View": "view",
         "Text": "text",
         "TextView": "text",
         "Image": "image",

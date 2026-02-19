@@ -4,142 +4,85 @@ import UIKit
 
 /// 滚动视图组件
 /// 支持水平/垂直滚动，弹性效果，分页
-public final class ScrollComponent: BaseComponent, ComponentFactory {
+final class ScrollComponent: TemplateXComponent<TemplateXScrollView, ScrollComponent.Props> {
     
-    // MARK: - ComponentFactory
+    // MARK: - Props
     
-    public static var typeIdentifier: String { "scroll" }
-    
-    public static func create(from json: JSONWrapper) -> Component? {
-        let id = json.id ?? UUID().uuidString
-        let component = ScrollComponent(id: id)
-        component.jsonWrapper = json
-        component.parseFromJSON(json)
-        return component
+    struct Props: ComponentProps {
+        var direction: String?
+        var scrollDirection: String?
+        @Default<True> var showsIndicator: Bool
+        @Default<True> var bounces: Bool
+        @Default<False> var pagingEnabled: Bool
+        var contentInsetTop: CGFloat?
+        var contentInsetLeft: CGFloat?
+        var contentInsetBottom: CGFloat?
+        var contentInsetRight: CGFloat?
+        
+        /// 获取滚动方向
+        var scrollDir: ScrollDirection {
+            let dir = direction ?? scrollDirection ?? "vertical"
+            return ScrollDirection(rawValue: dir.lowercased()) ?? .vertical
+        }
+        
+        /// 获取内容边距
+        var contentInset: UIEdgeInsets {
+            UIEdgeInsets(
+                top: contentInsetTop ?? 0,
+                left: contentInsetLeft ?? 0,
+                bottom: contentInsetBottom ?? 0,
+                right: contentInsetRight ?? 0
+            )
+        }
     }
     
-    // MARK: - Properties
-    
     /// 滚动方向
-    public enum ScrollDirection: String {
+    enum ScrollDirection: String {
         case horizontal
         case vertical
         case both
     }
     
-    /// 滚动方向
-    public var direction: ScrollDirection = .vertical
+    // MARK: - ComponentFactory
     
-    /// 是否显示滚动指示器
-    public var showsIndicator: Bool = true
+    override class var typeIdentifier: String { "scroll" }
     
-    /// 是否启用弹性效果
-    public var bounces: Bool = true
+    // MARK: - 事件回调
     
-    /// 是否启用分页
-    public var pagingEnabled: Bool = false
+    var onScroll: ((CGPoint) -> Void)?
+    var onScrollEnd: ((CGPoint) -> Void)?
     
-    /// 内容边距
-    public var contentInset: EdgeInsets = .zero
+    // MARK: - View Lifecycle
     
-    /// 滚动事件回调
-    public var onScroll: ((CGPoint) -> Void)?
-    public var onScrollEnd: ((CGPoint) -> Void)?
-    
-    // MARK: - Init
-    
-    public init(id: String = UUID().uuidString) {
-        super.init(id: id, type: ScrollComponent.typeIdentifier)
-    }
-    
-    // MARK: - Clone
-    
-    public override func clone() -> Component {
-        let cloned = ScrollComponent(id: self.id)
-        cloned.jsonWrapper = self.jsonWrapper
-        cloned.style = self.style.clone()
-        cloned.events = self.events
-        
-        // 复制 Scroll 特有属性
-        cloned.direction = self.direction
-        cloned.showsIndicator = self.showsIndicator
-        cloned.bounces = self.bounces
-        cloned.pagingEnabled = self.pagingEnabled
-        cloned.contentInset = self.contentInset
-        
-        // 注意: 不在这里递归克隆子组件，由 RenderEngine.cloneComponentTree 统一处理
-        
-        return cloned
-    }
-    
-    // MARK: - Parse
-    
-    private func parseFromJSON(_ json: JSONWrapper) {
-        // 使用基类的通用解析方法
-        parseBaseParams(from: json)
-        
-        // 滚动视图默认裁剪
-        style.clipsToBounds = true
-        
-        // 解析滚动特有属性
-        if let props = json.props {
-            parseScrollProps(from: props)
-        }
-        
-        // 解析事件
-        if let eventsJson = json.events {
-            events = eventsJson.rawDictionary
-        }
-    }
-    
-    private func parseScrollProps(from props: JSONWrapper) {
-        if let dir = props.string("direction") {
-            direction = ScrollDirection(rawValue: dir.lowercased()) ?? .vertical
-        } else if let dir = props.string("scrollDirection") {
-            direction = ScrollDirection(rawValue: dir.lowercased()) ?? .vertical
-        }
-        
-        showsIndicator = props.bool("showsIndicator", default: true)
-        bounces = props.bool("bounces", default: true)
-        pagingEnabled = props.bool("pagingEnabled", default: false)
-        
-        // 内容边距
-        contentInset = props.edgeInsets("contentInset")
-    }
-    
-    // MARK: - View
-    
-    public override func createView() -> UIView {
+    override func createView() -> UIView {
         let scrollView = TemplateXScrollView()
-        scrollView.direction = direction
-        scrollView.showsHorizontalScrollIndicator = showsIndicator && (direction == .horizontal || direction == .both)
-        scrollView.showsVerticalScrollIndicator = showsIndicator && (direction == .vertical || direction == .both)
-        scrollView.bounces = bounces
-        scrollView.isPagingEnabled = pagingEnabled
-        scrollView.contentInset = contentInset.uiEdgeInsets
         scrollView.delegate = scrollView
-        scrollView.onScroll = onScroll
-        scrollView.onScrollEnd = onScrollEnd
         self.view = scrollView
         return scrollView
     }
     
-    public override func updateView() {
-        if let scrollView = view as? TemplateXScrollView {
-            scrollView.direction = direction
-            scrollView.showsHorizontalScrollIndicator = showsIndicator && (direction == .horizontal || direction == .both)
-            scrollView.showsVerticalScrollIndicator = showsIndicator && (direction == .vertical || direction == .both)
-            scrollView.bounces = bounces
-            scrollView.isPagingEnabled = pagingEnabled
-            scrollView.contentInset = contentInset.uiEdgeInsets
-            scrollView.onScroll = onScroll
-            scrollView.onScrollEnd = onScrollEnd
-        }
-        super.updateView()
+    override func didParseProps() {
+        // 滚动视图默认裁剪
+        style.clipsToBounds = true
     }
     
+    override func configureView(_ view: TemplateXScrollView) {
+        let direction = props.scrollDir
+        
+        view.direction = direction
+        view.showsHorizontalScrollIndicator = props.showsIndicator && (direction == .horizontal || direction == .both)
+        view.showsVerticalScrollIndicator = props.showsIndicator && (direction == .vertical || direction == .both)
+        view.bounces = props.bounces
+        view.isPagingEnabled = props.pagingEnabled
+        view.contentInset = props.contentInset
+        view.onScroll = onScroll
+        view.onScrollEnd = onScrollEnd
+    }
+    
+    // MARK: - Public Methods
+    
     /// 更新内容尺寸
-    public func updateContentSize() {
+    func updateContentSize() {
         guard let scrollView = view as? UIScrollView else { return }
         
         // 计算所有子视图的 bounds
@@ -148,7 +91,7 @@ public final class ScrollComponent: BaseComponent, ComponentFactory {
             contentRect = contentRect.union(subview.frame)
         }
         
-        // 添加 padding - 从 style 读取
+        // 添加 padding
         let padding = style.padding
         contentRect.size.width += padding.right
         contentRect.size.height += padding.bottom
@@ -160,25 +103,25 @@ public final class ScrollComponent: BaseComponent, ComponentFactory {
 // MARK: - TemplateXScrollView
 
 /// 自定义滚动视图
-public class TemplateXScrollView: UIScrollView, UIScrollViewDelegate {
+class TemplateXScrollView: UIScrollView, UIScrollViewDelegate {
     
-    public var direction: ScrollComponent.ScrollDirection = .vertical
+    var direction: ScrollComponent.ScrollDirection = .vertical
     
     /// 滚动回调
-    public var onScroll: ((CGPoint) -> Void)?
-    public var onScrollEnd: ((CGPoint) -> Void)?
+    var onScroll: ((CGPoint) -> Void)?
+    var onScrollEnd: ((CGPoint) -> Void)?
     
     // MARK: - UIScrollViewDelegate
     
-    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
         onScroll?(scrollView.contentOffset)
     }
     
-    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         onScrollEnd?(scrollView.contentOffset)
     }
     
-    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         if !decelerate {
             onScrollEnd?(scrollView.contentOffset)
         }

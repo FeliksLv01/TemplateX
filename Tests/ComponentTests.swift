@@ -7,7 +7,7 @@ final class ComponentTests: XCTestCase {
     
     func testViewComponentCreation() {
         let json = JSONWrapper([
-            "type": "view",
+            "type": "container",
             "id": "test_view",
             "style": [
                 "width": 100,
@@ -31,7 +31,7 @@ final class ComponentTests: XCTestCase {
     
     func testViewComponentViewCreation() {
         let json = JSONWrapper([
-            "type": "view",
+            "type": "container",
             "id": "view_test"
         ])
         
@@ -290,7 +290,7 @@ final class ComponentTests: XCTestCase {
     
     func testFlexLayoutVertical() {
         let json = JSONWrapper([
-            "type": "flex",
+            "type": "container",
             "id": "vertical_layout",
             "style": [
                 "width": "100%",
@@ -309,7 +309,7 @@ final class ComponentTests: XCTestCase {
     
     func testFlexLayoutHorizontal() {
         let json = JSONWrapper([
-            "type": "flex",
+            "type": "container",
             "id": "horizontal_layout",
             "style": [
                 "flexDirection": "row"
@@ -428,7 +428,7 @@ final class ComponentTests: XCTestCase {
     
     func testStyleFromJSON() {
         let json = JSONWrapper([
-            "type": "view",
+            "type": "container",
             "id": "style_test",
             "style": [
                 "width": "100%",
@@ -458,7 +458,7 @@ final class ComponentTests: XCTestCase {
     
     func testFixedDimension() {
         let json = JSONWrapper([
-            "type": "view",
+            "type": "container",
             "id": "fixed_test",
             "style": [
                 "width": 150,
@@ -477,7 +477,7 @@ final class ComponentTests: XCTestCase {
     
     func testPercentDimension() {
         let json = JSONWrapper([
-            "type": "view",
+            "type": "container",
             "id": "percent_test",
             "style": [
                 "width": "50%",
@@ -496,7 +496,7 @@ final class ComponentTests: XCTestCase {
     
     func testStyleShadow() {
         let json = JSONWrapper([
-            "type": "view",
+            "type": "container",
             "id": "shadow_test",
             "style": [
                 "shadowColor": "#000000",
@@ -519,7 +519,7 @@ final class ComponentTests: XCTestCase {
     
     func testDisplayNone() {
         let json = JSONWrapper([
-            "type": "view",
+            "type": "container",
             "id": "display_test",
             "style": [
                 "display": "none"
@@ -536,7 +536,7 @@ final class ComponentTests: XCTestCase {
     
     func testVisibilityHidden() {
         let json = JSONWrapper([
-            "type": "view",
+            "type": "container",
             "id": "visibility_test",
             "style": [
                 "visibility": "hidden"

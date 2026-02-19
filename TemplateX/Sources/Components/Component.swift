@@ -88,6 +88,16 @@ open class BaseComponent: Component {
     public var view: UIView?
     public var layoutResult: LayoutResult = LayoutResult()
     
+    // MARK: - 解析错误
+    
+    /// 解析错误信息（props 解析失败时设置）
+    /// - Debug 模式：显示 errorView
+    /// - Release 模式：隐藏视图
+    public var parseError: Error?
+    
+    /// 是否解析失败
+    public var hasParseError: Bool { parseError != nil }
+    
     // MARK: - 绑定数据
     
     /// 原始 JSON 数据
@@ -135,7 +145,7 @@ open class BaseComponent: Component {
     
     // MARK: - Init
     
-    public init(id: String = UUID().uuidString, type: String) {
+    public required init(id: String = UUID().uuidString, type: String) {
         self.id = id
         self.type = type
         self.style = ComponentStyle()
@@ -410,15 +420,6 @@ open class BaseComponent: Component {
 
 // MARK: - 组件注册表
 
-/// 组件工厂协议
-public protocol ComponentFactory {
-    /// 组件类型标识
-    static var typeIdentifier: String { get }
-    
-    /// 从 JSON 创建组件
-    static func create(from json: JSONWrapper) -> Component?
-}
-
 /// 组件注册表
 public final class ComponentRegistry {
     
@@ -453,16 +454,14 @@ public final class ComponentRegistry {
     
     /// 注册内置组件
     private func registerBuiltinComponents() {
+        // 容器组件
+        register(ContainerComponent.self)
+        
         // 基础视图
-        register(ViewComponent.self)
         register(TextComponent.self)
         register(ImageComponent.self)
         
-        // Flexbox 布局组件
-        register(FlexLayoutComponent.self)
-        register(ContainerComponent.self)
-        
-        // 容器组件
+        // 滚动/列表容器
         register(ScrollComponent.self)
         register(ListComponent.self)
         register(GridComponent.self)

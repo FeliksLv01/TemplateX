@@ -53,7 +53,7 @@ class BasicRenderDemoViewController: UIViewController {
     private func renderTemplate() {
         // 定义模板 JSON - 统一 style 格式
         let template: [String: Any] = [
-            "type": "flex",
+            "type": "container",
             "id": "card",
             "style": [
                 "width": "100%",
@@ -93,7 +93,7 @@ class BasicRenderDemoViewController: UIViewController {
                     ]
                 ],
                 [
-                    "type": "view",
+                    "type": "container",
                     "id": "spacer",
                     "style": [
                         "flexGrow": 1

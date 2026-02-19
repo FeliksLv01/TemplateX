@@ -4,24 +4,66 @@ import UIKit
 
 /// 输入框组件
 /// 支持单行/多行输入、placeholder、键盘类型等
-public final class InputComponent: BaseComponent, ComponentFactory {
+final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
+    
+    // MARK: - Props
+    
+    struct Props: ComponentProps {
+        @Default<TextInput> var inputType: String
+        var placeholder: String?
+        var placeholderColor: String?
+        var text: String?
+        var value: String?  // 别名
+        var maxLength: Int?
+        var maxLines: Int?
+        @Default<False> var disabled: Bool
+        @Default<False> var readOnly: Bool
+        var returnKeyType: String?
+        
+        // 计算属性
+        var resolvedText: String {
+            text ?? value ?? ""
+        }
+        
+        var resolvedInputType: InputType {
+            InputType(rawValue: inputType.lowercased()) ?? .text
+        }
+    }
     
     // MARK: - ComponentFactory
     
-    public static var typeIdentifier: String { "input" }
+    override class var typeIdentifier: String { "input" }
     
-    public static func create(from json: JSONWrapper) -> Component? {
-        let id = json.id ?? UUID().uuidString
-        let component = InputComponent(id: id)
-        component.jsonWrapper = json
-        component.parseFromJSON(json)
-        return component
+    // MARK: - 便捷属性访问器（供 DiffPatcher 等外部使用）
+    
+    var text: String {
+        get { props.resolvedText }
+        set { props.text = newValue; currentText = newValue }
     }
     
-    // MARK: - Properties
+    var placeholder: String? {
+        get { props.placeholder }
+        set { props.placeholder = newValue }
+    }
     
-    /// 输入类型
-    public enum InputType: String {
+    var inputType: String {
+        get { props.inputType }
+        set { props.inputType = newValue }
+    }
+    
+    var isDisabled: Bool {
+        get { props.disabled }
+        set { props.disabled = newValue }
+    }
+    
+    var isReadOnly: Bool {
+        get { props.readOnly }
+        set { props.readOnly = newValue }
+    }
+    
+    // MARK: - 输入类型枚举
+    
+    enum InputType: String {
         case text
         case number
         case phone
@@ -30,155 +72,46 @@ public final class InputComponent: BaseComponent, ComponentFactory {
         case multiline
     }
     
-    /// 输入类型
-    public var inputType: InputType = .text
+    // MARK: - 运行时属性
     
-    /// 占位文字
-    public var placeholder: String?
+    /// 当前文本（运行时状态）
+    var currentText: String = ""
     
-    /// 占位文字颜色
-    public var placeholderColor: UIColor = .placeholderText
-    
-    /// 当前文本
-    public var text: String = ""
-    
-    /// 最大字符数
-    public var maxLength: Int?
-    
-    /// 最大行数（多行模式）
-    public var maxLines: Int = 0
-    
-    /// 是否禁用
-    public var isDisabled: Bool = false
-    
-    /// 是否只读
-    public var isReadOnly: Bool = false
-    
-    /// 自动大写类型
-    public var autocapitalizationType: UITextAutocapitalizationType = .sentences
-    
-    /// 自动纠正
-    public var autocorrectionType: UITextAutocorrectionType = .default
-    
-    /// 清除按钮模式
-    public var clearButtonMode: UITextField.ViewMode = .whileEditing
-    
-    /// 返回键类型
-    public var returnKeyType: UIReturnKeyType = .default
+    /// 解析后的占位文字颜色
+    private var placeholderUIColor: UIColor = .placeholderText
     
     // MARK: - 事件回调
     
     /// 文本变化
-    public var onTextChange: ((String) -> Void)?
+    var onTextChange: ((String) -> Void)?
     
     /// 获得焦点
-    public var onFocus: (() -> Void)?
+    var onFocus: (() -> Void)?
     
     /// 失去焦点
-    public var onBlur: (() -> Void)?
+    var onBlur: (() -> Void)?
     
     /// 提交（按返回键）
-    public var onSubmit: ((String) -> Void)?
+    var onSubmit: ((String) -> Void)?
     
     // MARK: - Private
     
     private weak var textField: UITextField?
     private weak var textView: UITextView?
     
-    // MARK: - Init
+    // MARK: - Lifecycle
     
-    public init(id: String = UUID().uuidString) {
-        super.init(id: id, type: InputComponent.typeIdentifier)
-    }
-    
-    // MARK: - Clone
-    
-    public override func clone() -> Component {
-        let cloned = InputComponent(id: self.id)
-        cloned.jsonWrapper = self.jsonWrapper
-        cloned.style = self.style.clone()
-        cloned.events = self.events
-        
-        // 复制 Input 特有属性
-        cloned.inputType = self.inputType
-        cloned.placeholder = self.placeholder
-        cloned.placeholderColor = self.placeholderColor
-        cloned.text = self.text
-        cloned.maxLength = self.maxLength
-        cloned.maxLines = self.maxLines
-        cloned.isDisabled = self.isDisabled
-        cloned.isReadOnly = self.isReadOnly
-        cloned.autocapitalizationType = self.autocapitalizationType
-        cloned.autocorrectionType = self.autocorrectionType
-        cloned.clearButtonMode = self.clearButtonMode
-        cloned.returnKeyType = self.returnKeyType
-        
-        // 注意: 不在这里递归克隆子组件，由 RenderEngine.cloneComponentTree 统一处理
-        
-        return cloned
-    }
-    
-    // MARK: - Parse
-    
-    private func parseFromJSON(_ json: JSONWrapper) {
-        // 使用基类的通用解析方法
-        parseBaseParams(from: json)
-        
+    override func didParseProps() {
+        currentText = props.resolvedText
+        placeholderUIColor = parseColor(props.placeholderColor) ?? .placeholderText
         // 输入框默认裁剪
         style.clipsToBounds = true
-        
-        // 解析输入特有属性
-        if let props = json.props {
-            parseInputProps(from: props)
-        }
-        
-        // 解析事件
-        if let eventsJson = json.events {
-            events = eventsJson.rawDictionary
-        }
-    }
-    
-    private func parseInputProps(from props: JSONWrapper) {
-        if let type = props.string("type") ?? props.string("inputType") {
-            inputType = InputType(rawValue: type.lowercased()) ?? .text
-        }
-        
-        placeholder = props.string("placeholder") ?? props.string("hint")
-        placeholderColor = props.color("placeholderColor") ?? .placeholderText
-        
-        text = props.string("text") ?? props.string("value") ?? ""
-        
-        if let max = props.int("maxLength") {
-            maxLength = max
-        }
-        
-        maxLines = props.int("maxLines") ?? 0
-        
-        isDisabled = props.bool("disabled", default: false)
-        isReadOnly = props.bool("readOnly", default: false)
-        
-        // 键盘相关
-        if let returnType = props.string("returnKeyType") {
-            returnKeyType = parseReturnKeyType(returnType)
-        }
-    }
-    
-    private func parseReturnKeyType(_ type: String) -> UIReturnKeyType {
-        switch type.lowercased() {
-        case "go": return .go
-        case "next": return .next
-        case "search": return .search
-        case "send": return .send
-        case "done": return .done
-        case "join": return .join
-        default: return .default
-        }
     }
     
     // MARK: - View
     
-    public override func createView() -> UIView {
-        if inputType == .multiline {
+    override func createView() -> UIView {
+        if props.resolvedInputType == .multiline {
             return createTextView()
         } else {
             return createTextField()
@@ -234,8 +167,18 @@ public final class InputComponent: BaseComponent, ComponentFactory {
         return container
     }
     
+    override func configureView(_ view: UIView) {
+        // 由于 createView 已经配置了视图，这里只处理更新
+        if let textField = self.textField {
+            configureTextField(textField)
+        }
+        if let textView = self.textView {
+            configureTextView(textView)
+        }
+    }
+    
     private func configureTextField(_ textField: UITextField) {
-        textField.text = text
+        textField.text = currentText
         
         // 从 style 读取文字样式
         textField.textColor = style.textColor ?? .label
@@ -244,24 +187,22 @@ public final class InputComponent: BaseComponent, ComponentFactory {
         textField.font = UIFont.systemFont(ofSize: fontSize, weight: fontWeight)
         
         // Placeholder
-        if let placeholder = placeholder {
+        if let placeholder = props.placeholder {
             textField.attributedPlaceholder = NSAttributedString(
                 string: placeholder,
-                attributes: [.foregroundColor: placeholderColor]
+                attributes: [.foregroundColor: placeholderUIColor]
             )
         }
         
         // 键盘类型
-        textField.keyboardType = keyboardType(for: inputType)
-        textField.isSecureTextEntry = inputType == .password
+        textField.keyboardType = keyboardType(for: props.resolvedInputType)
+        textField.isSecureTextEntry = props.resolvedInputType == .password
         
-        // 其他设置
-        textField.autocapitalizationType = autocapitalizationType
-        textField.autocorrectionType = autocorrectionType
-        textField.clearButtonMode = clearButtonMode
-        textField.returnKeyType = returnKeyType
+        // 返回键类型
+        textField.returnKeyType = parseReturnKeyType(props.returnKeyType)
         
-        textField.isEnabled = !isDisabled && !isReadOnly
+        // 启用状态
+        textField.isEnabled = !props.disabled && !props.readOnly
         
         // 内边距 - 从 style 读取
         let padding = style.padding
@@ -272,7 +213,7 @@ public final class InputComponent: BaseComponent, ComponentFactory {
     }
     
     private func configureTextView(_ textView: UITextView) {
-        textView.text = text
+        textView.text = currentText
         
         // 从 style 读取文字样式
         textView.textColor = style.textColor ?? .label
@@ -289,17 +230,16 @@ public final class InputComponent: BaseComponent, ComponentFactory {
             right: padding.right
         )
         
-        textView.keyboardType = keyboardType(for: inputType)
-        textView.autocapitalizationType = autocapitalizationType
-        textView.autocorrectionType = autocorrectionType
-        textView.returnKeyType = returnKeyType
+        textView.keyboardType = keyboardType(for: props.resolvedInputType)
+        textView.returnKeyType = parseReturnKeyType(props.returnKeyType)
         
-        textView.isEditable = !isDisabled && !isReadOnly
+        // 启用状态
+        textView.isEditable = !props.disabled && !props.readOnly
         
         // Placeholder - 使用 TemplateXTextView 的内置 placeholder 功能
         if let templateXTextView = textView as? TemplateXTextView {
-            templateXTextView.placeholder = placeholder
-            templateXTextView.placeholderColor = placeholderColor
+            templateXTextView.placeholder = props.placeholder
+            templateXTextView.placeholderColor = placeholderUIColor
         }
     }
     
@@ -316,57 +256,60 @@ public final class InputComponent: BaseComponent, ComponentFactory {
         }
     }
     
-    public override func updateView() {
-        if let textField = textField {
-            configureTextField(textField)
+    private func parseReturnKeyType(_ type: String?) -> UIReturnKeyType {
+        guard let type = type else { return .default }
+        switch type.lowercased() {
+        case "go": return .go
+        case "next": return .next
+        case "search": return .search
+        case "send": return .send
+        case "done": return .done
+        case "join": return .join
+        default: return .default
         }
-        if let textView = textView {
-            configureTextView(textView)
-        }
-        super.updateView()
     }
     
     @objc private func textFieldDidChange(_ textField: UITextField) {
         let newText = textField.text ?? ""
         
         // 检查最大长度
-        if let maxLength = maxLength, newText.count > maxLength {
+        if let maxLength = props.maxLength, newText.count > maxLength {
             textField.text = String(newText.prefix(maxLength))
             return
         }
         
-        text = textField.text ?? ""
-        onTextChange?(text)
+        currentText = textField.text ?? ""
+        onTextChange?(currentText)
     }
     
     // MARK: - Public Methods
     
     /// 获取当前文本
-    public func getText() -> String {
-        return textField?.text ?? textView?.text ?? text
+    func getText() -> String {
+        return textField?.text ?? textView?.text ?? currentText
     }
     
     /// 设置文本
-    public func setText(_ newText: String) {
-        text = newText
+    func setText(_ newText: String) {
+        currentText = newText
         textField?.text = newText
         textView?.text = newText
     }
     
     /// 获取焦点
-    public func focus() {
+    func focus() {
         textField?.becomeFirstResponder()
         textView?.becomeFirstResponder()
     }
     
     /// 失去焦点
-    public func blur() {
+    func blur() {
         textField?.resignFirstResponder()
         textView?.resignFirstResponder()
     }
     
     /// 清空文本
-    public func clear() {
+    func clear() {
         setText("")
         onTextChange?("")
     }
@@ -387,6 +330,25 @@ public final class InputComponent: BaseComponent, ComponentFactory {
         case "black", "900": return .black
         default: return .regular
         }
+    }
+    
+    private func parseColor(_ colorString: String?) -> UIColor? {
+        guard let colorString = colorString else { return nil }
+        // 简单的颜色解析，支持 #RRGGBB 格式
+        if colorString.hasPrefix("#") {
+            var hexString = colorString.dropFirst()
+            if hexString.count == 6 {
+                var rgbValue: UInt64 = 0
+                Scanner(string: String(hexString)).scanHexInt64(&rgbValue)
+                return UIColor(
+                    red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
+                    green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
+                    blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
+                    alpha: 1.0
+                )
+            }
+        }
+        return nil
     }
 }
 
@@ -412,7 +374,7 @@ class TemplateXTextField: UITextField, UITextFieldDelegate {
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        guard let maxLength = component?.maxLength else { return true }
+        guard let maxLength = component?.props.maxLength else { return true }
         
         let currentText = textField.text ?? ""
         guard let stringRange = Range(range, in: currentText) else { return false }
@@ -489,12 +451,12 @@ class TemplateXTextView: UITextView, UITextViewDelegate {
         let newText = textView.text ?? ""
         
         // 检查最大长度
-        if let maxLength = component?.maxLength, newText.count > maxLength {
+        if let maxLength = component?.props.maxLength, newText.count > maxLength {
             textView.text = String(newText.prefix(maxLength))
             return
         }
         
-        component?.text = textView.text ?? ""
+        component?.currentText = textView.text ?? ""
         component?.onTextChange?(textView.text ?? "")
     }
     

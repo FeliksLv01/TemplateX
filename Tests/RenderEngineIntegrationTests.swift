@@ -24,7 +24,7 @@ final class RenderEngineIntegrationTests: XCTestCase {
     func testRenderSimpleView() {
         // 准备简单的 JSON 模板
         let json: [String: Any] = [
-            "type": "view",
+            "type": "container",
             "id": "root",
             "layout": [
                 "width": 200,
@@ -298,7 +298,7 @@ final class RenderEngineIntegrationTests: XCTestCase {
     
     func testGetComponent() {
         let json: [String: Any] = [
-            "type": "view",
+            "type": "container",
             "id": "test_root",
             "layout": ["width": 100, "height": 100]
         ]
@@ -319,7 +319,7 @@ final class RenderEngineIntegrationTests: XCTestCase {
     
     func testCleanup() {
         let json: [String: Any] = [
-            "type": "view",
+            "type": "container",
             "id": "cleanup_test",
             "layout": ["width": 100, "height": 100]
         ]
@@ -413,7 +413,7 @@ final class RenderEngineIntegrationTests: XCTestCase {
         engine.config.enableViewReuse = true
         
         let json: [String: Any] = [
-            "type": "view",
+            "type": "container",
             "id": "recycle_test",
             "layout": ["width": 100, "height": 100]
         ]
@@ -462,7 +462,7 @@ final class RenderEngineIntegrationTests: XCTestCase {
     
     func testZeroContainerSize() {
         let json: [String: Any] = [
-            "type": "view",
+            "type": "container",
             "id": "zero_size",
             "layout": ["width": "match_parent", "height": "match_parent"]
         ]

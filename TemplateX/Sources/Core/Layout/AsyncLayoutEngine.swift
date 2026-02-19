@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import yoga
 
 // MARK: - 异步布局引擎
@@ -207,8 +208,8 @@ public final class AsyncLayoutEngine {
     private func setupTextMeasureFunc(node: YGNodeRef, textComponent: TextComponent) {
         let context = TextMeasureContext(
             text: textComponent.text,
-            fontSize: textComponent.fontSize,
-            fontWeight: textComponent.fontWeight,
+            fontSize: textComponent.fontSize ?? textComponent.style.fontSize ?? 14,
+            fontWeight: parseFontWeight(textComponent.fontWeight ?? textComponent.style.fontWeight),
             lineHeight: textComponent.lineHeight,
             letterSpacing: textComponent.letterSpacing,
             numberOfLines: textComponent.numberOfLines
@@ -293,8 +294,8 @@ public final class AsyncLayoutEngine {
         if let textComponent = component as? TextComponent {
             textData = TextLayoutData(
                 text: textComponent.text,
-                fontSize: textComponent.fontSize,
-                fontWeight: textComponent.fontWeight,
+                fontSize: textComponent.fontSize ?? textComponent.style.fontSize ?? 14,
+                fontWeight: parseFontWeight(textComponent.fontWeight ?? textComponent.style.fontWeight),
                 lineHeight: textComponent.lineHeight,
                 letterSpacing: textComponent.letterSpacing,
                 numberOfLines: textComponent.numberOfLines
@@ -307,6 +308,23 @@ public final class AsyncLayoutEngine {
             textData: textData,
             children: component.children.map { extractLayoutData(from: $0) }
         )
+    }
+    
+    /// 解析字体粗细字符串为 UIFont.Weight
+    private func parseFontWeight(_ weight: String?) -> UIFont.Weight {
+        guard let weight = weight else { return .regular }
+        switch weight.lowercased() {
+        case "thin", "100": return .thin
+        case "ultralight", "200": return .ultraLight
+        case "light", "300": return .light
+        case "regular", "normal", "400": return .regular
+        case "medium", "500": return .medium
+        case "semibold", "600": return .semibold
+        case "bold", "700": return .bold
+        case "heavy", "800": return .heavy
+        case "black", "900": return .black
+        default: return .regular
+        }
     }
 }
 

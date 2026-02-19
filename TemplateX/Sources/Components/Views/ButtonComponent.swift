@@ -4,208 +4,149 @@ import UIKit
 
 /// 按钮组件
 /// 支持文字、图标、背景色、点击状态等
-public final class ButtonComponent: BaseComponent, ComponentFactory {
+final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent.Props> {
+    
+    // MARK: - Props
+    
+    struct Props: ComponentProps {
+        var title: String?
+        var text: String?
+        var iconLeft: String?
+        var icon: String?
+        var iconRight: String?
+        var iconSize: CGFloat?
+        var iconSpacing: CGFloat?
+        @Default<False> var disabled: Bool
+        @Default<False> var loading: Bool
+        var titleColorHighlighted: String?
+        var titleColorDisabled: String?
+        var backgroundColorHighlighted: String?
+        var backgroundColorDisabled: String?
+        
+        /// 按钮标题（兼容 title 和 text）
+        var buttonTitle: String? { title ?? text }
+        
+        /// 左侧图标（兼容 iconLeft 和 icon）
+        var leftIcon: String? { iconLeft ?? icon }
+    }
     
     // MARK: - ComponentFactory
     
-    public static var typeIdentifier: String { "button" }
+    override class var typeIdentifier: String { "button" }
     
-    public static func create(from json: JSONWrapper) -> Component? {
-        let id = json.id ?? UUID().uuidString
-        let component = ButtonComponent(id: id)
-        component.jsonWrapper = json
-        component.parseFromJSON(json)
-        return component
+    // MARK: - 便捷属性访问器（供 DiffPatcher 等外部使用）
+    
+    var title: String? {
+        get { props.buttonTitle }
+        set { props.title = newValue }
     }
     
-    // MARK: - Properties
-    
-    /// 按钮文字
-    public var title: String?
-    
-    /// 按下时的文字颜色
-    public var titleColorHighlighted: UIColor?
-    
-    /// 禁用时的文字颜色
-    public var titleColorDisabled: UIColor?
-    
-    /// 图标（左侧）
-    public var iconLeft: String?
-    
-    /// 图标（右侧）
-    public var iconRight: String?
-    
-    /// 图标大小
-    public var iconSize: CGFloat = 16
-    
-    /// 图标与文字间距
-    public var iconSpacing: CGFloat = 4
-    
-    /// 按下时的背景色
-    public var backgroundColorHighlighted: UIColor?
-    
-    /// 禁用时的背景色
-    public var backgroundColorDisabled: UIColor?
-    
-    /// 是否禁用
-    public var isDisabled: Bool = false
-    
-    /// 是否显示加载中
-    public var isLoading: Bool = false
-    
-    /// 点击事件
-    public var onClick: (() -> Void)?
-    
-    // MARK: - Init
-    
-    public init(id: String = UUID().uuidString) {
-        super.init(id: id, type: ButtonComponent.typeIdentifier)
+    var isDisabled: Bool {
+        get { props.disabled }
+        set { props.disabled = newValue }
     }
     
-    // MARK: - Clone
-    
-    public override func clone() -> Component {
-        let cloned = ButtonComponent(id: self.id)
-        cloned.jsonWrapper = self.jsonWrapper
-        cloned.style = self.style.clone()
-        cloned.events = self.events
-        
-        // 复制 Button 特有属性
-        cloned.title = self.title
-        cloned.titleColorHighlighted = self.titleColorHighlighted
-        cloned.titleColorDisabled = self.titleColorDisabled
-        cloned.iconLeft = self.iconLeft
-        cloned.iconRight = self.iconRight
-        cloned.iconSize = self.iconSize
-        cloned.iconSpacing = self.iconSpacing
-        cloned.backgroundColorHighlighted = self.backgroundColorHighlighted
-        cloned.backgroundColorDisabled = self.backgroundColorDisabled
-        cloned.isDisabled = self.isDisabled
-        cloned.isLoading = self.isLoading
-        
-        // 注意: 不在这里递归克隆子组件，由 RenderEngine.cloneComponentTree 统一处理
-        
-        return cloned
+    var isLoading: Bool {
+        get { props.loading }
+        set { props.loading = newValue }
     }
     
-    // MARK: - Parse
-    
-    private func parseFromJSON(_ json: JSONWrapper) {
-        // 使用基类的通用解析方法
-        parseBaseParams(from: json)
-        
-        // 按钮默认裁剪
-        style.clipsToBounds = true
-        
-        // 解析按钮特有属性
-        if let props = json.props {
-            parseButtonProps(from: props)
-        }
-        
-        // 解析事件
-        if let eventsJson = json.events {
-            events = eventsJson.rawDictionary
-        }
+    var iconLeft: String? {
+        get { props.leftIcon }
+        set { props.iconLeft = newValue }
     }
     
-    private func parseButtonProps(from props: JSONWrapper) {
-        title = props.string("title") ?? props.string("text")
-        
-        titleColorHighlighted = props.color("titleColorHighlighted")
-        titleColorDisabled = props.color("titleColorDisabled")
-        
-        iconLeft = props.string("iconLeft") ?? props.string("icon")
-        iconRight = props.string("iconRight")
-        
-        if let size = props.cgFloat("iconSize") {
-            iconSize = size
-        }
-        
-        if let spacing = props.cgFloat("iconSpacing") {
-            iconSpacing = spacing
-        }
-        
-        backgroundColorHighlighted = props.color("backgroundColorHighlighted")
-        backgroundColorDisabled = props.color("backgroundColorDisabled")
-        
-        isDisabled = props.bool("disabled", default: false)
-        isLoading = props.bool("loading", default: false)
+    var iconRight: String? {
+        get { props.iconRight }
+        set { props.iconRight = newValue }
     }
     
-    // MARK: - View
+    // MARK: - 事件回调
     
-    public override func createView() -> UIView {
+    var onClick: (() -> Void)?
+    
+    // MARK: - View Lifecycle
+    
+    override func createView() -> UIView {
         let button = TemplateXButton(type: .custom)
-        configureButton(button)
-        
         button.addTarget(self, action: #selector(handleTap), for: .touchUpInside)
-        
         self.view = button
         return button
     }
     
-    private func configureButton(_ button: TemplateXButton) {
+    override func didParseProps() {
+        // 按钮默认裁剪
+        style.clipsToBounds = true
+    }
+    
+    override func configureView(_ view: TemplateXButton) {
         // 标题
-        button.setTitle(title, for: .normal)
+        view.setTitle(props.buttonTitle, for: .normal)
         
         // 文字颜色 - 从 style 读取
         let titleColor = style.textColor ?? .white
-        button.setTitleColor(titleColor, for: .normal)
-        button.setTitleColor(titleColorHighlighted ?? titleColor.withAlphaComponent(0.7), for: .highlighted)
-        button.setTitleColor(titleColorDisabled ?? titleColor.withAlphaComponent(0.5), for: .disabled)
+        view.setTitleColor(titleColor, for: .normal)
+        view.setTitleColor(
+            parseColor(props.titleColorHighlighted) ?? titleColor.withAlphaComponent(0.7),
+            for: .highlighted
+        )
+        view.setTitleColor(
+            parseColor(props.titleColorDisabled) ?? titleColor.withAlphaComponent(0.5),
+            for: .disabled
+        )
         
         // 字体 - 从 style 读取
         let fontSize = style.fontSize ?? 14
         let fontWeight = parseFontWeight(style.fontWeight)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: fontSize, weight: fontWeight)
+        view.titleLabel?.font = UIFont.systemFont(ofSize: fontSize, weight: fontWeight)
         
         // 背景色
-        button.normalBackgroundColor = style.backgroundColor
-        button.highlightedBackgroundColor = backgroundColorHighlighted ?? style.backgroundColor?.withAlphaComponent(0.8)
-        button.disabledBackgroundColor = backgroundColorDisabled ?? style.backgroundColor?.withAlphaComponent(0.5)
+        view.normalBackgroundColor = style.backgroundColor
+        view.highlightedBackgroundColor = parseColor(props.backgroundColorHighlighted)
+            ?? style.backgroundColor?.withAlphaComponent(0.8)
+        view.disabledBackgroundColor = parseColor(props.backgroundColorDisabled)
+            ?? style.backgroundColor?.withAlphaComponent(0.5)
         
         // 图标
-        if iconLeft != nil {
-            // TODO: 加载图标图片
-            // button.setImage(UIImage(named: iconLeft), for: .normal)
-        }
+        // TODO: 加载图标图片
         
         // 状态
-        button.isEnabled = !isDisabled
-        button.isLoading = isLoading
+        view.isEnabled = !props.disabled
+        view.isLoading = props.loading
         
         // 图标间距
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: iconSpacing)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: iconSpacing, bottom: 0, right: 0)
+        let spacing = props.iconSpacing ?? 4
+        view.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: spacing)
+        view.titleEdgeInsets = UIEdgeInsets(top: 0, left: spacing, bottom: 0, right: 0)
     }
     
-    public override func updateView() {
-        if let button = view as? TemplateXButton {
-            configureButton(button)
-        }
-        super.updateView()
-    }
+    // MARK: - Actions
     
     @objc private func handleTap() {
-        guard !isDisabled && !isLoading else { return }
+        guard !props.disabled && !props.loading else { return }
         onClick?()
     }
     
     // MARK: - Public Methods
     
     /// 设置加载状态
-    public func setLoading(_ loading: Bool) {
-        isLoading = loading
+    func setLoading(_ loading: Bool) {
+        props.loading = loading
         (view as? TemplateXButton)?.isLoading = loading
     }
     
     /// 设置禁用状态
-    public func setDisabled(_ disabled: Bool) {
-        isDisabled = disabled
+    func setDisabled(_ disabled: Bool) {
+        props.disabled = disabled
         (view as? UIButton)?.isEnabled = !disabled
     }
     
     // MARK: - Parse Helpers
+    
+    private func parseColor(_ colorString: String?) -> UIColor? {
+        guard let str = colorString else { return nil }
+        return UIColor(hexString: str)
+    }
     
     private func parseFontWeight(_ weight: String?) -> UIFont.Weight {
         guard let weight = weight else { return .regular }
@@ -227,23 +168,23 @@ public final class ButtonComponent: BaseComponent, ComponentFactory {
 // MARK: - TemplateXButton
 
 /// 自定义按钮视图
-public class TemplateXButton: UIButton {
+class TemplateXButton: UIButton {
     
     /// 正常背景色
-    public var normalBackgroundColor: UIColor? {
+    var normalBackgroundColor: UIColor? {
         didSet {
             updateBackgroundColor()
         }
     }
     
     /// 高亮背景色
-    public var highlightedBackgroundColor: UIColor?
+    var highlightedBackgroundColor: UIColor?
     
     /// 禁用背景色
-    public var disabledBackgroundColor: UIColor?
+    var disabledBackgroundColor: UIColor?
     
     /// 加载中状态
-    public var isLoading: Bool = false {
+    var isLoading: Bool = false {
         didSet {
             updateLoadingState()
         }
@@ -260,13 +201,13 @@ public class TemplateXButton: UIButton {
     /// 保存的标题
     private var savedTitle: String?
     
-    public override var isHighlighted: Bool {
+    override var isHighlighted: Bool {
         didSet {
             updateBackgroundColor()
         }
     }
     
-    public override var isEnabled: Bool {
+    override var isEnabled: Bool {
         didSet {
             updateBackgroundColor()
         }
@@ -301,7 +242,7 @@ public class TemplateXButton: UIButton {
         }
     }
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         super.layoutSubviews()
         if isLoading {
             loadingIndicator.center = CGPoint(x: bounds.midX, y: bounds.midY)

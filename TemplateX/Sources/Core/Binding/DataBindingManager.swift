@@ -360,4 +360,25 @@ extension UIColor {
             return nil
         }
     }
+    
+    /// 颜色转十六进制字符串
+    var hexString: String {
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        
+        getRed(&r, green: &g, blue: &b, alpha: &a)
+        
+        let ir = Int(r * 255)
+        let ig = Int(g * 255)
+        let ib = Int(b * 255)
+        let ia = Int(a * 255)
+        
+        if ia == 255 {
+            return String(format: "#%02X%02X%02X", ir, ig, ib)
+        } else {
+            return String(format: "#%02X%02X%02X%02X", ia, ir, ig, ib)
+        }
+    }
 }

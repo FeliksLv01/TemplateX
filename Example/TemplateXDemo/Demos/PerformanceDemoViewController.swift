@@ -192,7 +192,7 @@ class PerformanceDemoViewController: UIViewController {
     private func performBasicRender() {
         // 统一 style 格式
         let template: [String: Any] = [
-            "type": "view",
+            "type": "container",
             "id": "basic",
             "style": ["width": 200, "height": 100, "backgroundColor": "#007AFF", "cornerRadius": 8]
         ]
@@ -219,7 +219,7 @@ class PerformanceDemoViewController: UIViewController {
             
             return (0..<5).map { i in
                 var child: [String: Any] = [
-                    "type": "flex",
+                    "type": "container",
                     "id": "node_\(depth)_\(i)",
                     "style": [
                         "width": "100%",
@@ -248,7 +248,7 @@ class PerformanceDemoViewController: UIViewController {
         }
         
         let template: [String: Any] = [
-            "type": "flex",
+            "type": "container",
             "id": "complex_root",
             "style": ["width": "100%", "height": "auto", "flexDirection": "column"],
             "children": makeChildren(depth: 3)
@@ -271,7 +271,7 @@ class PerformanceDemoViewController: UIViewController {
     
     private func performDataBindingRender() {
         let template: [String: Any] = [
-            "type": "flex",
+            "type": "container",
             "id": "binding_root",
             "style": ["width": "100%", "height": "auto", "flexDirection": "column"],
             "children": (0..<10).map { i in
@@ -312,7 +312,7 @@ class PerformanceDemoViewController: UIViewController {
     
     private func performIncrementalUpdate() {
         let template: [String: Any] = [
-            "type": "flex",
+            "type": "container",
             "id": "update_root",
             "style": ["width": "100%", "height": 100, "flexDirection": "column"],
             "children": [

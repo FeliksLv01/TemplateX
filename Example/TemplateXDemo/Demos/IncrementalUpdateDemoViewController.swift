@@ -12,7 +12,7 @@ class IncrementalUpdateDemoViewController: UIViewController {
     
     // 统一 style 格式
     private let template: [String: Any] = [
-        "type": "flex",
+        "type": "container",
         "id": "counter_card",
         "style": [
             "width": "100%",

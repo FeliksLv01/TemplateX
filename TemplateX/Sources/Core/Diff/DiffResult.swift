@@ -251,7 +251,7 @@ public struct ComponentSnapshot: Hashable {
         if let textComponent = component as? TextComponent {
             hasher.combine(textComponent.text)
             hasher.combine(textComponent.fontSize)
-            hasher.combine(textComponent.fontWeight.rawValue)
+            hasher.combine(textComponent.fontWeight)
             hasher.combine(String(describing: textComponent.textColor))
             hasher.combine(textComponent.textAlignment.rawValue)
             hasher.combine(textComponent.numberOfLines)
@@ -263,7 +263,7 @@ public struct ComponentSnapshot: Hashable {
         // ImageComponent
         if let imageComponent = component as? ImageComponent {
             hasher.combine(imageComponent.src)
-            hasher.combine(imageComponent.scaleType.rawValue)
+            hasher.combine(imageComponent.scaleType)
             hasher.combine(imageComponent.placeholder)
             return hasher.finalize()
         }
@@ -280,7 +280,7 @@ public struct ComponentSnapshot: Hashable {
         if let inputComponent = component as? InputComponent {
             hasher.combine(inputComponent.text)
             hasher.combine(inputComponent.placeholder)
-            hasher.combine(inputComponent.inputType.rawValue)
+            hasher.combine(inputComponent.inputType)
             hasher.combine(inputComponent.isDisabled)
             return hasher.finalize()
         }

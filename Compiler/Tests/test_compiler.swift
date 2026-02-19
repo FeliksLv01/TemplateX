@@ -157,8 +157,8 @@ enum AttributeCategory { case layout, style, text, image, event, directive, iden
 // MARK: - AttributeMapper (简化版)
 struct AttributeMapper {
     static let componentTypeMap: [String: String] = [
-        "Flex": "flex", "Row": "flex", "Column": "flex",
-        "View": "view", "Text": "text", "Image": "image",
+        "Flex": "container", "Row": "container", "Column": "container",
+        "View": "container", "Text": "text", "Image": "image",
         "ScrollView": "scroll", "ListView": "list", "Template": "template"
     ]
     

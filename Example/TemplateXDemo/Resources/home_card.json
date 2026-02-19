@@ -1,5 +1,5 @@
 {
-    "type": "flex",
+    "type": "container",
     "id": "home_card",
     "style": {
         "width": "100%",
@@ -15,7 +15,7 @@
     },
     "children": [
         {
-            "type": "flex",
+            "type": "container",
             "id": "header",
             "style": {
                 "width": "100%",
@@ -38,7 +38,7 @@
                     }
                 },
                 {
-                    "type": "flex",
+                    "type": "container",
                     "id": "user_info",
                     "style": {
                         "height": "auto",
@@ -138,7 +138,7 @@
             }
         },
         {
-            "type": "flex",
+            "type": "container",
             "id": "action_bar",
             "style": {
                 "width": "100%",

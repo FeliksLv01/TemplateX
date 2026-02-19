@@ -52,7 +52,7 @@ class LayoutDemoViewController: UIViewController {
         demoTemplates.append((
             title: "Flexbox Row (水平布局)",
             template: [
-                "type": "flex",
+                "type": "container",
                 "id": "row_demo",
                 "style": ["width": "100%", "height": 60, "flexDirection": "row", "backgroundColor": "#E3F2FD"],
                 "children": [
@@ -68,7 +68,7 @@ class LayoutDemoViewController: UIViewController {
         demoTemplates.append((
             title: "Flexbox Column (垂直布局)",
             template: [
-                "type": "flex",
+                "type": "container",
                 "id": "column_demo",
                 "style": ["width": "100%", "height": 150, "flexDirection": "column", "backgroundColor": "#E8F5E9"],
                 "children": [
@@ -84,7 +84,7 @@ class LayoutDemoViewController: UIViewController {
         demoTemplates.append((
             title: "Margin & Padding",
             template: [
-                "type": "view",
+                "type": "container",
                 "id": "margin_demo",
                 "style": [
                     "width": "100%",
@@ -94,7 +94,7 @@ class LayoutDemoViewController: UIViewController {
                 ],
                 "children": [
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "inner_box",
                         "style": [
                             "flexGrow": 1,
@@ -111,7 +111,7 @@ class LayoutDemoViewController: UIViewController {
         demoTemplates.append((
             title: "Align Items (对齐)",
             template: [
-                "type": "flex",
+                "type": "container",
                 "id": "align_demo",
                 "style": [
                     "width": "100%",
@@ -140,7 +140,7 @@ class LayoutDemoViewController: UIViewController {
         demoTemplates.append((
             title: "Flex Wrap (换行)",
             template: [
-                "type": "flex",
+                "type": "container",
                 "id": "wrap_demo",
                 "style": [
                     "width": "100%",
@@ -169,7 +169,7 @@ class LayoutDemoViewController: UIViewController {
         demoTemplates.append((
             title: "Aspect Ratio (宽高比)",
             template: [
-                "type": "flex",
+                "type": "container",
                 "id": "aspect_demo",
                 "style": [
                     "width": "100%",
@@ -181,17 +181,17 @@ class LayoutDemoViewController: UIViewController {
                 ],
                 "children": [
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "ar1",
                         "style": ["width": 80, "aspectRatio": 1.0, "backgroundColor": "#00BCD4", "cornerRadius": 8]
                     ],
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "ar2",
                         "style": ["width": 80, "aspectRatio": 1.5, "backgroundColor": "#00ACC1", "cornerRadius": 8]
                     ],
                     [
-                        "type": "view",
+                        "type": "container",
                         "id": "ar3",
                         "style": ["width": 80, "aspectRatio": 0.75, "backgroundColor": "#0097A7", "cornerRadius": 8]
                     ]
@@ -244,7 +244,7 @@ class LayoutDemoViewController: UIViewController {
     
     private func makeBox(id: String, color: String, flex: Int) -> [String: Any] {
         return [
-            "type": "view",
+            "type": "container",
             "id": id,
             "style": [
                 "flexGrow": flex,
@@ -258,7 +258,7 @@ class LayoutDemoViewController: UIViewController {
     
     private func makeSmallBox(id: String, color: String) -> [String: Any] {
         return [
-            "type": "view",
+            "type": "container",
             "id": id,
             "style": [
                 "width": 30,
