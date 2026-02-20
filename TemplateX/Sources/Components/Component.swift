@@ -91,6 +91,10 @@ public protocol Component: AnyObject {
     
     /// 克隆组件（深拷贝属性，不包括 view 和 children）
     func clone() -> Component
+    
+    /// 从另一个组件复制属性（用于增量更新）
+    /// 由组件自己实现，避免外部代码判断具体组件类型
+    func copyProps(from other: Component)
 }
 
 // MARK: - 组件基类
@@ -365,6 +369,12 @@ open class BaseComponent: Component {
         cloned.layoutResult = layoutResult
         cloned.jsonWrapper = jsonWrapper
         return cloned
+    }
+    
+    /// 从另一个组件复制属性（用于增量更新）
+    /// BaseComponent 默认空实现，TemplateXComponent 会复制 props
+    open func copyProps(from other: Component) {
+        // BaseComponent 没有 props，子类重写
     }
     
     // MARK: - 子组件管理

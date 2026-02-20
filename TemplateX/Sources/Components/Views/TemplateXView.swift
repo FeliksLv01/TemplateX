@@ -84,6 +84,12 @@ public class TemplateXView: UIView {
     /// 启用时：frame 变化会触发重新布局
     public var enableAutoLayout: Bool = true
     
+    /// 是否自动调整高度（默认 false）
+    /// 
+    /// 启用时：渲染完成后自动更新 frame.size.height 为内容高度
+    /// 适用于 frame 布局场景，让视图高度自动撑开
+    public var autoResizeHeight: Bool = false
+    
     /// SyncFlush 超时时间（毫秒）
     public var syncFlushTimeoutMs: Int = 100 {
         didSet {
@@ -383,8 +389,8 @@ public class TemplateXView: UIView {
             }
         }
         
-        // 复制组件特有属性
-        copyComponentSpecificProperties(from: newComponent, to: component)
+        // 复制组件特有属性（由组件自己实现）
+        component.copyProps(from: newComponent)
     }
     
     /// 根据 ID 查找组件
@@ -396,55 +402,6 @@ public class TemplateXView: UIView {
             }
         }
         return nil
-    }
-    
-    /// 复制组件特有属性
-    private func copyComponentSpecificProperties(from source: Component, to target: Component) {
-        // TextComponent
-        if let sourceText = source as? TextComponent,
-           let targetText = target as? TextComponent {
-            targetText.text = sourceText.text
-            targetText.fontSize = sourceText.fontSize
-            targetText.fontWeight = sourceText.fontWeight
-            targetText.textColor = sourceText.textColor
-            targetText.textAlignment = sourceText.textAlignment
-            targetText.numberOfLines = sourceText.numberOfLines
-            targetText.lineBreakMode = sourceText.lineBreakMode
-            targetText.lineHeight = sourceText.lineHeight
-            targetText.letterSpacing = sourceText.letterSpacing
-            return
-        }
-        
-        // ImageComponent
-        if let sourceImage = source as? ImageComponent,
-           let targetImage = target as? ImageComponent {
-            targetImage.src = sourceImage.src
-            targetImage.scaleType = sourceImage.scaleType
-            targetImage.placeholder = sourceImage.placeholder
-            targetImage.tintColor = sourceImage.tintColor
-            return
-        }
-        
-        // ButtonComponent
-        if let sourceButton = source as? ButtonComponent,
-           let targetButton = target as? ButtonComponent {
-            targetButton.title = sourceButton.title
-            targetButton.isDisabled = sourceButton.isDisabled
-            targetButton.iconLeft = sourceButton.iconLeft
-            targetButton.iconRight = sourceButton.iconRight
-            return
-        }
-        
-        // InputComponent
-        if let sourceInput = source as? InputComponent,
-           let targetInput = target as? InputComponent {
-            targetInput.text = sourceInput.text
-            targetInput.placeholder = sourceInput.placeholder
-            targetInput.inputType = sourceInput.inputType
-            targetInput.isDisabled = sourceInput.isDisabled
-            targetInput.isReadOnly = sourceInput.isReadOnly
-            return
-        }
     }
     
     /// 更新视图属性
@@ -645,6 +602,16 @@ public class TemplateXView: UIView {
                 // 添加新视图
                 self.addSubview(view)
                 self.contentView = view
+                
+                // 自动调整高度
+                if self.autoResizeHeight {
+                    let contentHeight = component.layoutResult.frame.height
+                    if contentHeight > 0 {
+                        var newFrame = self.frame
+                        newFrame.size.height = contentHeight
+                        self.frame = newFrame
+                    }
+                }
                 
                 // 更新状态
                 self.loadState = .loaded

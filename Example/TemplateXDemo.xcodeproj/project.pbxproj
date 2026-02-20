@@ -36,6 +36,7 @@
 		B3B48AD62F47A71B0057C9BF /* flexbox_row.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AC32F47A71B0057C9BF /* flexbox_row.json */; };
 		B3B48ADA2F47A7620057C9BF /* basic_render.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AD72F47A7620057C9BF /* basic_render.json */; };
 		B3B48ADB2F47A7620057C9BF /* incremental_update.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AD82F47A7620057C9BF /* incremental_update.json */; };
+		B3B48ADD2F48521B0057C9BF /* TemplateXDemoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B48ADC2F48521B0057C9BF /* TemplateXDemoCell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,6 +73,7 @@
 		B3B48AC42F47A71B0057C9BF /* margin_padding.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = margin_padding.json; sourceTree = "<group>"; };
 		B3B48AD72F47A7620057C9BF /* basic_render.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = basic_render.json; sourceTree = "<group>"; };
 		B3B48AD82F47A7620057C9BF /* incremental_update.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = incremental_update.json; sourceTree = "<group>"; };
+		B3B48ADC2F48521B0057C9BF /* TemplateXDemoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateXDemoCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,6 +138,7 @@
 		A1000033203D5D1100000001 /* Demos */ = {
 			isa = PBXGroup;
 			children = (
+				B3B48ADC2F48521B0057C9BF /* TemplateXDemoCell.swift */,
 				A1000006203D5D1100000001 /* BasicRenderDemoViewController.swift */,
 				A1000008203D5D1100000001 /* DataBindingDemoViewController.swift */,
 				A100000A203D5D1100000001 /* IncrementalUpdateDemoViewController.swift */,
@@ -224,7 +227,7 @@
 				A1000041203D5D1100000001 /* Sources */,
 				A1000020203D5D1100000001 /* Frameworks */,
 				A1000042203D5D1100000001 /* Resources */,
-				CA3AFCE02DDD4832BDDFCA03 /* [CP] Embed Pods Frameworks */,
+				90791897D99408E9190C92EC /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -321,21 +324,21 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		CA3AFCE02DDD4832BDDFCA03 /* [CP] Embed Pods Frameworks */ = {
+		90791897D99408E9190C92EC /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -352,6 +355,7 @@
 				A1000009203D5D1100000001 /* IncrementalUpdateDemoViewController.swift in Sources */,
 				A100000B203D5D1100000001 /* LayoutDemoViewController.swift in Sources */,
 				A100000D203D5D1100000001 /* ComponentShowcaseViewController.swift in Sources */,
+				B3B48ADD2F48521B0057C9BF /* TemplateXDemoCell.swift in Sources */,
 				A100000F203D5D1100000001 /* PerformanceDemoViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

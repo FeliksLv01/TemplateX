@@ -2,7 +2,7 @@
 # 用法：cd Example && pod install && open TemplateXDemo.xcworkspace
 
 platform :ios, '13.4'
-use_frameworks!
+use_frameworks! :linkage => :static
 inhibit_all_warnings!
 
 target 'TemplateXDemo' do

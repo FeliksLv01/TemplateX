@@ -351,63 +351,11 @@ public final class DiffPatcher {
             }
         }
         
-        // 3. 应用组件特有属性变化
-        // 从新组件复制特有属性到旧组件
-        copyComponentSpecificProperties(from: newComponent, to: component)
+        // 3. 应用组件特有属性变化（由组件自己实现）
+        component.copyProps(from: newComponent)
         
         // 注意：布局在 apply() 最后统一处理，这里不单独计算
         // 视图更新也在 apply() 最后的 updateViewTree 中统一处理
-    }
-    
-    /// 复制组件特有属性（如 TextComponent.text、ImageComponent.src 等）
-    private func copyComponentSpecificProperties(from source: Component, to target: Component) {
-        // TextComponent
-        if let sourceText = source as? TextComponent,
-           let targetText = target as? TextComponent {
-            targetText.text = sourceText.text
-            targetText.fontSize = sourceText.fontSize
-            targetText.fontWeight = sourceText.fontWeight
-            targetText.textColor = sourceText.textColor
-            targetText.textAlignment = sourceText.textAlignment
-            targetText.numberOfLines = sourceText.numberOfLines
-            targetText.lineBreakMode = sourceText.lineBreakMode
-            targetText.lineHeight = sourceText.lineHeight
-            targetText.letterSpacing = sourceText.letterSpacing
-            return
-        }
-        
-        // ImageComponent
-        if let sourceImage = source as? ImageComponent,
-           let targetImage = target as? ImageComponent {
-            targetImage.src = sourceImage.src
-            targetImage.scaleType = sourceImage.scaleType
-            targetImage.placeholder = sourceImage.placeholder
-            targetImage.tintColor = sourceImage.tintColor
-            return
-        }
-        
-        // ButtonComponent
-        if let sourceButton = source as? ButtonComponent,
-           let targetButton = target as? ButtonComponent {
-            targetButton.title = sourceButton.title
-            targetButton.isDisabled = sourceButton.isDisabled
-            targetButton.iconLeft = sourceButton.iconLeft
-            targetButton.iconRight = sourceButton.iconRight
-            return
-        }
-        
-        // InputComponent
-        if let sourceInput = source as? InputComponent,
-           let targetInput = target as? InputComponent {
-            targetInput.text = sourceInput.text
-            targetInput.placeholder = sourceInput.placeholder
-            targetInput.inputType = sourceInput.inputType
-            targetInput.isDisabled = sourceInput.isDisabled
-            targetInput.isReadOnly = sourceInput.isReadOnly
-            return
-        }
-        
-        // 其他组件类型可以继续添加...
     }
     
     // MARK: - Move

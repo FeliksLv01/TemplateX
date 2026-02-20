@@ -240,6 +240,12 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: BaseComponent, Comp
         return cloned
     }
     
+    /// 从另一个组件复制 props（用于增量更新）
+    open override func copyProps(from other: Component) {
+        guard let other = other as? Self else { return }
+        self.props = other.props
+    }
+    
     // MARK: - Diff
     
     open override func needsUpdate(with other: Component) -> Bool {
