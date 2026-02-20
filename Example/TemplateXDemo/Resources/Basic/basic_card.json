@@ -1,0 +1,64 @@
+{
+    "type": "container",
+    "id": "card",
+    "style": {
+        "width": "100%",
+        "height": "100%",
+        "flexDirection": "column",
+        "padding": 16,
+        "backgroundColor": "#FFFFFF",
+        "cornerRadius": 12
+    },
+    "children": [
+        {
+            "type": "text",
+            "id": "title",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "fontSize": 24,
+                "fontWeight": "bold",
+                "textColor": "#333333"
+            },
+            "props": {
+                "text": "Hello TemplateX!"
+            }
+        },
+        {
+            "type": "text",
+            "id": "subtitle",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "marginTop": 8,
+                "fontSize": 14,
+                "textColor": "#666666"
+            },
+            "props": {
+                "text": "高性能 iOS DSL 动态渲染框架"
+            }
+        },
+        {
+            "type": "container",
+            "id": "spacer",
+            "style": {
+                "flexGrow": 1
+            }
+        },
+        {
+            "type": "button",
+            "id": "action_btn",
+            "style": {
+                "width": "100%",
+                "height": 44,
+                "backgroundColor": "#007AFF",
+                "cornerRadius": 8,
+                "textColor": "#FFFFFF",
+                "fontWeight": "500"
+            },
+            "props": {
+                "title": "了解更多"
+            }
+        }
+    ]
+}

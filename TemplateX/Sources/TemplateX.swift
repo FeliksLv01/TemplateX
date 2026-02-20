@@ -144,13 +144,6 @@ public enum TemplateX {
     
     /// 预热配置
     public struct WarmUpOptions {
-        /// 是否预热视图池（UITextField/UITextView 等重型视图）
-        /// 默认开启，可以消除首次渲染 Input 组件的延迟
-        public var warmUpViews: Bool = true
-        
-        /// 视图预热配置
-        public var viewWarmUpConfig: ViewRecyclePool.WarmUpConfig = .default
-        
         /// Yoga 节点池预热数量
         public var yogaNodeCount: Int = 64
         
@@ -159,10 +152,9 @@ public enum TemplateX {
         /// 默认配置
         public static var `default`: WarmUpOptions { WarmUpOptions() }
         
-        /// 最小配置（不预热视图）
+        /// 最小配置
         public static var minimal: WarmUpOptions {
             var options = WarmUpOptions()
-            options.warmUpViews = false
             options.yogaNodeCount = 32
             return options
         }
@@ -174,7 +166,6 @@ public enum TemplateX {
     /// 1. ComponentRegistry 初始化（加载所有组件类元数据）
     /// 2. Yoga 节点池预分配
     /// 3. TemplateParser 单例初始化
-    /// 4. 视图池预热（UITextField/UITextView 等重型视图）
     ///
     /// 使用示例：
     /// ```swift
@@ -188,8 +179,6 @@ public enum TemplateX {
     ///     TemplateX.warmUp(options: .minimal)
     /// }
     /// ```
-    ///
-    /// - Note: 视图预热部分会自动切换到主线程执行
     public static func warmUp(options: WarmUpOptions = .default) {
         let start = CACurrentMediaTime()
         
@@ -205,28 +194,8 @@ public enum TemplateX {
         // 4. 触发 TemplateXRenderEngine 单例初始化
         _ = TemplateXRenderEngine.shared
         
-        let coreElapsed = (CACurrentMediaTime() - start) * 1000
-        
-        // 5. 视图预热（必须在主线程）
-        if options.warmUpViews {
-            let viewWarmUp = {
-                let viewStart = CACurrentMediaTime()
-                ViewRecyclePool.shared.warmUp(config: options.viewWarmUpConfig)
-                let viewElapsed = (CACurrentMediaTime() - viewStart) * 1000
-                let totalElapsed = (CACurrentMediaTime() - start) * 1000
-                TXLogger.info("TemplateX.warmUp completed in \(String(format: "%.2f", totalElapsed))ms (core=\(String(format: "%.2f", coreElapsed))ms, views=\(String(format: "%.2f", viewElapsed))ms)")
-            }
-            
-            if Thread.isMainThread {
-                viewWarmUp()
-            } else {
-                DispatchQueue.main.async {
-                    viewWarmUp()
-                }
-            }
-        } else {
-            TXLogger.info("TemplateX.warmUp completed in \(String(format: "%.2f", coreElapsed))ms (views skipped)")
-        }
+        let elapsed = (CACurrentMediaTime() - start) * 1000
+        TXLogger.info("TemplateX.warmUp completed in \(String(format: "%.2f", elapsed))ms")
     }
     
     /// 简化版预热（无配置）

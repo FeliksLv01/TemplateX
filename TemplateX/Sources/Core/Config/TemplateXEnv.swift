@@ -144,7 +144,6 @@ public final class TemplateXEnv {
             if ServiceRegistry.shared.hasImageLoader {
                 ServiceRegistry.shared.imageLoader.clearCache(type: .all)
             }
-            ViewRecyclePool.shared.clear()
             TXLogger.info("TemplateXEnv: trimMemory critical")
         }
     }

@@ -1,0 +1,44 @@
+{
+    "type": "container",
+    "id": "aspect_demo",
+    "style": {
+        "width": "100%",
+        "height": 100,
+        "flexDirection": "row",
+        "justifyContent": "space-around",
+        "alignItems": "center",
+        "backgroundColor": "#E0F7FA"
+    },
+    "children": [
+        {
+            "type": "container",
+            "id": "ar1",
+            "style": {
+                "width": 80,
+                "aspectRatio": 1.0,
+                "backgroundColor": "#00BCD4",
+                "cornerRadius": 8
+            }
+        },
+        {
+            "type": "container",
+            "id": "ar2",
+            "style": {
+                "width": 80,
+                "aspectRatio": 1.5,
+                "backgroundColor": "#00ACC1",
+                "cornerRadius": 8
+            }
+        },
+        {
+            "type": "container",
+            "id": "ar3",
+            "style": {
+                "width": 80,
+                "aspectRatio": 0.75,
+                "backgroundColor": "#0097A7",
+                "cornerRadius": 8
+            }
+        }
+    ]
+}

@@ -20,192 +20,6 @@ class DataBindingDemoViewController: UIViewController {
         ]
     ]
     
-    // 用户信息卡片模板 - 统一 style 格式
-    private let template: [String: Any] = [
-        "type": "container",
-        "id": "user_card",
-        "style": [
-            "width": "100%",
-            "height": "100%",
-            "flexDirection": "column",
-            "padding": 16,
-            "backgroundColor": "#FFFFFF"
-        ],
-        "children": [
-            // 用户名 + VIP 标识
-            [
-                "type": "container",
-                "id": "header",
-                "style": ["width": "100%", "height": "auto", "flexDirection": "row", "alignItems": "center"],
-                "children": [
-                    [
-                        "type": "text",
-                        "id": "name",
-                        "style": [
-                            "width": "auto",
-                            "height": "auto",
-                            "fontSize": 20,
-                            "fontWeight": "bold",
-                            "textColor": "#333333"
-                        ],
-                        "props": [
-                            "text": "${user.name}"
-                        ]
-                    ],
-                    [
-                        "type": "text",
-                        "id": "vip_badge",
-                        "style": [
-                            "width": "auto",
-                            "height": "auto",
-                            "marginLeft": 8,
-                            "backgroundColor": "#FFD700",
-                            "cornerRadius": 4,
-                            "paddingHorizontal": 6,
-                            "paddingVertical": 2,
-                            "fontSize": 12,
-                            "textColor": "#FFFFFF"
-                        ],
-                        "props": [
-                            "text": "VIP"
-                        ],
-                        "bindings": [
-                            "display": "${user.isVip}"
-                        ]
-                    ]
-                ]
-            ],
-            // 年龄信息
-            [
-                "type": "text",
-                "id": "age_info",
-                "style": [
-                    "width": "100%",
-                    "height": "auto",
-                    "marginTop": 8,
-                    "fontSize": 14,
-                    "textColor": "#666666"
-                ],
-                "props": [
-                    "text": "${'年龄: ' + user.age + ' 岁'}"
-                ]
-            ],
-            // 统计数据
-            [
-                "type": "container",
-                "id": "stats_row",
-                "style": ["width": "100%", "height": "auto", "flexDirection": "row", "marginTop": 16],
-                "children": [
-                    [
-                        "type": "container",
-                        "id": "followers_stat",
-                        "style": ["flexGrow": 1, "flexDirection": "column", "alignItems": "center"],
-                        "children": [
-                            [
-                                "type": "text",
-                                "id": "followers_count",
-                                "style": [
-                                    "width": "auto",
-                                    "height": "auto",
-                                    "fontSize": 18,
-                                    "fontWeight": "bold",
-                                    "textColor": "#333333"
-                                ],
-                                "props": [
-                                    "text": "${stats.followers}"
-                                ]
-                            ],
-                            [
-                                "type": "text",
-                                "id": "followers_label",
-                                "style": [
-                                    "width": "auto",
-                                    "height": "auto",
-                                    "marginTop": 4,
-                                    "fontSize": 12,
-                                    "textColor": "#999999"
-                                ],
-                                "props": [
-                                    "text": "粉丝"
-                                ]
-                            ]
-                        ]
-                    ],
-                    [
-                        "type": "container",
-                        "id": "following_stat",
-                        "style": ["flexGrow": 1, "flexDirection": "column", "alignItems": "center"],
-                        "children": [
-                            [
-                                "type": "text",
-                                "id": "following_count",
-                                "style": [
-                                    "width": "auto",
-                                    "height": "auto",
-                                    "fontSize": 18,
-                                    "fontWeight": "bold",
-                                    "textColor": "#333333"
-                                ],
-                                "props": [
-                                    "text": "${stats.following}"
-                                ]
-                            ],
-                            [
-                                "type": "text",
-                                "id": "following_label",
-                                "style": [
-                                    "width": "auto",
-                                    "height": "auto",
-                                    "marginTop": 4,
-                                    "fontSize": 12,
-                                    "textColor": "#999999"
-                                ],
-                                "props": [
-                                    "text": "关注"
-                                ]
-                            ]
-                        ]
-                    ],
-                    [
-                        "type": "container",
-                        "id": "posts_stat",
-                        "style": ["flexGrow": 1, "flexDirection": "column", "alignItems": "center"],
-                        "children": [
-                            [
-                                "type": "text",
-                                "id": "posts_count",
-                                "style": [
-                                    "width": "auto",
-                                    "height": "auto",
-                                    "fontSize": 18,
-                                    "fontWeight": "bold",
-                                    "textColor": "#333333"
-                                ],
-                                "props": [
-                                    "text": "${stats.posts}"
-                                ]
-                            ],
-                            [
-                                "type": "text",
-                                "id": "posts_label",
-                                "style": [
-                                    "width": "auto",
-                                    "height": "auto",
-                                    "marginTop": 4,
-                                    "fontSize": 12,
-                                    "textColor": "#999999"
-                                ],
-                                "props": [
-                                    "text": "动态"
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
-        ]
-    ]
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -256,6 +70,11 @@ class DataBindingDemoViewController: UIViewController {
     }
     
     private func renderTemplate() {
+        guard let template = loadJSONTemplate(named: "user_card") else {
+            print("[DataBindingDemo] Failed to load user_card.json")
+            return
+        }
+        
         // 使用 TemplateXView 加载模板
         templateView.loadTemplate(json: template, data: userData)
     }
@@ -276,5 +95,23 @@ class DataBindingDemoViewController: UIViewController {
         
         // 使用 TemplateXView 的增量更新方法
         templateView.updateData(userData)
+    }
+    
+    // MARK: - JSON Loading
+    
+    private func loadJSONTemplate(named fileName: String) -> [String: Any]? {
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: "json") else {
+            print("[DataBindingDemo] JSON file not found: \(fileName).json")
+            return nil
+        }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let json = try JSONSerialization.jsonObject(with: data, options: [])
+            return json as? [String: Any]
+        } catch {
+            print("[DataBindingDemo] Failed to parse JSON: \(fileName).json, error: \(error)")
+            return nil
+        }
     }
 }

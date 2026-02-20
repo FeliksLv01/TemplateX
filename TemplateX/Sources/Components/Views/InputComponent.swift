@@ -119,15 +119,7 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
     }
     
     private func createTextField() -> UIView {
-        // 优先从视图池获取
-        let textField: TemplateXTextField
-        if let recycled = ViewRecyclePool.shared.dequeueView(forType: "input") as? TemplateXTextField {
-            textField = recycled
-            TXLogger.verbose("InputComponent: reused TextField from pool")
-        } else {
-            textField = TemplateXTextField()
-            TXLogger.verbose("InputComponent: created new TextField")
-        }
+        let textField = TemplateXTextField()
         
         configureTextField(textField)
         
@@ -143,15 +135,7 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
     private func createTextView() -> UIView {
         let container = UIView()
         
-        // 优先从视图池获取
-        let textView: TemplateXTextView
-        if let recycled = ViewRecyclePool.shared.dequeueView(forType: "input_multiline") as? TemplateXTextView {
-            textView = recycled
-            TXLogger.verbose("InputComponent: reused TextView from pool")
-        } else {
-            textView = TemplateXTextView()
-            TXLogger.verbose("InputComponent: created new TextView")
-        }
+        let textView = TemplateXTextView()
         
         configureTextView(textView)
         

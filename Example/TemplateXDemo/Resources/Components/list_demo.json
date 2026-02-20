@@ -1,0 +1,90 @@
+{
+    "type": "list",
+    "id": "product_list",
+    "style": {
+        "width": "100%",
+        "height": "auto",
+        "backgroundColor": "#FFFFFF",
+        "cornerRadius": 8
+    },
+    "props": {
+        "itemTemplate": {
+            "type": "container",
+            "id": "list_item",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "flexDirection": "row",
+                "alignItems": "center",
+                "padding": 16,
+                "borderBottomWidth": 1,
+                "borderBottomColor": "#EEEEEE"
+            },
+            "children": [
+                {
+                    "type": "container",
+                    "id": "icon",
+                    "style": {
+                        "width": 40,
+                        "height": 40,
+                        "backgroundColor": "#007AFF",
+                        "cornerRadius": 20
+                    }
+                },
+                {
+                    "type": "container",
+                    "id": "info",
+                    "style": {
+                        "flexGrow": 1,
+                        "flexDirection": "column",
+                        "marginLeft": 12
+                    },
+                    "children": [
+                        {
+                            "type": "text",
+                            "id": "title",
+                            "style": {
+                                "width": "100%",
+                                "height": "auto",
+                                "fontSize": 16,
+                                "fontWeight": "bold",
+                                "textColor": "#333333"
+                            },
+                            "props": {
+                                "text": "${item.title}"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "id": "subtitle",
+                            "style": {
+                                "width": "100%",
+                                "height": "auto",
+                                "marginTop": 4,
+                                "fontSize": 12,
+                                "textColor": "#999999"
+                            },
+                            "props": {
+                                "text": "${item.subtitle}"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "id": "price",
+                    "style": {
+                        "width": "auto",
+                        "height": "auto",
+                        "fontSize": 16,
+                        "fontWeight": "bold",
+                        "textColor": "#FF5722"
+                    },
+                    "props": {
+                        "text": "${item.price}"
+                    }
+                }
+            ]
+        }
+    }
+}

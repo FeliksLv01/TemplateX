@@ -1,0 +1,88 @@
+{
+    "type": "container",
+    "id": "text_demo",
+    "style": {
+        "width": "100%",
+        "height": "auto",
+        "flexDirection": "column",
+        "padding": 16,
+        "backgroundColor": "#FFFFFF",
+        "cornerRadius": 8
+    },
+    "children": [
+        {
+            "type": "text",
+            "id": "text1",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "fontSize": 14,
+                "textColor": "#333333"
+            },
+            "props": {
+                "text": "普通文本 - Regular Text"
+            }
+        },
+        {
+            "type": "text",
+            "id": "text2",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "marginTop": 8,
+                "fontSize": 16,
+                "fontWeight": "bold",
+                "textColor": "#333333"
+            },
+            "props": {
+                "text": "粗体文本 - Bold Text"
+            }
+        },
+        {
+            "type": "text",
+            "id": "text3",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "marginTop": 8,
+                "fontSize": 18,
+                "fontWeight": "bold",
+                "textColor": "#007AFF"
+            },
+            "props": {
+                "text": "彩色文本 - Colored Text"
+            }
+        },
+        {
+            "type": "text",
+            "id": "text4",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "marginTop": 8,
+                "fontSize": 14,
+                "textColor": "#666666",
+                "textAlign": "center"
+            },
+            "props": {
+                "text": "居中对齐的多行文本，这是一段较长的文字用于展示多行效果和文本截断功能。",
+                "maxLines": 2
+            }
+        },
+        {
+            "type": "text",
+            "id": "text5",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "marginTop": 8,
+                "fontSize": 14,
+                "textColor": "#999999",
+                "textAlign": "right"
+            },
+            "props": {
+                "text": "右对齐文本"
+            }
+        }
+    ]
+}

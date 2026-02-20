@@ -11,13 +11,13 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
     struct Props: ComponentProps {
         var title: String?
         var text: String?
+        var titleColor: String?
         var iconLeft: String?
         var icon: String?
         var iconRight: String?
         var iconSize: CGFloat?
         var iconSpacing: CGFloat?
         @Default<False> var disabled: Bool
-        @Default<False> var loading: Bool
         var titleColorHighlighted: String?
         var titleColorDisabled: String?
         var backgroundColorHighlighted: String?
@@ -44,11 +44,6 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
     var isDisabled: Bool {
         get { props.disabled }
         set { props.disabled = newValue }
-    }
-    
-    var isLoading: Bool {
-        get { props.loading }
-        set { props.loading = newValue }
     }
     
     var iconLeft: String? {
@@ -83,8 +78,13 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
         // 标题
         view.setTitle(props.buttonTitle, for: .normal)
         
-        // 文字颜色 - 从 style 读取
-        let titleColor = style.textColor ?? .white
+        // 文字颜色 - 优先从 props 读取，其次从 style 读取
+        let titleColor: UIColor
+        if let propsColor = props.titleColor, let color = parseColor(propsColor) {
+            titleColor = color
+        } else {
+            titleColor = style.textColor ?? .white
+        }
         view.setTitleColor(titleColor, for: .normal)
         view.setTitleColor(
             parseColor(props.titleColorHighlighted) ?? titleColor.withAlphaComponent(0.7),
@@ -107,33 +107,28 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
         view.disabledBackgroundColor = parseColor(props.backgroundColorDisabled)
             ?? style.backgroundColor?.withAlphaComponent(0.5)
         
-        // 图标
-        // TODO: 加载图标图片
-        
         // 状态
         view.isEnabled = !props.disabled
-        view.isLoading = props.loading
         
-        // 图标间距
-        let spacing = props.iconSpacing ?? 4
-        view.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: spacing)
-        view.titleEdgeInsets = UIEdgeInsets(top: 0, left: spacing, bottom: 0, right: 0)
+        // 图标间距（只在有图标时应用）
+        if props.leftIcon != nil || props.iconRight != nil {
+            let spacing = props.iconSpacing ?? 4
+            view.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: spacing)
+            view.titleEdgeInsets = UIEdgeInsets(top: 0, left: spacing, bottom: 0, right: 0)
+        } else {
+            view.imageEdgeInsets = .zero
+            view.titleEdgeInsets = .zero
+        }
     }
     
     // MARK: - Actions
     
     @objc private func handleTap() {
-        guard !props.disabled && !props.loading else { return }
+        guard !props.disabled else { return }
         onClick?()
     }
     
     // MARK: - Public Methods
-    
-    /// 设置加载状态
-    func setLoading(_ loading: Bool) {
-        props.loading = loading
-        (view as? TemplateXButton)?.isLoading = loading
-    }
     
     /// 设置禁用状态
     func setDisabled(_ disabled: Bool) {
@@ -168,6 +163,7 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
 // MARK: - TemplateXButton
 
 /// 自定义按钮视图
+/// 支持不同状态下的背景色变化
 class TemplateXButton: UIButton {
     
     /// 正常背景色
@@ -182,24 +178,6 @@ class TemplateXButton: UIButton {
     
     /// 禁用背景色
     var disabledBackgroundColor: UIColor?
-    
-    /// 加载中状态
-    var isLoading: Bool = false {
-        didSet {
-            updateLoadingState()
-        }
-    }
-    
-    /// 加载指示器
-    private lazy var loadingIndicator: UIActivityIndicatorView = {
-        let indicator = UIActivityIndicatorView(style: .medium)
-        indicator.hidesWhenStopped = true
-        indicator.color = .white
-        return indicator
-    }()
-    
-    /// 保存的标题
-    private var savedTitle: String?
     
     override var isHighlighted: Bool {
         didSet {
@@ -220,32 +198,6 @@ class TemplateXButton: UIButton {
             backgroundColor = highlightedBackgroundColor ?? normalBackgroundColor?.withAlphaComponent(0.8)
         } else {
             backgroundColor = normalBackgroundColor
-        }
-    }
-    
-    private func updateLoadingState() {
-        if isLoading {
-            savedTitle = title(for: .normal)
-            setTitle(nil, for: .normal)
-            
-            addSubview(loadingIndicator)
-            loadingIndicator.center = CGPoint(x: bounds.midX, y: bounds.midY)
-            loadingIndicator.startAnimating()
-            
-            isUserInteractionEnabled = false
-        } else {
-            setTitle(savedTitle, for: .normal)
-            loadingIndicator.stopAnimating()
-            loadingIndicator.removeFromSuperview()
-            
-            isUserInteractionEnabled = true
-        }
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        if isLoading {
-            loadingIndicator.center = CGPoint(x: bounds.midX, y: bounds.midY)
         }
     }
 }

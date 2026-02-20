@@ -1,0 +1,57 @@
+{
+    "type": "container",
+    "id": "counter_card",
+    "style": {
+        "width": "100%",
+        "height": "100%",
+        "flexDirection": "column",
+        "justifyContent": "center",
+        "alignItems": "center",
+        "padding": 16,
+        "backgroundColor": "#FFFFFF"
+    },
+    "children": [
+        {
+            "type": "text",
+            "id": "counter_label",
+            "style": {
+                "width": "auto",
+                "height": "auto",
+                "fontSize": 14,
+                "textColor": "#666666"
+            },
+            "props": {
+                "text": "计数器"
+            }
+        },
+        {
+            "type": "text",
+            "id": "counter_value",
+            "style": {
+                "width": "auto",
+                "height": "auto",
+                "marginTop": 8,
+                "fontSize": 48,
+                "fontWeight": "bold",
+                "textColor": "#007AFF"
+            },
+            "props": {
+                "text": "${count}"
+            }
+        },
+        {
+            "type": "text",
+            "id": "update_time",
+            "style": {
+                "width": "auto",
+                "height": "auto",
+                "marginTop": 8,
+                "fontSize": 12,
+                "textColor": "#999999"
+            },
+            "props": {
+                "text": "${'更新时间: ' + timestamp}"
+            }
+        }
+    ]
+}

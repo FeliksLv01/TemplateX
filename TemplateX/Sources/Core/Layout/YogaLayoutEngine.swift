@@ -1,6 +1,32 @@
 import UIKit
 import yoga
 
+// MARK: - 文本测量上下文
+
+/// 文本测量上下文（用于 Yoga 测量回调）
+final class TextMeasureContext {
+    let text: String
+    let fontSize: CGFloat
+    let fontWeight: UIFont.Weight
+    let lineHeight: CGFloat?
+    let letterSpacing: CGFloat?
+    let numberOfLines: Int
+    
+    init(text: String,
+         fontSize: CGFloat,
+         fontWeight: UIFont.Weight,
+         lineHeight: CGFloat? = nil,
+         letterSpacing: CGFloat? = nil,
+         numberOfLines: Int = 0) {
+        self.text = text
+        self.fontSize = fontSize
+        self.fontWeight = fontWeight
+        self.lineHeight = lineHeight
+        self.letterSpacing = letterSpacing
+        self.numberOfLines = numberOfLines
+    }
+}
+
 // MARK: - Yoga 布局引擎
 
 /// Yoga 布局引擎封装（基于 Yoga C API）

@@ -1,0 +1,130 @@
+{
+    "type": "container",
+    "id": "button_demo",
+    "style": {
+        "width": "100%",
+        "height": "auto",
+        "flexDirection": "column",
+        "padding": 16,
+        "backgroundColor": "#FFFFFF",
+        "cornerRadius": 8
+    },
+    "children": [
+        {
+            "type": "button",
+            "id": "btn_primary",
+            "style": {
+                "width": "100%",
+                "height": 44,
+                "backgroundColor": "#007AFF",
+                "cornerRadius": 8
+            },
+            "props": {
+                "title": "主要按钮",
+                "titleColor": "#FFFFFF"
+            }
+        },
+        {
+            "type": "button",
+            "id": "btn_secondary",
+            "style": {
+                "width": "100%",
+                "height": 44,
+                "marginTop": 8,
+                "backgroundColor": "#E3F2FD",
+                "cornerRadius": 8
+            },
+            "props": {
+                "title": "次要按钮",
+                "titleColor": "#007AFF"
+            }
+        },
+        {
+            "type": "button",
+            "id": "btn_danger",
+            "style": {
+                "width": "100%",
+                "height": 44,
+                "marginTop": 8,
+                "backgroundColor": "#F44336",
+                "cornerRadius": 8
+            },
+            "props": {
+                "title": "危险操作",
+                "titleColor": "#FFFFFF"
+            }
+        },
+        {
+            "type": "button",
+            "id": "btn_outline",
+            "style": {
+                "width": "100%",
+                "height": 44,
+                "marginTop": 8,
+                "backgroundColor": "#FFFFFF",
+                "borderWidth": 1,
+                "borderColor": "#007AFF",
+                "cornerRadius": 8
+            },
+            "props": {
+                "title": "描边按钮",
+                "titleColor": "#007AFF"
+            }
+        },
+        {
+            "type": "container",
+            "id": "btn_row",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "flexDirection": "row",
+                "marginTop": 8,
+                "justifyContent": "spaceBetween"
+            },
+            "children": [
+                {
+                    "type": "button",
+                    "id": "btn_small1",
+                    "style": {
+                        "width": 100,
+                        "height": 36,
+                        "backgroundColor": "#4CAF50",
+                        "cornerRadius": 18
+                    },
+                    "props": {
+                        "title": "确认",
+                        "titleColor": "#FFFFFF"
+                    }
+                },
+                {
+                    "type": "button",
+                    "id": "btn_small2",
+                    "style": {
+                        "width": 100,
+                        "height": 36,
+                        "backgroundColor": "#9E9E9E",
+                        "cornerRadius": 18
+                    },
+                    "props": {
+                        "title": "取消",
+                        "titleColor": "#FFFFFF"
+                    }
+                },
+                {
+                    "type": "button",
+                    "id": "btn_small3",
+                    "style": {
+                        "width": 100,
+                        "height": 36,
+                        "backgroundColor": "#FF9800",
+                        "cornerRadius": 18
+                    },
+                    "props": {
+                        "title": "警告",
+                        "titleColor": "#FFFFFF"
+                    }
+                }
+            ]
+        }
+    ]
+}

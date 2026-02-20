@@ -1,0 +1,203 @@
+{
+    "type": "container",
+    "id": "user_card",
+    "style": {
+        "width": "100%",
+        "height": "100%",
+        "flexDirection": "column",
+        "padding": 16,
+        "backgroundColor": "#FFFFFF"
+    },
+    "children": [
+        {
+            "type": "container",
+            "id": "header",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "flexDirection": "row",
+                "alignItems": "center"
+            },
+            "children": [
+                {
+                    "type": "text",
+                    "id": "name",
+                    "style": {
+                        "width": "auto",
+                        "height": "auto",
+                        "fontSize": 20,
+                        "fontWeight": "bold",
+                        "textColor": "#333333"
+                    },
+                    "props": {
+                        "text": "${user.name}"
+                    }
+                },
+                {
+                    "type": "text",
+                    "id": "vip_badge",
+                    "style": {
+                        "width": "auto",
+                        "height": "auto",
+                        "marginLeft": 8,
+                        "backgroundColor": "#FFD700",
+                        "cornerRadius": 4,
+                        "paddingHorizontal": 6,
+                        "paddingVertical": 2,
+                        "fontSize": 12,
+                        "textColor": "#FFFFFF"
+                    },
+                    "props": {
+                        "text": "VIP"
+                    },
+                    "bindings": {
+                        "display": "${user.isVip}"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "text",
+            "id": "age_info",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "marginTop": 8,
+                "fontSize": 14,
+                "textColor": "#666666"
+            },
+            "props": {
+                "text": "${'年龄: ' + user.age + ' 岁'}"
+            }
+        },
+        {
+            "type": "container",
+            "id": "stats_row",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "flexDirection": "row",
+                "marginTop": 16
+            },
+            "children": [
+                {
+                    "type": "container",
+                    "id": "followers_stat",
+                    "style": {
+                        "flexGrow": 1,
+                        "flexDirection": "column",
+                        "alignItems": "center"
+                    },
+                    "children": [
+                        {
+                            "type": "text",
+                            "id": "followers_count",
+                            "style": {
+                                "width": "auto",
+                                "height": "auto",
+                                "fontSize": 18,
+                                "fontWeight": "bold",
+                                "textColor": "#333333"
+                            },
+                            "props": {
+                                "text": "${stats.followers}"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "id": "followers_label",
+                            "style": {
+                                "width": "auto",
+                                "height": "auto",
+                                "marginTop": 4,
+                                "fontSize": 12,
+                                "textColor": "#999999"
+                            },
+                            "props": {
+                                "text": "粉丝"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "container",
+                    "id": "following_stat",
+                    "style": {
+                        "flexGrow": 1,
+                        "flexDirection": "column",
+                        "alignItems": "center"
+                    },
+                    "children": [
+                        {
+                            "type": "text",
+                            "id": "following_count",
+                            "style": {
+                                "width": "auto",
+                                "height": "auto",
+                                "fontSize": 18,
+                                "fontWeight": "bold",
+                                "textColor": "#333333"
+                            },
+                            "props": {
+                                "text": "${stats.following}"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "id": "following_label",
+                            "style": {
+                                "width": "auto",
+                                "height": "auto",
+                                "marginTop": 4,
+                                "fontSize": 12,
+                                "textColor": "#999999"
+                            },
+                            "props": {
+                                "text": "关注"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "container",
+                    "id": "posts_stat",
+                    "style": {
+                        "flexGrow": 1,
+                        "flexDirection": "column",
+                        "alignItems": "center"
+                    },
+                    "children": [
+                        {
+                            "type": "text",
+                            "id": "posts_count",
+                            "style": {
+                                "width": "auto",
+                                "height": "auto",
+                                "fontSize": 18,
+                                "fontWeight": "bold",
+                                "textColor": "#333333"
+                            },
+                            "props": {
+                                "text": "${stats.posts}"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "id": "posts_label",
+                            "style": {
+                                "width": "auto",
+                                "height": "auto",
+                                "marginTop": 4,
+                                "fontSize": 12,
+                                "textColor": "#999999"
+                            },
+                            "props": {
+                                "text": "动态"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

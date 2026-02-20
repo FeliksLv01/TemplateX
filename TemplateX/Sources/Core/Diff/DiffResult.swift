@@ -272,7 +272,6 @@ public struct ComponentSnapshot: Hashable {
         if let buttonComponent = component as? ButtonComponent {
             hasher.combine(buttonComponent.title)
             hasher.combine(buttonComponent.isDisabled)
-            hasher.combine(buttonComponent.isLoading)
             return hasher.finalize()
         }
         

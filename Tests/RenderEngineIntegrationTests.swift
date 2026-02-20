@@ -9,7 +9,6 @@ final class RenderEngineIntegrationTests: XCTestCase {
         super.setUp()
         engine = RenderEngine.shared
         engine.config.enablePerformanceMonitor = false
-        engine.config.enableViewReuse = true
         engine.config.enableIncrementalUpdate = true
         engine.clearAllCache()
     }
@@ -405,32 +404,6 @@ final class RenderEngineIntegrationTests: XCTestCase {
         XCTAssertEqual(view?.subviews.count, 10)
         
         engine.config.enablePerformanceMonitor = false
-    }
-    
-    // MARK: - 视图复用测试
-    
-    func testViewRecycling() {
-        engine.config.enableViewReuse = true
-        
-        let json: [String: Any] = [
-            "type": "container",
-            "id": "recycle_test",
-            "layout": ["width": 100, "height": 100]
-        ]
-        
-        // 渲染多次
-        for _ in 0..<5 {
-            if let view = engine.render(
-                json: json,
-                containerSize: CGSize(width: 375, height: 812)
-            ) {
-                engine.cleanup(view: view)
-            }
-        }
-        
-        // 视图应该被复用（具体验证需要访问内部状态）
-        // 这里只验证不会崩溃
-        XCTAssertTrue(true)
     }
     
     // MARK: - 边界情况测试

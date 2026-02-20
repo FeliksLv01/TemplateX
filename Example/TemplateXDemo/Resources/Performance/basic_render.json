@@ -1,0 +1,10 @@
+{
+    "type": "container",
+    "id": "basic",
+    "style": {
+        "width": 200,
+        "height": 100,
+        "backgroundColor": "#007AFF",
+        "cornerRadius": 8
+    }
+}

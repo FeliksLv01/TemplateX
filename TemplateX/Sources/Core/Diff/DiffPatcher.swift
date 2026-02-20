@@ -12,15 +12,11 @@ public final class DiffPatcher {
     
     // MARK: - 依赖
     
-    private let viewRecyclePool = ViewRecyclePool.shared
     private let layoutEngine = YogaLayoutEngine.shared
     
     // MARK: - 配置
     
     public struct Config {
-        /// 是否启用视图复用
-        public var enableViewRecycle: Bool = true
-        
         /// 是否启用动画
         public var enableAnimation: Bool = false
         
@@ -231,21 +227,10 @@ public final class DiffPatcher {
             return errorView
         }
         
-        // 创建或复用视图
-        let view: UIView
-        if config.enableViewRecycle, let recycledView = viewRecyclePool.dequeueView(forType: component.type) {
-            view = recycledView
-            component.view = view
-            // 复用视图时需要强制应用样式，避免旧样式残留
-            if let baseComponent = component as? BaseComponent {
-                baseComponent.forceApplyStyle = true
-            }
-        } else {
-            view = component.createView()
-        }
+        // 创建视图
+        let view = component.createView()
         
-        // 标记组件类型
-        view.componentType = component.type
+        // 标记组件 ID
         view.accessibilityIdentifier = component.id
         
         // 递归创建子视图
@@ -337,10 +322,6 @@ public final class DiffPatcher {
     
     private func recycleOrRemoveView(_ view: UIView, component: Component) {
         view.removeFromSuperview()
-        
-        if config.enableViewRecycle {
-            viewRecyclePool.recycleView(view, forType: component.type)
-        }
     }
     
     // MARK: - Update
@@ -410,7 +391,6 @@ public final class DiffPatcher {
            let targetButton = target as? ButtonComponent {
             targetButton.title = sourceButton.title
             targetButton.isDisabled = sourceButton.isDisabled
-            targetButton.isLoading = sourceButton.isLoading
             targetButton.iconLeft = sourceButton.iconLeft
             targetButton.iconRight = sourceButton.iconRight
             return
@@ -537,9 +517,8 @@ public final class DiffPatcher {
     }
     
     private func buildViewIndexRecursive(_ view: UIView, index: inout [String: UIView]) {
-        if view.componentType != nil {
-            // 使用视图的 tag 或 accessibilityIdentifier 作为 key
-            let key = view.accessibilityIdentifier ?? "view_\(view.hash)"
+        // 使用 accessibilityIdentifier 作为 key
+        if let key = view.accessibilityIdentifier {
             index[key] = view
         }
         for subview in view.subviews {

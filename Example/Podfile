@@ -12,7 +12,8 @@ target 'TemplateXDemo' do
   # TemplateXService - 提供 ImageLoader 实现（SDWebImage）
   pod 'TemplateXService', :path => '../'
   
-  pod 'LookinServer'
+  pod 'LookinServer', :subspecs => ['Swift'], :configurations => ['Debug']
+
 end
 
 post_install do |installer|

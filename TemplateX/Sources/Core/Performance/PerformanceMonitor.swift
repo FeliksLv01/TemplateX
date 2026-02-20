@@ -28,6 +28,16 @@ public final class PerformanceMonitor {
     /// 高性能自旋锁
     private var statsLock = os_unfair_lock()
     
+    // MARK: - 平均绑定时间（GapWorker 使用）
+    
+    /// 按模板 ID 存储的平均绑定时间（纳秒）
+    /// 对应 Lynx: list_adapter.cc:109 GetAverageBindTime
+    private var averageBindTimes: [String: Int64] = [:]
+    
+    /// 默认绑定时间（纳秒）- 用于首次预加载估算
+    /// 默认 2ms = 2,000,000 纳秒
+    public var defaultBindTimeNanos: Int64 = 2_000_000
+    
     private init() {}
     
     // MARK: - API
@@ -69,6 +79,43 @@ public final class PerformanceMonitor {
         os_unfair_lock_lock(&statsLock)
         defer { os_unfair_lock_unlock(&statsLock) }
         aggregatedStats.removeAll()
+    }
+    
+    // MARK: - 平均绑定时间 API（GapWorker 使用）
+    
+    /// 获取指定模板的平均绑定时间（纳秒）
+    /// 对应 Lynx: list_adapter.cc:109 GetAverageBindTime
+    /// - Parameter templateId: 模板 ID
+    /// - Returns: 平均绑定时间（纳秒），如果没有记录则返回默认值
+    public func getAverageBindTime(templateId: String) -> Int64 {
+        os_unfair_lock_lock(&statsLock)
+        defer { os_unfair_lock_unlock(&statsLock) }
+        return averageBindTimes[templateId] ?? defaultBindTimeNanos
+    }
+    
+    /// 更新平均绑定时间
+    /// 使用加权平均：newAverage = oldAverage * 0.75 + newValue * 0.25
+    /// 对应 Lynx: list_adapter.cc:17 CalculateAverage
+    /// - Parameters:
+    ///   - templateId: 模板 ID
+    ///   - newValue: 新的绑定时间（纳秒）
+    public func updateAverageBindTime(templateId: String, newValue: Int64) {
+        os_unfair_lock_lock(&statsLock)
+        defer { os_unfair_lock_unlock(&statsLock) }
+        
+        if let oldAverage = averageBindTimes[templateId] {
+            // 加权平均：oldAverage * 3/4 + newValue * 1/4
+            averageBindTimes[templateId] = (oldAverage * 3 / 4) + (newValue / 4)
+        } else {
+            averageBindTimes[templateId] = newValue
+        }
+    }
+    
+    /// 重置平均绑定时间
+    public func resetAverageBindTimes() {
+        os_unfair_lock_lock(&statsLock)
+        defer { os_unfair_lock_unlock(&statsLock) }
+        averageBindTimes.removeAll()
     }
     
     // MARK: - Private

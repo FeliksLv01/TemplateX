@@ -1,0 +1,45 @@
+{
+    "type": "container",
+    "id": "column_demo",
+    "style": {
+        "width": "100%",
+        "height": 150,
+        "flexDirection": "column",
+        "backgroundColor": "#E8F5E9"
+    },
+    "children": [
+        {
+            "type": "container",
+            "id": "vbox1",
+            "style": {
+                "flexGrow": 1,
+                "alignSelf": "stretch",
+                "margin": 4,
+                "backgroundColor": "#4CAF50",
+                "cornerRadius": 4
+            }
+        },
+        {
+            "type": "container",
+            "id": "vbox2",
+            "style": {
+                "flexGrow": 1,
+                "alignSelf": "stretch",
+                "margin": 4,
+                "backgroundColor": "#388E3C",
+                "cornerRadius": 4
+            }
+        },
+        {
+            "type": "container",
+            "id": "vbox3",
+            "style": {
+                "flexGrow": 1,
+                "alignSelf": "stretch",
+                "margin": 4,
+                "backgroundColor": "#1B5E20",
+                "cornerRadius": 4
+            }
+        }
+    ]
+}

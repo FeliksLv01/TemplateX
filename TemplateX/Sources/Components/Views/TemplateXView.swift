@@ -430,7 +430,6 @@ public class TemplateXView: UIView {
            let targetButton = target as? ButtonComponent {
             targetButton.title = sourceButton.title
             targetButton.isDisabled = sourceButton.isDisabled
-            targetButton.isLoading = sourceButton.isLoading
             targetButton.iconLeft = sourceButton.iconLeft
             targetButton.iconRight = sourceButton.iconRight
             return

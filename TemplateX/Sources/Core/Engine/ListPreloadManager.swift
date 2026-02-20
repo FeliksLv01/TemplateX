@@ -4,10 +4,10 @@ import UIKit
 
 /// 列表预加载管理器
 ///
-/// 借鉴 Lynx 的 ListPreloadCache 设计：
+/// 借鉴 Lynx 的 ListPreloadCache + GapWorker 设计：
 /// - Cell 模板预编译：在列表创建时预先解析 Cell 模板
 /// - Cell 高度预计算：批量预计算所有数据项的高度
-/// - 滚动方向预加载：预先创建即将进入屏幕的 Cell 视图
+/// - GapWorker 闲时预加载：在帧空闲时间预创建即将进入屏幕的 Cell
 ///
 /// 使用示例：
 /// ```swift
@@ -43,6 +43,9 @@ public final class ListPreloadManager {
         
         /// 最大预创建视图数量
         public var maxPreloadedViews: Int = 5
+        
+        /// 是否启用 GapWorker 闲时预加载
+        public var enableGapWorker: Bool = true
         
         public init() {}
     }
@@ -91,13 +94,33 @@ public final class ListPreloadManager {
     /// 上次滚动位置
     private var lastScrollOffset: CGFloat = 0
     
+    /// 当前滚动状态
+    private var scrollStatus: ScrollStatus = .idle
+    
+    // MARK: - GapWorker 集成
+    
+    /// GapWorker 任务组
+    private var gapTaskBundle: GapTaskBundle?
+    
+    /// 预加载位置收集器
+    private let prefetchRegistry = PrefetchRegistry()
+    
+    /// 预加载辅助器
+    private var prefetchHelper = LinearLayoutPrefetchHelper()
+    
+    /// 数据源引用（用于 GapWorker 回调）
+    private weak var dataSourceRef: NSArray?
+    
+    /// 平均 Cell 尺寸（用于计算距离）
+    private var averageItemSize: CGFloat = 44
+    
     // MARK: - 依赖
     
     private let templateParser = TemplateParser.shared
     private let layoutEngine = YogaLayoutEngine.shared
     private let dataBindingManager = DataBindingManager.shared
     
-    /// 后台队列
+    /// 后台队列（用于非 GapWorker 场景）
     private let backgroundQueue = DispatchQueue(
         label: "com.templatex.listpreload",
         qos: .userInitiated
@@ -113,6 +136,14 @@ public final class ListPreloadManager {
         self.cellTemplate = cellTemplate
         self.templateId = templateId
         self.containerWidth = containerWidth
+        
+        // 配置预加载辅助器
+        prefetchHelper.prefetchBufferCount = config.preloadBufferCount
+    }
+    
+    deinit {
+        // 取消 GapWorker 注册
+        unregisterFromGapWorker()
     }
     
     // MARK: - 模板预编译
@@ -228,6 +259,11 @@ public final class ListPreloadManager {
                 self.heightCache[index] = height
             }
             
+            // 更新平均尺寸
+            if !heights.isEmpty {
+                self.averageItemSize = heights.reduce(0, +) / CGFloat(heights.count)
+            }
+            
             let elapsed = (CACurrentMediaTime() - start) * 1000
             TXLogger.trace("[ListPreloadManager] precomputeHeights: count=\(dataSource.count) | \(String(format: "%.2f", elapsed))ms")
             
@@ -279,7 +315,122 @@ public final class ListPreloadManager {
         }
     }
     
-    // MARK: - 视图预加载
+    // MARK: - GapWorker 集成
+    
+    /// 滚动状态
+    private enum ScrollStatus {
+        case idle
+        case dragging
+        case fling
+        case animating
+        
+        var needsPrefetch: Bool {
+            switch self {
+            case .dragging, .fling, .animating:
+                return true
+            case .idle:
+                return false
+            }
+        }
+    }
+    
+    /// 注册到 GapWorker
+    /// 对应 Lynx: base_list_view.cc:719 RegisterPrefetch
+    private func registerToGapWorker() {
+        guard config.enableGapWorker else { return }
+        
+        // 创建任务组
+        gapTaskBundle = GapTaskBundle(host: self)
+        
+        // 注册收集器
+        TemplateXGapWorker.shared.registerPrefetch(host: self) { [weak self] in
+            self?.startPrefetch()
+        }
+    }
+    
+    /// 取消注册
+    /// 对应 Lynx: base_list_view.cc:728 UnregisterPrefetch
+    private func unregisterFromGapWorker() {
+        guard config.enableGapWorker else { return }
+        
+        TemplateXGapWorker.shared.unregisterPrefetch(host: self)
+        gapTaskBundle = nil
+    }
+    
+    /// 开始预加载（GapWorker 回调）
+    /// 对应 Lynx: base_list_view.cc:735 StartPrefetch
+    private func startPrefetch() {
+        guard let bundle = gapTaskBundle,
+              let visibleRange = visibleRange,
+              let dataSource = dataSourceRef as? [Any] else { return }
+        
+        // 清空旧任务
+        bundle.clear()
+        
+        // 计算滚动方向
+        let scrollDirection = lastScrollOffset
+        
+        // 收集预加载位置
+        prefetchHelper.collectPrefetchPositions(
+            into: prefetchRegistry,
+            visibleRange: visibleRange,
+            totalCount: dataSource.count,
+            scrollDirection: scrollDirection,
+            averageItemSize: averageItemSize
+        )
+        
+        guard !prefetchRegistry.isEmpty else { return }
+        
+        // 获取平均绑定时间
+        let estimateDuration = PerformanceMonitor.shared.getAverageBindTime(templateId: templateId)
+        
+        // 创建预加载任务
+        for info in prefetchRegistry.getSortedPositions() {
+            guard info.position < dataSource.count else { continue }
+            
+            let itemData = dataSource[info.position]
+            var context: [String: Any] = ["item": itemData, "index": info.position]
+            if let dictData = itemData as? [String: Any] {
+                context.merge(dictData) { _, new in new }
+            }
+            
+            let task = CellPrefetchTask(
+                position: info.position,
+                templateId: templateId,
+                templateJson: cellTemplate.rawDictionary,
+                cellData: context,
+                containerSize: CGSize(width: containerWidth, height: heightCache[info.position] ?? averageItemSize),
+                estimateDuration: estimateDuration,
+                priority: Int(info.distance),
+                enableForceRun: true,
+                hostView: self
+            )
+            
+            bundle.addTask(task)
+        }
+        
+        // 排序并提交
+        bundle.sort()
+        TemplateXGapWorker.shared.submit(taskBundle: bundle, host: self)
+    }
+    
+    /// 更新滚动状态
+    /// 对应 Lynx: base_list_view.cc:1272 SetScrollStatus
+    private func updateScrollStatus(_ newStatus: ScrollStatus) {
+        let oldStatus = scrollStatus
+        scrollStatus = newStatus
+        
+        let needsPrefetch = newStatus.needsPrefetch
+        let oldNeedsPrefetch = oldStatus.needsPrefetch
+        
+        if needsPrefetch && !oldNeedsPrefetch {
+            registerToGapWorker()
+        } else if !needsPrefetch && oldNeedsPrefetch {
+            unregisterFromGapWorker()
+        }
+    }
+    
+    // MARK: - 视图预加载（非 GapWorker 模式）
     
     /// 预加载指定范围的视图
     ///
@@ -297,6 +448,22 @@ public final class ListPreloadManager {
             return
         }
         
+        // 如果启用了 GapWorker，交给 GapWorker 处理
+        if config.enableGapWorker {
+            // 使用 PrefetchCache 获取已预加载的组件
+            for index in range {
+                let cacheKey = PrefetchCache.cacheKey(templateId: templateId, position: index)
+                if let item = PrefetchCache.shared.get(cacheKey: cacheKey) {
+                    // 在主线程创建视图
+                    let view = createViewTree(for: item.component)
+                    preloadedViews[index] = (view, item.component)
+                }
+            }
+            completion()
+            return
+        }
+        
+        // 非 GapWorker 模式：使用后台队列
         backgroundQueue.async { [weak self] in
             guard let self = self else { return }
             
@@ -370,7 +537,21 @@ public final class ListPreloadManager {
     /// - Parameter index: 索引
     /// - Returns: 预加载的视图（如果存在）
     public func dequeuePreloadedView(for index: Int) -> (UIView, Component)? {
-        return preloadedViews.removeValue(forKey: index)
+        // 先检查本地缓存
+        if let cached = preloadedViews.removeValue(forKey: index) {
+            return cached
+        }
+        
+        // 再检查 PrefetchCache（GapWorker 预加载的）
+        if config.enableGapWorker {
+            let cacheKey = PrefetchCache.cacheKey(templateId: templateId, position: index)
+            if let item = PrefetchCache.shared.get(cacheKey: cacheKey) {
+                let view = createViewTree(for: item.component)
+                return (view, item.component)
+            }
+        }
+        
+        return nil
     }
     
     /// 回收视图到缓存
@@ -410,11 +591,25 @@ public final class ListPreloadManager {
     ) {
         let currentOffset = scrollView.contentOffset.y
         let isScrollingDown = currentOffset > lastScrollOffset
-        lastScrollOffset = currentOffset
+        lastScrollOffset = isScrollingDown ? 1 : -1  // 简化为方向标记
         
         self.visibleRange = visibleRange
+        self.dataSourceRef = dataSource as NSArray
         
-        // 计算预加载范围
+        // 更新滚动状态
+        if scrollView.isDragging {
+            updateScrollStatus(.dragging)
+        } else if scrollView.isDecelerating {
+            updateScrollStatus(.fling)
+        }
+        
+        // 如果启用了 GapWorker，预加载由 GapWorker 在 VSYNC 时处理
+        // 不需要在这里立即触发
+        if config.enableGapWorker {
+            return
+        }
+        
+        // 非 GapWorker 模式：计算预加载范围
         let bufferCount = config.preloadBufferCount
         let preloadRange: Range<Int>
         
@@ -436,6 +631,11 @@ public final class ListPreloadManager {
         }
     }
     
+    /// 滚动结束
+    public func handleScrollEnd() {
+        updateScrollStatus(.idle)
+    }
+    
     // MARK: - 清理
     
     /// 清理所有缓存
@@ -446,6 +646,10 @@ public final class ListPreloadManager {
         lowerCache.removeAll()
         componentPrototype = nil
         isPrecompiled = false
+        
+        // 清理 GapWorker 相关
+        unregisterFromGapWorker()
+        PrefetchCache.shared.clear(templateId: templateId)
     }
     
     // MARK: - 私有方法

@@ -1,6 +1,27 @@
 import UIKit
 import os.lock
 
+// MARK: - 渲染错误
+
+/// 渲染错误类型
+public enum RenderError: Error, LocalizedError {
+    case parseError(String)
+    case layoutError(String)
+    case viewCreationError(String)
+    case bindingError(String)
+    case unknown(String)
+    
+    public var errorDescription: String? {
+        switch self {
+        case .parseError(let msg): return "Parse error: \(msg)"
+        case .layoutError(let msg): return "Layout error: \(msg)"
+        case .viewCreationError(let msg): return "View creation error: \(msg)"
+        case .bindingError(let msg): return "Binding error: \(msg)"
+        case .unknown(let msg): return "Unknown error: \(msg)"
+        }
+    }
+}
+
 // MARK: - 渲染引擎
 
 /// 模板渲染引擎
@@ -19,9 +40,6 @@ public final class TemplateXRenderEngine {
     
     /// 渲染配置
     public struct Config {
-        /// 是否启用视图复用
-        public var enableViewReuse: Bool = true
-        
         /// 是否启用布局缓存
         public var enableLayoutCache: Bool = true
         
@@ -60,7 +78,6 @@ public final class TemplateXRenderEngine {
     private let expressionEngine = ExpressionEngine.shared
     private let viewDiffer = ViewDiffer.shared
     private let diffPatcher = DiffPatcher.shared
-    private let viewRecyclePool = ViewRecyclePool.shared
     
     // MARK: - 渲染状态缓存
     
@@ -88,9 +105,6 @@ public final class TemplateXRenderEngine {
     private init() {
         // 预热布局引擎
         layoutEngine.warmUp(nodeCount: 64)
-        
-        // 注册内存警告
-        viewRecyclePool.registerMemoryWarningHandler()
     }
     
     // MARK: - 渲染 API
@@ -108,14 +122,12 @@ public final class TemplateXRenderEngine {
     ) -> UIView? {
         // 1. 尝试从缓存获取组件树
         var component: Component?
-        if config.enableViewReuse {
-            component = templateCache.get(templateName)
-        }
+        component = templateCache.get(templateName)
         
         // 2. 缓存未命中，加载模板
         if component == nil {
             component = TemplateLoader.shared.loadFromBundle(name: templateName)
-            if let c = component, config.enableViewReuse {
+            if let c = component {
                 templateCache.set(templateName, component: c)
             }
         }
@@ -278,7 +290,6 @@ public final class TemplateXRenderEngine {
         }
         
         // 4. 配置 Patcher
-        diffPatcher.config.enableViewRecycle = config.enableViewReuse
         diffPatcher.config.enableAnimation = config.enableUpdateAnimation
         diffPatcher.config.animationDuration = config.updateAnimationDuration
         
@@ -352,11 +363,8 @@ public final class TemplateXRenderEngine {
     public func cleanup(view: UIView) {
         let viewId = generateViewIdentifier(view)
         
-        // 回收组件树
-        if let component = renderedComponents.removeValue(forKey: viewId) {
-            viewRecyclePool.recycleComponentTree(component)
-        }
-        
+        // 移除组件缓存
+        renderedComponents.removeValue(forKey: viewId)
         renderedData.removeValue(forKey: viewId)
     }
     
@@ -365,7 +373,6 @@ public final class TemplateXRenderEngine {
         renderedComponents.removeAll()
         renderedData.removeAll()
         templateCache.clear()
-        viewRecyclePool.clear()
     }
     
     // MARK: - 数据绑定
@@ -443,26 +450,18 @@ public final class TemplateXRenderEngine {
             return errorView
         }
         
-        // 创建或复用视图
+        // 创建视图
         let view: UIView
         let createStart = CACurrentMediaTime()
         if let existingView = component.view {
             view = existingView
-        } else if config.enableViewReuse, let recycledView = viewRecyclePool.dequeueView(forType: component.type) {
-            view = recycledView
-            component.view = view
-            // 复用视图时需要强制应用样式，避免旧样式残留
-            if let baseComponent = component as? BaseComponent {
-                baseComponent.forceApplyStyle = true
-            }
         } else {
             view = component.createView()
         }
         let createTime = (CACurrentMediaTime() - createStart) * 1000
         viewCreationStats.recordCreate(type: component.type, time: createTime)
         
-        // 标记组件类型
-        view.componentType = component.type
+        // 标记组件 ID
         view.accessibilityIdentifier = component.id
         
         // 递归创建子视图
@@ -610,83 +609,7 @@ extension TemplateXRenderEngine {
     }
 }
 
-// MARK: - 异步渲染 API
 
-extension TemplateXRenderEngine {
-    
-    /// 异步渲染引擎实例
-    public var asyncEngine: AsyncTemplateXRenderEngine {
-        return AsyncTemplateXRenderEngine.shared
-    }
-    
-    /// 从 JSON 异步渲染视图
-    /// - Parameters:
-    ///   - json: JSON 字典
-    ///   - data: 绑定数据
-    ///   - containerSize: 容器尺寸
-    ///   - completion: 完成回调（主线程）
-    public func renderAsync(
-        json: [String: Any],
-        data: [String: Any]? = nil,
-        containerSize: CGSize,
-        completion: @escaping (Result<RenderOutput, RenderError>) -> Void
-    ) {
-        asyncEngine.renderAsync(json: json, data: data, containerSize: containerSize, completion: completion)
-    }
-    
-    /// 从模板名称异步渲染
-    public func renderAsync(
-        templateName: String,
-        data: [String: Any]? = nil,
-        containerSize: CGSize,
-        completion: @escaping (Result<RenderOutput, RenderError>) -> Void
-    ) {
-        asyncEngine.renderAsync(templateName: templateName, data: data, containerSize: containerSize, completion: completion)
-    }
-    
-    /// 异步增量更新
-    public func updateAsync(
-        view: UIView,
-        data: [String: Any],
-        containerSize: CGSize,
-        completion: @escaping (Result<Int, RenderError>) -> Void
-    ) {
-        asyncEngine.updateAsync(view: view, data: data, containerSize: containerSize, completion: completion)
-    }
-}
-
-// MARK: - Async/Await 支持 (iOS 13+)
-
-@available(iOS 13.0, *)
-extension TemplateXRenderEngine {
-    
-    /// 使用 async/await 异步渲染 JSON
-    public func render(
-        json: [String: Any],
-        data: [String: Any]? = nil,
-        containerSize: CGSize
-    ) async throws -> RenderOutput {
-        try await asyncEngine.render(json: json, data: data, containerSize: containerSize)
-    }
-    
-    /// 使用 async/await 异步渲染模板
-    public func render(
-        templateName: String,
-        data: [String: Any]? = nil,
-        containerSize: CGSize
-    ) async throws -> RenderOutput {
-        try await asyncEngine.render(templateName: templateName, data: data, containerSize: containerSize)
-    }
-    
-    /// 使用 async/await 异步更新
-    public func update(
-        view: UIView,
-        data: [String: Any],
-        containerSize: CGSize
-    ) async throws -> Int {
-        try await asyncEngine.update(view: view, data: data, containerSize: containerSize)
-    }
-}
 
 // MARK: - 渲染结果
 
@@ -1392,7 +1315,6 @@ extension TemplateXRenderEngine {
     ) -> UIView? {
         let pipeline = createPipeline()
         pipeline.config.syncFlushTimeoutMs = timeoutMs
-        pipeline.config.enableViewReuse = config.enableViewReuse
         pipeline.config.enablePerformanceMonitor = config.enablePerformanceMonitor
         
         // 启动渲染
@@ -1445,7 +1367,6 @@ extension TemplateXRenderEngine {
         
         let pipeline = createPipeline()
         pipeline.config.syncFlushTimeoutMs = timeoutMs
-        pipeline.config.enableViewReuse = config.enableViewReuse
         pipeline.config.enablePerformanceMonitor = config.enablePerformanceMonitor
         
         // 使用原型启动渲染

@@ -33,9 +33,6 @@ final class RenderPipeline {
         /// SyncFlush 超时时间（毫秒）
         public var syncFlushTimeoutMs: Int = 100
         
-        /// 是否启用视图复用
-        public var enableViewReuse: Bool = true
-        
         /// 是否启用性能监控
         public var enablePerformanceMonitor: Bool = false
         
@@ -82,7 +79,6 @@ final class RenderPipeline {
     private let templateParser = TemplateParser.shared
     private let dataBindingManager = DataBindingManager.shared
     private let layoutEngine = YogaLayoutEngine.shared
-    private let viewRecyclePool = ViewRecyclePool.shared
     
     /// 后台队列
     private let backgroundQueue: DispatchQueue
@@ -398,24 +394,15 @@ final class RenderPipeline {
         operationQueue.enqueue { [weak self] in
             guard let self = self else { return }
             
-            // 创建或复用视图
+            // 创建视图
             let view: UIView
             if let existingView = component.view {
                 view = existingView
-            } else if self.config.enableViewReuse,
-                      let recycledView = self.viewRecyclePool.dequeueView(forType: component.type) {
-                view = recycledView
-                component.view = view
-                // 复用视图时强制应用样式
-                if let baseComponent = component as? BaseComponent {
-                    baseComponent.forceApplyStyle = true
-                }
             } else {
                 view = component.createView()
             }
             
             // 设置属性
-            view.componentType = component.type
             view.accessibilityIdentifier = component.id
             
             // 设置 frame

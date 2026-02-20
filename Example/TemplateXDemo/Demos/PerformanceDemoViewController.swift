@@ -10,12 +10,22 @@ class PerformanceDemoViewController: UIViewController {
     
     private var isRunning = false
     
+    // 缓存的模板
+    private var basicTemplate: [String: Any]?
+    private var incrementalTemplate: [String: Any]?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = .systemGroupedBackground
         
+        loadTemplates()
         setupUI()
+    }
+    
+    private func loadTemplates() {
+        basicTemplate = loadJSONTemplate(named: "basic_render")
+        incrementalTemplate = loadJSONTemplate(named: "incremental_update")
     }
     
     private func setupUI() {
@@ -87,6 +97,24 @@ class PerformanceDemoViewController: UIViewController {
             logTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             logTextView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
         ])
+    }
+    
+    // MARK: - JSON Loading
+    
+    private func loadJSONTemplate(named fileName: String) -> [String: Any]? {
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: "json") else {
+            print("[PerformanceDemo] JSON file not found: \(fileName).json")
+            return nil
+        }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let json = try JSONSerialization.jsonObject(with: data, options: [])
+            return json as? [String: Any]
+        } catch {
+            print("[PerformanceDemo] Failed to parse JSON: \(fileName).json, error: \(error)")
+            return nil
+        }
     }
     
     // MARK: - Tests
@@ -190,12 +218,7 @@ class PerformanceDemoViewController: UIViewController {
     // MARK: - Test Operations
     
     private func performBasicRender() {
-        // 统一 style 格式
-        let template: [String: Any] = [
-            "type": "container",
-            "id": "basic",
-            "style": ["width": 200, "height": 100, "backgroundColor": "#007AFF", "cornerRadius": 8]
-        ]
+        guard let template = basicTemplate else { return }
         
         // 使用 Builder 模式创建 TemplateXView
         let templateView = TemplateXView { builder in
@@ -213,7 +236,7 @@ class PerformanceDemoViewController: UIViewController {
     }
     
     private func performComplexLayoutRender() {
-        // 模拟复杂的嵌套布局（3 层嵌套，每层 5 个子元素）
+        // 模拟复杂的嵌套布局（3 层嵌套，每层 5 个子元素）- 保持动态生成
         func makeChildren(depth: Int) -> [[String: Any]] {
             guard depth > 0 else { return [] }
             
@@ -270,6 +293,7 @@ class PerformanceDemoViewController: UIViewController {
     }
     
     private func performDataBindingRender() {
+        // 数据绑定测试 - 保持动态生成
         let template: [String: Any] = [
             "type": "container",
             "id": "binding_root",
@@ -311,25 +335,7 @@ class PerformanceDemoViewController: UIViewController {
     private var updateCounter = 0
     
     private func performIncrementalUpdate() {
-        let template: [String: Any] = [
-            "type": "container",
-            "id": "update_root",
-            "style": ["width": "100%", "height": 100, "flexDirection": "column"],
-            "children": [
-                [
-                    "type": "text",
-                    "id": "counter_text",
-                    "style": ["width": "100%", "height": "auto", "fontSize": 24],
-                    "props": ["text": "${count}"]
-                ],
-                [
-                    "type": "text",
-                    "id": "time_text",
-                    "style": ["width": "100%", "height": "auto", "fontSize": 12],
-                    "props": ["text": "${timestamp}"]
-                ]
-            ]
-        ]
+        guard let template = incrementalTemplate else { return }
         
         // 首次渲染或获取缓存
         if cachedTemplateView == nil {

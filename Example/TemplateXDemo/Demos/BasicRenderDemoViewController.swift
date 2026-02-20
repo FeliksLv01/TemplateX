@@ -51,72 +51,30 @@ class BasicRenderDemoViewController: UIViewController {
     }
     
     private func renderTemplate() {
-        // 定义模板 JSON - 统一 style 格式
-        let template: [String: Any] = [
-            "type": "container",
-            "id": "card",
-            "style": [
-                "width": "100%",
-                "height": "100%",
-                "flexDirection": "column",
-                "padding": 16,
-                "backgroundColor": "#FFFFFF",
-                "cornerRadius": 12
-            ],
-            "children": [
-                [
-                    "type": "text",
-                    "id": "title",
-                    "style": [
-                        "width": "100%",
-                        "height": "auto",
-                        "fontSize": 24,
-                        "fontWeight": "bold",
-                        "textColor": "#333333"
-                    ],
-                    "props": [
-                        "text": "Hello TemplateX!"
-                    ]
-                ],
-                [
-                    "type": "text",
-                    "id": "subtitle",
-                    "style": [
-                        "width": "100%",
-                        "height": "auto",
-                        "marginTop": 8,
-                        "fontSize": 14,
-                        "textColor": "#666666"
-                    ],
-                    "props": [
-                        "text": "高性能 iOS DSL 动态渲染框架"
-                    ]
-                ],
-                [
-                    "type": "container",
-                    "id": "spacer",
-                    "style": [
-                        "flexGrow": 1
-                    ]
-                ],
-                [
-                    "type": "button",
-                    "id": "action_btn",
-                    "style": [
-                        "width": "100%",
-                        "height": 44,
-                        "backgroundColor": "#007AFF",
-                        "cornerRadius": 8,
-                        "textColor": "#FFFFFF"
-                    ],
-                    "props": [
-                        "title": "了解更多"
-                    ]
-                ]
-            ]
-        ]
+        guard let template = loadJSONTemplate(named: "basic_card") else {
+            print("[BasicRenderDemo] Failed to load basic_card.json")
+            return
+        }
         
         // 使用 TemplateXView 加载模板
         templateView.loadTemplate(json: template)
+    }
+    
+    // MARK: - JSON Loading
+    
+    private func loadJSONTemplate(named fileName: String) -> [String: Any]? {
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: "json") else {
+            print("[BasicRenderDemo] JSON file not found: \(fileName).json")
+            return nil
+        }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let json = try JSONSerialization.jsonObject(with: data, options: [])
+            return json as? [String: Any]
+        } catch {
+            print("[BasicRenderDemo] Failed to parse JSON: \(fileName).json, error: \(error)")
+            return nil
+        }
     }
 }

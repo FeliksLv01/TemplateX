@@ -11,7 +11,7 @@ TemplateX 是一个高性能的 iOS DSL 动态化渲染框架，支持通过 JSO
 - **数据绑定**：`${expression}` 表达式求值
 - **增量更新**：Diff + Patch 算法，最小化视图操作
 - **组件化**：可扩展的组件注册机制
-- **高性能**：视图复用池、布局缓存、异步渲染
+- **高性能**：组件树复用、布局缓存、异步渲染
 
 ---
 
@@ -50,13 +50,17 @@ TemplateX/                               # Git 仓库根目录
 │       ├── Core/
 │       │   ├── Engine/
 │       │   │   ├── RenderEngine.swift       # 核心渲染引擎
-│       │   │   └── AsyncRenderEngine.swift  # 异步渲染引擎
+│       │   │   └── ListPreloadManager.swift # 列表预加载管理
 │       │   ├── Layout/
 │       │   │   ├── YogaLayoutEngine.swift   # Yoga 布局引擎封装
 │       │   │   ├── YogaCBridge.swift        # Yoga C API 桥接
 │       │   │   ├── YogaNodePool.swift       # Yoga 节点池
-│       │   │   ├── AsyncLayoutEngine.swift  # 异步布局引擎
 │       │   │   └── LayoutTypes.swift        # 布局类型定义
+│       │   ├── GapWorker/                   # 帧空闲时间任务调度（对标 Lynx）
+│       │   │   ├── GapTask.swift            # 任务协议 + TaskBundle
+│       │   │   ├── TemplateXGapWorker.swift # 核心调度器（CADisplayLink）
+│       │   │   ├── PrefetchRegistry.swift   # 预取位置收集器
+│       │   │   └── CellPrefetchTask.swift   # Cell 预取任务 + 缓存
 │       │   ├── Template/
 │       │   │   ├── TemplateParser.swift     # 模板解析器 + 缓存
 │       │   │   ├── JSONWrapper.swift        # JSON 封装工具
@@ -67,8 +71,7 @@ TemplateX/                               # Git 仓库根目录
 │       │   │   └── ExpressionEngine.swift   # 表达式引擎
 │       │   ├── Diff/
 │       │   │   ├── ViewDiffer.swift         # Diff 算法
-│       │   │   ├── DiffPatcher.swift        # Patch 应用
-│       │   │   └── ViewRecyclePool.swift    # 视图回收池
+│       │   │   └── DiffPatcher.swift        # Patch 应用
 │       │   ├── Cache/
 │       │   │   ├── ComponentPool.swift      # 组件池
 │       │   │   └── LRUCache.swift           # LRU 缓存
@@ -317,19 +320,17 @@ ExpressionEngine.shared.registerFunctions([func1, func2, func3])
    - 支持在子线程计算布局
    - YogaNodePool 节点复用 + 批量获取（`acquireBatch`）
 
-2. **视图复用池**
-   - ViewRecyclePool 回收/复用视图
+2. **组件复用**
    - ComponentPool 组件复用
    - 按组件类型分类存储
-   - **Input 组件池化**：UITextField/UITextView 复用
+   - 列表场景使用 UICollectionView 内置复用机制
 
-3. **视图预热**
-   - `ViewRecyclePool.warmUp()` 预创建重型视图（UITextField/UITextView）
-   - 消除首次渲染 Input 组件的延迟
-   - 支持自定义预热配置
+3. **UIView 创建优化**
+   - UIView 创建耗时极低（<0.1ms），无需独立视图池
+   - 列表场景依赖 UICollectionView/UITableView 内置 Cell 复用
 
 4. **移除不必要的锁**
-   - ViewRecyclePool、ComponentPool、EventManager、GestureHandlerManager 只在主线程访问，无需锁
+   - ComponentPool、EventManager、GestureHandlerManager 只在主线程访问，无需锁
    - 真正需要锁的场景：PreRenderOptimizer（后台预渲染）、LRUCache（通用缓存）
 
 5. **LRUCache.ObjectPool Bug 修复**
@@ -349,9 +350,7 @@ ExpressionEngine.shared.registerFunctions([func1, func2, func3])
 
 8. **引擎预热（warmUp）**
    - `TemplateX.warmUp()` 在 App 启动时异步调用
-   - 预热内容：
-     - ComponentRegistry、TemplateParser、YogaNodePool、RenderEngine
-     - **ViewRecyclePool**（UITextField/UITextView 预创建）
+   - 预热内容：ComponentRegistry、TemplateParser、YogaNodePool、RenderEngine
    - 消除首次渲染的冷启动开销（从 6ms 降到 <1ms）
 
 9. **视图样式残留 Bug 修复**
@@ -386,7 +385,7 @@ ExpressionEngine.shared.registerFunctions([func1, func2, func3])
       - 首次布局：与全量模式相当
       - 二次布局（样式不变）：Yoga 直接跳过计算，接近 O(1)
       - 二次布局（部分样式变化）：只计算 dirty 子树
-    - **影响范围**：YogaLayoutEngine、Component、ViewRecyclePool
+    - **影响范围**：YogaLayoutEngine、Component
 
 ### 性能数据
 
@@ -461,22 +460,10 @@ ViewCreation: count=4 | createView=0.03ms | addSubview=0.03ms
 ```swift
 // AppDelegate.swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions ...) {
-    // 方式1: 默认预热（推荐）- 包含视图预热
+    // 异步预热（推荐）
     DispatchQueue.global(qos: .userInitiated).async {
         TemplateX.warmUp()  // 异步预热，消除首次渲染冷启动
     }
-    
-    // 方式2: 最小预热（不预热重型视图）
-    TemplateX.warmUp(options: .minimal)
-    
-    // 方式3: 自定义预热配置
-    var options = TemplateX.WarmUpOptions()
-    options.yogaNodeCount = 128  // 更多 Yoga 节点
-    options.viewWarmUpConfig = ViewRecyclePool.WarmUpConfig(viewCounts: [
-        "input": 8,           // 更多 UITextField
-        "input_multiline": 4  // 更多 UITextView
-    ])
-    TemplateX.warmUp(options: options)
 }
 ```
 
@@ -498,9 +485,9 @@ s.dependency 'Antlr4', '~> 4.0'  # 表达式解析
 2. ~~**引擎预热机制**~~：✅ 已完成，`TemplateX.warmUp()`
 3. ~~**模板预编译**~~：✅ 已完成，`renderWithCache()` 实现模板原型缓存
 4. ~~**Cell 场景优化**~~：✅ 已完成，支持高度计算和批量并发
-5. ~~**视图预热**~~：✅ 已完成，`ViewRecyclePool.warmUp()` 预创建 UITextField/UITextView
-6. ~~**Input 组件池化**~~：✅ 已完成，复用 TemplateXTextField/TemplateXTextView
-7. ~~**异步渲染 API**~~：✅ 已完成，`AsyncRenderEngine` 支持任务取消
+5. ~~**视图预热**~~：已移除（UIView 创建耗时极低，无需预热）
+6. ~~**Input 组件池化**~~：已移除（依赖系统视图创建）
+7. ~~**GapWorker 帧空闲调度**~~：✅ 已完成，对标 Lynx 的 Cell 预取机制
 8. **Instruments 分析**：进一步定位瓶颈
 
 ---
@@ -655,3 +642,222 @@ func collectionView(_ collectionView: UICollectionView, layout: UICollectionView
 | sizeForItemAt | 固定高度 | 实际计算高度（带缓存） |
 | prefetch 高度计算 | N/A | 批量并发计算 |
 
+---
+
+## GapWorker 帧空闲调度系统
+
+### 概述
+
+GapWorker 是对标 Lynx 的帧空闲时间任务调度系统，用于在每帧渲染完成后的空闲时间内执行 Cell 预取任务，避免影响主线程渲染性能。
+
+### 核心组件
+
+#### 1. TemplateXGapWorker（核心调度器）
+
+**文件**: `Sources/Core/GapWorker/TemplateXGapWorker.swift`
+
+基于 CADisplayLink 的帧空闲任务调度器：
+- 自动检测屏幕刷新率（60fps/120fps ProMotion）
+- 时间预算控制：60fps = 8ms，120fps = 4ms
+- 支持任务优先级排序（按距离视口距离）
+
+```swift
+// 获取单例
+let gapWorker = TemplateXGapWorker.shared
+
+// 注册任务提供者
+gapWorker.register(provider: listPreloadManager)
+
+// 注销任务提供者
+gapWorker.unregister(provider: listPreloadManager)
+
+// 启动/停止调度
+gapWorker.start()
+gapWorker.stop()
+```
+
+#### 2. GapTask 协议
+
+**文件**: `Sources/Core/GapWorker/GapTask.swift`
+
+```swift
+/// 帧空闲任务协议
+protocol GapTask {
+    /// 任务 ID
+    var taskId: String { get }
+    
+    /// 预估执行时间（纳秒）
+    var estimatedDuration: Int64 { get }
+    
+    /// 执行任务
+    func execute()
+}
+
+/// 任务提供者协议
+protocol GapTaskProvider: AnyObject {
+    /// 收集当前需要执行的任务
+    func collectTasks() -> GapTaskBundle?
+}
+
+/// 任务包（按优先级排序的任务集合）
+struct GapTaskBundle {
+    var tasks: [GapTask]
+    
+    mutating func sortByPriority()
+}
+```
+
+#### 3. CellPrefetchTask（Cell 预取任务）
+
+**文件**: `Sources/Core/GapWorker/CellPrefetchTask.swift`
+
+```swift
+/// Cell 预取任务
+final class CellPrefetchTask: GapTask {
+    let templateId: String
+    let index: Int
+    let data: [String: Any]
+    let containerSize: CGSize
+    
+    // 执行：parse → bind → layout → createView → 缓存
+    func execute()
+}
+
+/// 预取缓存
+final class PrefetchCache {
+    /// 获取预取的视图
+    func getView(templateId: String, index: Int) -> UIView?
+    
+    /// 缓存预取的视图
+    func setView(_ view: UIView, templateId: String, index: Int)
+    
+    /// 清理缓存
+    func clear(templateId: String? = nil)
+}
+```
+
+#### 4. PrefetchRegistry（预取位置收集器）
+
+**文件**: `Sources/Core/GapWorker/PrefetchRegistry.swift`
+
+```swift
+/// 预取位置收集器（对标 Lynx LayoutPrefetchRegistry）
+final class PrefetchRegistry {
+    /// 收集需要预取的位置
+    func collectPrefetchPositions(
+        visibleRange: Range<Int>,
+        velocity: CGFloat,
+        direction: ScrollDirection
+    ) -> [Int]
+}
+
+/// 线性布局预取辅助（对标 Lynx LinearLayoutPrefetchHelper）
+struct LinearLayoutPrefetchHelper {
+    /// 计算预取位置
+    static func calculatePrefetchPositions(
+        currentPosition: Int,
+        velocity: CGFloat,
+        itemCount: Int,
+        prefetchCount: Int
+    ) -> [Int]
+}
+```
+
+### 时间预算计算
+
+对标 Lynx 的时间预算公式：
+
+```swift
+// Lynx: max_estimate_duration_ = 1.0E9F / refresh_rate / 2
+// 60fps: 1000000000 / 60 / 2 = 8.33ms
+// 120fps: 1000000000 / 120 / 2 = 4.17ms
+
+let timeBudgetNs: Int64 = Int64(1_000_000_000.0 / refreshRate / 2.0)
+```
+
+### 平均绑定时间计算
+
+对标 Lynx `list_adapter.cc:17` 的加权平均算法：
+
+```swift
+// old_average * 3/4 + new_value * 1/4
+func updateAverageBindTime(templateId: String, newValue: Int64) {
+    let oldAverage = averageBindTimes[templateId] ?? newValue
+    averageBindTimes[templateId] = (oldAverage * 3 / 4) + (newValue / 4)
+}
+```
+
+### 与 ListPreloadManager 集成
+
+```swift
+// ListPreloadManager 实现 GapTaskProvider 协议
+extension ListPreloadManager: GapTaskProvider {
+    func collectTasks() -> GapTaskBundle? {
+        // 1. 收集需要预取的位置
+        let positions = prefetchRegistry.collectPrefetchPositions(...)
+        
+        // 2. 创建预取任务
+        var tasks: [GapTask] = positions.map { index in
+            CellPrefetchTask(
+                templateId: templateId,
+                index: index,
+                data: dataSource[index],
+                containerSize: cellSize
+            )
+        }
+        
+        // 3. 返回任务包
+        return GapTaskBundle(tasks: tasks)
+    }
+}
+```
+
+### 使用示例
+
+```swift
+// 在 ListComponent 或 UICollectionView 中启用 GapWorker
+class MyListViewController: UIViewController {
+    let preloadManager = ListPreloadManager()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // 配置预加载管理器
+        preloadManager.configure(
+            templateId: "cell_template",
+            template: cellTemplate,
+            dataSource: items,
+            containerSize: cellSize
+        )
+        
+        // 启用 GapWorker
+        preloadManager.enableGapWorker = true
+        preloadManager.registerToGapWorker()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        preloadManager.unregisterFromGapWorker()
+    }
+    
+    // 在 cellForItemAt 中使用预取的视图
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        // 尝试获取预取的视图
+        if let prefetchedView = preloadManager.dequeuePreloadedView(at: indexPath.item) {
+            cell.contentView.addSubview(prefetchedView)
+            return cell
+        }
+        
+        // 降级到同步渲染
+        // ...
+    }
+}
+```
+
+### 性能收益
+
+| 场景 | 无 GapWorker | 有 GapWorker |
+|------|-------------|--------------|
+| 快速滚动 | 掉帧（Cell 同步创建） | 流畅（Cell 已预取） |
+| 首次显示 | 冷启动延迟 | 预热 + 预取 |
+| 内存占用 | 按需创建 | 预取缓存（可配置 maxLimit） |

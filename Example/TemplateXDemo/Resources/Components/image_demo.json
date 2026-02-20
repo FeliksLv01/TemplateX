@@ -1,0 +1,111 @@
+{
+    "type": "container",
+    "id": "image_demo",
+    "style": {
+        "width": "100%",
+        "height": "auto",
+        "flexDirection": "column",
+        "padding": 16,
+        "backgroundColor": "#FFFFFF",
+        "cornerRadius": 8
+    },
+    "children": [
+        {
+            "type": "container",
+            "id": "image_row",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "flexDirection": "row",
+                "justifyContent": "spaceAround"
+            },
+            "children": [
+                {
+                    "type": "image",
+                    "id": "img_square",
+                    "style": {
+                        "width": 80,
+                        "height": 80,
+                        "cornerRadius": 8
+                    },
+                    "props": {
+                        "src": "https://picsum.photos/160/160",
+                        "contentMode": "scaleAspectFill"
+                    }
+                },
+                {
+                    "type": "image",
+                    "id": "img_circle",
+                    "style": {
+                        "width": 80,
+                        "height": 80,
+                        "cornerRadius": 40
+                    },
+                    "props": {
+                        "src": "https://picsum.photos/161/161",
+                        "contentMode": "scaleAspectFill"
+                    }
+                },
+                {
+                    "type": "image",
+                    "id": "img_border",
+                    "style": {
+                        "width": 80,
+                        "height": 80,
+                        "cornerRadius": 16,
+                        "borderWidth": 2,
+                        "borderColor": "#007AFF"
+                    },
+                    "props": {
+                        "src": "https://picsum.photos/162/162",
+                        "contentMode": "scaleAspectFill"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "text",
+            "id": "image_label",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "marginTop": 12,
+                "fontSize": 12,
+                "textColor": "#999999",
+                "textAlign": "center"
+            },
+            "props": {
+                "text": "方形 / 圆形 / 圆角边框"
+            }
+        },
+        {
+            "type": "image",
+            "id": "img_wide",
+            "style": {
+                "width": "100%",
+                "height": 120,
+                "marginTop": 16,
+                "cornerRadius": 8
+            },
+            "props": {
+                "src": "https://picsum.photos/600/240",
+                "contentMode": "scaleAspectFill"
+            }
+        },
+        {
+            "type": "text",
+            "id": "image_label2",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "marginTop": 8,
+                "fontSize": 12,
+                "textColor": "#999999",
+                "textAlign": "center"
+            },
+            "props": {
+                "text": "宽幅图片"
+            }
+        }
+    ]
+}

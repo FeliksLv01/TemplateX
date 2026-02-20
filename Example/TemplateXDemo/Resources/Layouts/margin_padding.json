@@ -1,0 +1,21 @@
+{
+    "type": "container",
+    "id": "margin_demo",
+    "style": {
+        "width": "100%",
+        "height": 100,
+        "padding": 16,
+        "backgroundColor": "#FFF3E0"
+    },
+    "children": [
+        {
+            "type": "container",
+            "id": "inner_box",
+            "style": {
+                "flexGrow": 1,
+                "backgroundColor": "#FF9800",
+                "cornerRadius": 8
+            }
+        }
+    ]
+}

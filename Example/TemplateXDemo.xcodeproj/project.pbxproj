@@ -17,6 +17,25 @@
 		A100000D203D5D1100000001 /* ComponentShowcaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000E203D5D1100000001 /* ComponentShowcaseViewController.swift */; };
 		A100000F203D5D1100000001 /* PerformanceDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000010203D5D1100000001 /* PerformanceDemoViewController.swift */; };
 		A1000011203D5D1100000001 /* home_card.json in Resources */ = {isa = PBXBuildFile; fileRef = A1000012203D5D1100000001 /* home_card.json */; };
+		B3B48AC62F47A71B0057C9BF /* list_demo.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AB62F47A71B0057C9BF /* list_demo.json */; };
+		B3B48AC72F47A71B0057C9BF /* counter_card.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48ABC2F47A71B0057C9BF /* counter_card.json */; };
+		B3B48AC82F47A71B0057C9BF /* style_demo.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AB92F47A71B0057C9BF /* style_demo.json */; };
+		B3B48AC92F47A71B0057C9BF /* margin_padding.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AC42F47A71B0057C9BF /* margin_padding.json */; };
+		B3B48ACA2F47A71B0057C9BF /* scroll_demo.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AB82F47A71B0057C9BF /* scroll_demo.json */; };
+		B3B48ACB2F47A71B0057C9BF /* flexbox_column.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AC22F47A71B0057C9BF /* flexbox_column.json */; };
+		B3B48ACC2F47A71B0057C9BF /* user_card.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48ABD2F47A71B0057C9BF /* user_card.json */; };
+		B3B48ACD2F47A71B0057C9BF /* multiline_input_demo.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AB72F47A71B0057C9BF /* multiline_input_demo.json */; };
+		B3B48ACE2F47A71B0057C9BF /* image_demo.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AB42F47A71B0057C9BF /* image_demo.json */; };
+		B3B48ACF2F47A71B0057C9BF /* flex_wrap.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AC12F47A71B0057C9BF /* flex_wrap.json */; };
+		B3B48AD02F47A71B0057C9BF /* button_demo.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AB32F47A71B0057C9BF /* button_demo.json */; };
+		B3B48AD12F47A71B0057C9BF /* input_demo.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AB52F47A71B0057C9BF /* input_demo.json */; };
+		B3B48AD22F47A71B0057C9BF /* align_items.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48ABF2F47A71B0057C9BF /* align_items.json */; };
+		B3B48AD32F47A71B0057C9BF /* basic_card.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AB12F47A71B0057C9BF /* basic_card.json */; };
+		B3B48AD42F47A71B0057C9BF /* aspect_ratio.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AC02F47A71B0057C9BF /* aspect_ratio.json */; };
+		B3B48AD52F47A71B0057C9BF /* text_demo.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48ABA2F47A71B0057C9BF /* text_demo.json */; };
+		B3B48AD62F47A71B0057C9BF /* flexbox_row.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AC32F47A71B0057C9BF /* flexbox_row.json */; };
+		B3B48ADA2F47A7620057C9BF /* basic_render.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AD72F47A7620057C9BF /* basic_render.json */; };
+		B3B48ADB2F47A7620057C9BF /* incremental_update.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AD82F47A7620057C9BF /* incremental_update.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +53,25 @@
 		A1000010203D5D1100000001 /* PerformanceDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceDemoViewController.swift; sourceTree = "<group>"; };
 		A1000012203D5D1100000001 /* home_card.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = home_card.json; sourceTree = "<group>"; };
 		A1000013203D5D1100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B3B48AB12F47A71B0057C9BF /* basic_card.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = basic_card.json; sourceTree = "<group>"; };
+		B3B48AB32F47A71B0057C9BF /* button_demo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = button_demo.json; sourceTree = "<group>"; };
+		B3B48AB42F47A71B0057C9BF /* image_demo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = image_demo.json; sourceTree = "<group>"; };
+		B3B48AB52F47A71B0057C9BF /* input_demo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = input_demo.json; sourceTree = "<group>"; };
+		B3B48AB62F47A71B0057C9BF /* list_demo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = list_demo.json; sourceTree = "<group>"; };
+		B3B48AB72F47A71B0057C9BF /* multiline_input_demo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = multiline_input_demo.json; sourceTree = "<group>"; };
+		B3B48AB82F47A71B0057C9BF /* scroll_demo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = scroll_demo.json; sourceTree = "<group>"; };
+		B3B48AB92F47A71B0057C9BF /* style_demo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = style_demo.json; sourceTree = "<group>"; };
+		B3B48ABA2F47A71B0057C9BF /* text_demo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = text_demo.json; sourceTree = "<group>"; };
+		B3B48ABC2F47A71B0057C9BF /* counter_card.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = counter_card.json; sourceTree = "<group>"; };
+		B3B48ABD2F47A71B0057C9BF /* user_card.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = user_card.json; sourceTree = "<group>"; };
+		B3B48ABF2F47A71B0057C9BF /* align_items.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = align_items.json; sourceTree = "<group>"; };
+		B3B48AC02F47A71B0057C9BF /* aspect_ratio.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = aspect_ratio.json; sourceTree = "<group>"; };
+		B3B48AC12F47A71B0057C9BF /* flex_wrap.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = flex_wrap.json; sourceTree = "<group>"; };
+		B3B48AC22F47A71B0057C9BF /* flexbox_column.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = flexbox_column.json; sourceTree = "<group>"; };
+		B3B48AC32F47A71B0057C9BF /* flexbox_row.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = flexbox_row.json; sourceTree = "<group>"; };
+		B3B48AC42F47A71B0057C9BF /* margin_padding.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = margin_padding.json; sourceTree = "<group>"; };
+		B3B48AD72F47A7620057C9BF /* basic_render.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = basic_render.json; sourceTree = "<group>"; };
+		B3B48AD82F47A7620057C9BF /* incremental_update.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = incremental_update.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,9 +149,68 @@
 		A1000034203D5D1100000001 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				B3B48AD92F47A7620057C9BF /* Performance */,
+				B3B48AB22F47A71B0057C9BF /* Basic */,
+				B3B48ABB2F47A71B0057C9BF /* Components */,
+				B3B48ABE2F47A71B0057C9BF /* DataBinding */,
+				B3B48AC52F47A71B0057C9BF /* Layouts */,
 				A1000012203D5D1100000001 /* home_card.json */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		B3B48AB22F47A71B0057C9BF /* Basic */ = {
+			isa = PBXGroup;
+			children = (
+				B3B48AB12F47A71B0057C9BF /* basic_card.json */,
+			);
+			path = Basic;
+			sourceTree = "<group>";
+		};
+		B3B48ABB2F47A71B0057C9BF /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				B3B48AB32F47A71B0057C9BF /* button_demo.json */,
+				B3B48AB42F47A71B0057C9BF /* image_demo.json */,
+				B3B48AB52F47A71B0057C9BF /* input_demo.json */,
+				B3B48AB62F47A71B0057C9BF /* list_demo.json */,
+				B3B48AB72F47A71B0057C9BF /* multiline_input_demo.json */,
+				B3B48AB82F47A71B0057C9BF /* scroll_demo.json */,
+				B3B48AB92F47A71B0057C9BF /* style_demo.json */,
+				B3B48ABA2F47A71B0057C9BF /* text_demo.json */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		B3B48ABE2F47A71B0057C9BF /* DataBinding */ = {
+			isa = PBXGroup;
+			children = (
+				B3B48ABC2F47A71B0057C9BF /* counter_card.json */,
+				B3B48ABD2F47A71B0057C9BF /* user_card.json */,
+			);
+			path = DataBinding;
+			sourceTree = "<group>";
+		};
+		B3B48AC52F47A71B0057C9BF /* Layouts */ = {
+			isa = PBXGroup;
+			children = (
+				B3B48ABF2F47A71B0057C9BF /* align_items.json */,
+				B3B48AC02F47A71B0057C9BF /* aspect_ratio.json */,
+				B3B48AC12F47A71B0057C9BF /* flex_wrap.json */,
+				B3B48AC22F47A71B0057C9BF /* flexbox_column.json */,
+				B3B48AC32F47A71B0057C9BF /* flexbox_row.json */,
+				B3B48AC42F47A71B0057C9BF /* margin_padding.json */,
+			);
+			path = Layouts;
+			sourceTree = "<group>";
+		};
+		B3B48AD92F47A7620057C9BF /* Performance */ = {
+			isa = PBXGroup;
+			children = (
+				B3B48AD72F47A7620057C9BF /* basic_render.json */,
+				B3B48AD82F47A7620057C9BF /* incremental_update.json */,
+			);
+			path = Performance;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -177,6 +274,25 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000011203D5D1100000001 /* home_card.json in Resources */,
+				B3B48AC62F47A71B0057C9BF /* list_demo.json in Resources */,
+				B3B48AC72F47A71B0057C9BF /* counter_card.json in Resources */,
+				B3B48AC82F47A71B0057C9BF /* style_demo.json in Resources */,
+				B3B48ADA2F47A7620057C9BF /* basic_render.json in Resources */,
+				B3B48ADB2F47A7620057C9BF /* incremental_update.json in Resources */,
+				B3B48AC92F47A71B0057C9BF /* margin_padding.json in Resources */,
+				B3B48ACA2F47A71B0057C9BF /* scroll_demo.json in Resources */,
+				B3B48ACB2F47A71B0057C9BF /* flexbox_column.json in Resources */,
+				B3B48ACC2F47A71B0057C9BF /* user_card.json in Resources */,
+				B3B48ACD2F47A71B0057C9BF /* multiline_input_demo.json in Resources */,
+				B3B48ACE2F47A71B0057C9BF /* image_demo.json in Resources */,
+				B3B48ACF2F47A71B0057C9BF /* flex_wrap.json in Resources */,
+				B3B48AD02F47A71B0057C9BF /* button_demo.json in Resources */,
+				B3B48AD12F47A71B0057C9BF /* input_demo.json in Resources */,
+				B3B48AD22F47A71B0057C9BF /* align_items.json in Resources */,
+				B3B48AD32F47A71B0057C9BF /* basic_card.json in Resources */,
+				B3B48AD42F47A71B0057C9BF /* aspect_ratio.json in Resources */,
+				B3B48AD52F47A71B0057C9BF /* text_demo.json in Resources */,
+				B3B48AD62F47A71B0057C9BF /* flexbox_row.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -370,10 +486,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L6XGXKP989;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TemplateXDemo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = "";
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -382,7 +501,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.templatex.demo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.felikslv.templatex.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -398,10 +517,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L6XGXKP989;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TemplateXDemo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = "";
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -410,7 +532,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.templatex.demo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.felikslv.templatex.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

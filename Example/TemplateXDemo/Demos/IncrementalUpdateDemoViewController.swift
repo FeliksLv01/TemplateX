@@ -10,65 +10,6 @@ class IncrementalUpdateDemoViewController: UIViewController {
     private var counter = 0
     private var timer: Timer?
     
-    // 统一 style 格式
-    private let template: [String: Any] = [
-        "type": "container",
-        "id": "counter_card",
-        "style": [
-            "width": "100%",
-            "height": "100%",
-            "flexDirection": "column",
-            "justifyContent": "center",
-            "alignItems": "center",
-            "padding": 16,
-            "backgroundColor": "#FFFFFF"
-        ],
-        "children": [
-            [
-                "type": "text",
-                "id": "counter_label",
-                "style": [
-                    "width": "auto",
-                    "height": "auto",
-                    "fontSize": 14,
-                    "textColor": "#666666"
-                ],
-                "props": [
-                    "text": "计数器"
-                ]
-            ],
-            [
-                "type": "text",
-                "id": "counter_value",
-                "style": [
-                    "width": "auto",
-                    "height": "auto",
-                    "marginTop": 8,
-                    "fontSize": 48,
-                    "fontWeight": "bold",
-                    "textColor": "#007AFF"
-                ],
-                "props": [
-                    "text": "${count}"
-                ]
-            ],
-            [
-                "type": "text",
-                "id": "update_time",
-                "style": [
-                    "width": "auto",
-                    "height": "auto",
-                    "marginTop": 8,
-                    "fontSize": 12,
-                    "textColor": "#999999"
-                ],
-                "props": [
-                    "text": "${'更新时间: ' + timestamp}"
-                ]
-            ]
-        ]
-    ]
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -148,6 +89,11 @@ class IncrementalUpdateDemoViewController: UIViewController {
     }
     
     private func renderTemplate() {
+        guard let template = loadJSONTemplate(named: "counter_card") else {
+            print("[IncrementalUpdateDemo] Failed to load counter_card.json")
+            return
+        }
+        
         let data: [String: Any] = [
             "count": counter,
             "timestamp": currentTimestamp()
@@ -205,6 +151,24 @@ class IncrementalUpdateDemoViewController: UIViewController {
         // 限制日志长度
         if logTextView.text.count > 5000 {
             logTextView.text = String(logTextView.text.prefix(3000))
+        }
+    }
+    
+    // MARK: - JSON Loading
+    
+    private func loadJSONTemplate(named fileName: String) -> [String: Any]? {
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: "json") else {
+            print("[IncrementalUpdateDemo] JSON file not found: \(fileName).json")
+            return nil
+        }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let json = try JSONSerialization.jsonObject(with: data, options: [])
+            return json as? [String: Any]
+        } catch {
+            print("[IncrementalUpdateDemo] Failed to parse JSON: \(fileName).json, error: \(error)")
+            return nil
         }
     }
 }

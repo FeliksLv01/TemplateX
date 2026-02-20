@@ -1,0 +1,29 @@
+{
+    "type": "container",
+    "id": "multiline_demo",
+    "style": {
+        "width": "100%",
+        "height": "auto",
+        "flexDirection": "column",
+        "padding": 16,
+        "backgroundColor": "#FFFFFF",
+        "cornerRadius": 8
+    },
+    "children": [
+        {
+            "type": "input",
+            "id": "textarea",
+            "style": {
+                "width": "100%",
+                "height": 100,
+                "backgroundColor": "#F5F5F5",
+                "cornerRadius": 8,
+                "padding": 12
+            },
+            "props": {
+                "placeholder": "请输入多行文本内容...",
+                "multiline": true
+            }
+        }
+    ]
+}

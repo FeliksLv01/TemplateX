@@ -1,0 +1,177 @@
+{
+    "type": "container",
+    "id": "style_demo",
+    "style": {
+        "width": "100%",
+        "height": "auto",
+        "flexDirection": "row",
+        "flexWrap": "wrap",
+        "padding": 16,
+        "backgroundColor": "#FFFFFF",
+        "cornerRadius": 8
+    },
+    "children": [
+        {
+            "type": "container",
+            "id": "gradient_box",
+            "style": {
+                "width": 80,
+                "height": 80,
+                "margin": 4,
+                "backgroundGradient": {
+                    "colors": ["#667EEA", "#764BA2"],
+                    "direction": "topToBottom"
+                },
+                "cornerRadius": 8
+            },
+            "children": [
+                {
+                    "type": "text",
+                    "id": "gradient_label",
+                    "style": {
+                        "width": "100%",
+                        "height": "100%",
+                        "fontSize": 10,
+                        "textColor": "#FFFFFF",
+                        "textAlign": "center"
+                    },
+                    "props": { "text": "渐变" }
+                }
+            ]
+        },
+        {
+            "type": "container",
+            "id": "border_box",
+            "style": {
+                "width": 80,
+                "height": 80,
+                "margin": 4,
+                "backgroundColor": "#FFFFFF",
+                "borderWidth": 2,
+                "borderColor": "#007AFF",
+                "cornerRadius": 8,
+                "justifyContent": "center",
+                "alignItems": "center"
+            },
+            "children": [
+                {
+                    "type": "text",
+                    "id": "border_label",
+                    "style": {
+                        "fontSize": 10,
+                        "textColor": "#007AFF",
+                        "textAlign": "center"
+                    },
+                    "props": { "text": "边框" }
+                }
+            ]
+        },
+        {
+            "type": "container",
+            "id": "shadow_box",
+            "style": {
+                "width": 80,
+                "height": 80,
+                "margin": 4,
+                "backgroundColor": "#FFFFFF",
+                "cornerRadius": 8,
+                "shadowColor": "#000000",
+                "shadowOffset": [0, 4],
+                "shadowRadius": 8,
+                "shadowOpacity": 0.2,
+                "justifyContent": "center",
+                "alignItems": "center"
+            },
+            "children": [
+                {
+                    "type": "text",
+                    "id": "shadow_label",
+                    "style": {
+                        "fontSize": 10,
+                        "textColor": "#333333",
+                        "textAlign": "center"
+                    },
+                    "props": { "text": "阴影" }
+                }
+            ]
+        },
+        {
+            "type": "container",
+            "id": "opacity_box",
+            "style": {
+                "width": 80,
+                "height": 80,
+                "margin": 4,
+                "backgroundColor": "#FF5722",
+                "cornerRadius": 8,
+                "opacity": 0.5,
+                "justifyContent": "center",
+                "alignItems": "center"
+            },
+            "children": [
+                {
+                    "type": "text",
+                    "id": "opacity_label",
+                    "style": {
+                        "fontSize": 10,
+                        "textColor": "#FFFFFF",
+                        "textAlign": "center"
+                    },
+                    "props": { "text": "透明度" }
+                }
+            ]
+        },
+        {
+            "type": "container",
+            "id": "rounded_box",
+            "style": {
+                "width": 80,
+                "height": 80,
+                "margin": 4,
+                "backgroundColor": "#4CAF50",
+                "cornerRadius": 40,
+                "justifyContent": "center",
+                "alignItems": "center"
+            },
+            "children": [
+                {
+                    "type": "text",
+                    "id": "rounded_label",
+                    "style": {
+                        "fontSize": 10,
+                        "textColor": "#FFFFFF",
+                        "textAlign": "center"
+                    },
+                    "props": { "text": "圆形" }
+                }
+            ]
+        },
+        {
+            "type": "container",
+            "id": "dashed_box",
+            "style": {
+                "width": 80,
+                "height": 80,
+                "margin": 4,
+                "backgroundColor": "#FFF8E1",
+                "borderWidth": 2,
+                "borderColor": "#FFC107",
+                "cornerRadius": 8,
+                "justifyContent": "center",
+                "alignItems": "center"
+            },
+            "children": [
+                {
+                    "type": "text",
+                    "id": "dashed_label",
+                    "style": {
+                        "fontSize": 10,
+                        "textColor": "#FF9800",
+                        "textAlign": "center"
+                    },
+                    "props": { "text": "着色边框" }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,189 @@
+{
+    "type": "container",
+    "id": "scroll_demo",
+    "style": {
+        "width": "100%",
+        "height": 120,
+        "backgroundColor": "#FFFFFF",
+        "cornerRadius": 8,
+        "overflow": "hidden"
+    },
+    "children": [
+        {
+            "type": "scroll",
+            "id": "horizontal_scroll",
+            "style": {
+                "width": "100%",
+                "height": "100%"
+            },
+            "props": {
+                "horizontal": true,
+                "showsIndicator": false
+            },
+            "children": [
+                {
+                    "type": "container",
+                    "id": "scroll_content",
+                    "style": {
+                        "height": "100%",
+                        "flexDirection": "row",
+                        "alignItems": "center",
+                        "paddingHorizontal": 12
+                    },
+                    "children": [
+                        {
+                            "type": "container",
+                            "id": "card1",
+                            "style": {
+                                "width": 80,
+                                "height": 96,
+                                "marginHorizontal": 6,
+                                "backgroundColor": "#FF5722",
+                                "cornerRadius": 12,
+                                "justifyContent": "center",
+                                "alignItems": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "card1_text",
+                                    "style": {
+                                        "fontSize": 14,
+                                        "fontWeight": "bold",
+                                        "textColor": "#FFFFFF"
+                                    },
+                                    "props": { "text": "推荐" }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "container",
+                            "id": "card2",
+                            "style": {
+                                "width": 80,
+                                "height": 96,
+                                "marginHorizontal": 6,
+                                "backgroundColor": "#E91E63",
+                                "cornerRadius": 12,
+                                "justifyContent": "center",
+                                "alignItems": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "card2_text",
+                                    "style": {
+                                        "fontSize": 14,
+                                        "fontWeight": "bold",
+                                        "textColor": "#FFFFFF"
+                                    },
+                                    "props": { "text": "热门" }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "container",
+                            "id": "card3",
+                            "style": {
+                                "width": 80,
+                                "height": 96,
+                                "marginHorizontal": 6,
+                                "backgroundColor": "#9C27B0",
+                                "cornerRadius": 12,
+                                "justifyContent": "center",
+                                "alignItems": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "card3_text",
+                                    "style": {
+                                        "fontSize": 14,
+                                        "fontWeight": "bold",
+                                        "textColor": "#FFFFFF"
+                                    },
+                                    "props": { "text": "新品" }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "container",
+                            "id": "card4",
+                            "style": {
+                                "width": 80,
+                                "height": 96,
+                                "marginHorizontal": 6,
+                                "backgroundColor": "#673AB7",
+                                "cornerRadius": 12,
+                                "justifyContent": "center",
+                                "alignItems": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "card4_text",
+                                    "style": {
+                                        "fontSize": 14,
+                                        "fontWeight": "bold",
+                                        "textColor": "#FFFFFF"
+                                    },
+                                    "props": { "text": "促销" }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "container",
+                            "id": "card5",
+                            "style": {
+                                "width": 80,
+                                "height": 96,
+                                "marginHorizontal": 6,
+                                "backgroundColor": "#3F51B5",
+                                "cornerRadius": 12,
+                                "justifyContent": "center",
+                                "alignItems": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "card5_text",
+                                    "style": {
+                                        "fontSize": 14,
+                                        "fontWeight": "bold",
+                                        "textColor": "#FFFFFF"
+                                    },
+                                    "props": { "text": "精选" }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "container",
+                            "id": "card6",
+                            "style": {
+                                "width": 80,
+                                "height": 96,
+                                "marginHorizontal": 6,
+                                "backgroundColor": "#2196F3",
+                                "cornerRadius": 12,
+                                "justifyContent": "center",
+                                "alignItems": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "card6_text",
+                                    "style": {
+                                        "fontSize": 14,
+                                        "fontWeight": "bold",
+                                        "textColor": "#FFFFFF"
+                                    },
+                                    "props": { "text": "特惠" }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

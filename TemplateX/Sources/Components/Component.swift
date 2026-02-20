@@ -1,6 +1,26 @@
 import UIKit
 import yoga
 
+// MARK: - ComponentFlags
+
+/// 组件状态标记
+/// 对应 Lynx: list_item_view_holder.h:57
+struct ComponentFlags: OptionSet {
+    let rawValue: UInt8
+    
+    /// 已绑定数据
+    static let bound = ComponentFlags(rawValue: 1 << 0)
+    
+    /// 需要更新
+    static let update = ComponentFlags(rawValue: 1 << 1)
+    
+    /// 已失效（需要重新创建）
+    static let invalid = ComponentFlags(rawValue: 1 << 2)
+    
+    /// 预加载创建（来自 GapWorker）
+    static let prefetch = ComponentFlags(rawValue: 1 << 3)
+}
+
 // MARK: - 组件协议
 
 /// 组件协议 - 所有 DSL 组件的基础
@@ -111,6 +131,12 @@ open class BaseComponent: Component {
     
     /// 手势处理器
     private var gestureHandler: GestureHandler?
+    
+    // MARK: - 组件状态标记
+    
+    /// 组件状态标记（用于 GapWorker 预加载）
+    /// 对应 Lynx: list_item_view_holder.h Flag
+    var componentFlags: ComponentFlags = []
     
     // MARK: - Yoga 剪枝优化
     
