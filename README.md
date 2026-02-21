@@ -10,7 +10,7 @@
 - **视图复用**: 视图池化和组件缓存，减少内存分配
 - **XML 编译器**: 开发时使用 XML，编译为优化的 JSON
 
-![screenshot](./Docs/screenshot.png)
+<img src="./Docs/screenshot.png" width="20%" alt="截图">
 
 ## 架构
 
