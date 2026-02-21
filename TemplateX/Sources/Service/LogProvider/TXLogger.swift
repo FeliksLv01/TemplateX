@@ -56,7 +56,9 @@ public enum TXLogger {
         function: String = #function,
         line: Int = #line
     ) {
+#if DEBUG
         provider.log(level: .debug, message: message(), file: file, function: function, line: line)
+#endif
     }
     
     public static func trace(

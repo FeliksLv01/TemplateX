@@ -467,9 +467,14 @@ public class TemplateXView: UIView {
         }
         
         let frame = component.layoutResult.frame
+        let marginTop = component.style.margin.top
+        let marginBottom = component.style.margin.bottom
+        let marginLeft = component.style.margin.left
+        let marginRight = component.style.margin.right
+        
         return CGSize(
-            width: layoutWidthMode == .wrapContent ? frame.width : UIView.noIntrinsicMetric,
-            height: layoutHeightMode == .wrapContent || layoutHeightMode == .atMost ? frame.height : UIView.noIntrinsicMetric
+            width: layoutWidthMode == .wrapContent ? frame.width + marginLeft + marginRight : UIView.noIntrinsicMetric,
+            height: layoutHeightMode == .wrapContent || layoutHeightMode == .atMost ? frame.height + marginTop + marginBottom : UIView.noIntrinsicMetric
         )
     }
     
@@ -595,7 +600,17 @@ public class TemplateXView: UIView {
             component.view = view
             
             // 设置 frame
-            view.frame = component.layoutResult.frame
+            // 对于根组件，需要考虑 margin 偏移
+            if isRoot {
+                let marginTop = component.style.margin.top
+                let marginLeft = component.style.margin.left
+                var frame = component.layoutResult.frame
+                frame.origin.x += marginLeft
+                frame.origin.y += marginTop
+                view.frame = frame
+            } else {
+                view.frame = component.layoutResult.frame
+            }
             
             // 如果是根组件，添加到容器
             if isRoot {
@@ -606,9 +621,11 @@ public class TemplateXView: UIView {
                 self.addSubview(view)
                 self.contentView = view
                 
-                // 自动调整高度
+                // 自动调整高度（包含 margin）
                 if self.autoResizeHeight {
-                    let contentHeight = component.layoutResult.frame.height
+                    let marginTop = component.style.margin.top
+                    let marginBottom = component.style.margin.bottom
+                    let contentHeight = component.layoutResult.frame.height + marginTop + marginBottom
                     if contentHeight > 0 {
                         var newFrame = self.frame
                         newFrame.size.height = contentHeight
@@ -621,8 +638,16 @@ public class TemplateXView: UIView {
                 self.isLayoutFinished = true
                 self.onLoadComplete?(view)
                 
-                // 通知内容尺寸
-                self.onContentSizeChanged?(component.layoutResult.frame.size)
+                // 通知内容尺寸（包含 margin）
+                let marginTop = component.style.margin.top
+                let marginBottom = component.style.margin.bottom
+                let marginLeft = component.style.margin.left
+                let marginRight = component.style.margin.right
+                let contentSize = CGSize(
+                    width: component.layoutResult.frame.width + marginLeft + marginRight,
+                    height: component.layoutResult.frame.height + marginTop + marginBottom
+                )
+                self.onContentSizeChanged?(contentSize)
                 
                 // 更新 intrinsicContentSize
                 self.invalidateIntrinsicContentSize()
@@ -697,14 +722,20 @@ public class TemplateXView: UIView {
         return isLayoutFinished
     }
     
-    /// 根视图宽度
+    /// 根视图宽度（包含 margin）
     public var rootWidth: CGFloat {
-        return rootComponent?.layoutResult.frame.width ?? 0
+        guard let component = rootComponent else { return 0 }
+        let marginLeft = component.style.margin.left
+        let marginRight = component.style.margin.right
+        return component.layoutResult.frame.width + marginLeft + marginRight
     }
     
-    /// 根视图高度
+    /// 根视图高度（包含 margin）
     public var rootHeight: CGFloat {
-        return rootComponent?.layoutResult.frame.height ?? 0
+        guard let component = rootComponent else { return 0 }
+        let marginTop = component.style.margin.top
+        let marginBottom = component.style.margin.bottom
+        return component.layoutResult.frame.height + marginTop + marginBottom
     }
     
     // MARK: - 清理

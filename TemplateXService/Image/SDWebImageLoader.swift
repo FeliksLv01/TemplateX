@@ -77,4 +77,17 @@ public final class SDWebImageLoader: TemplateXImageLoader {
             SDImageCache.shared.clearDisk()
         }
     }
+    
+    /// 预热 SDWebImage
+    ///
+    /// 触发 SDWebImageManager 和 SDImageCache 的单例初始化。
+    /// 避免首次加载图片时的 ~3ms 初始化开销。
+    public func warmUp() {
+        // 触发 SDWebImageManager 单例初始化
+        _ = SDWebImageManager.shared
+        // 触发 SDImageCache 单例初始化
+        _ = SDImageCache.shared
+        // 触发 SDWebImageDownloader 单例初始化
+        _ = SDWebImageDownloader.shared
+    }
 }

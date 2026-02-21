@@ -9,20 +9,28 @@
     },
     "children": [
         {
-            "type": "text",
-            "id": "section_title",
+            "type": "container",
+            "id": "section_header",
             "style": {
                 "width": "100%",
-                "height": "auto",
-                "fontSize": 18,
-                "fontWeight": "semibold",
-                "textColor": "#333333",
-                "marginLeft": 16,
-                "marginBottom": 12
+                "height": 42,
+                "justifyContent": "center",
+                "paddingLeft": 16
             },
-            "props": {
-                "text": "${section.title}"
-            }
+            "children": [
+                {
+                    "type": "text",
+                    "id": "section_title",
+                    "style": {
+                        "fontSize": 18,
+                        "fontWeight": "semibold",
+                        "textColor": "#333333"
+                    },
+                    "props": {
+                        "text": "${section.title}"
+                    }
+                }
+            ]
         },
         {
             "type": "list",

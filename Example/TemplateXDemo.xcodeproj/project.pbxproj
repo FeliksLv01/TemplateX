@@ -38,6 +38,7 @@
 		B3B48ADB2F47A7620057C9BF /* incremental_update.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AD82F47A7620057C9BF /* incremental_update.json */; };
 		B3B48ADD2F48521B0057C9BF /* TemplateXDemoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B48ADC2F48521B0057C9BF /* TemplateXDemoCell.swift */; };
 		B3B48AE12F49DBA20057C9BF /* NSObject+LookinConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = B3B48AE02F49DBA20057C9BF /* NSObject+LookinConfig.m */; };
+		B3B48AE42F4A16B00057C9BF /* FPSLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B48AE22F4A16B00057C9BF /* FPSLabel.swift */; };
 		C1MUSIC01203D5D1100000001 /* MusicHomeDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1MUSIC02203D5D1100000001 /* MusicHomeDemoViewController.swift */; };
 		C1MUSIC03203D5D1100000001 /* MusicHomeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1MUSIC04203D5D1100000001 /* MusicHomeCell.swift */; };
 		C1MUSIC05203D5D1100000001 /* horizontal_section.json in Resources */ = {isa = PBXBuildFile; fileRef = C1MUSIC06203D5D1100000001 /* horizontal_section.json */; };
@@ -82,6 +83,7 @@
 		B3B48ADE2F49DBA20057C9BF /* TemplateXDemo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TemplateXDemo-Bridging-Header.h"; sourceTree = "<group>"; };
 		B3B48ADF2F49DBA20057C9BF /* NSObject+LookinConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+LookinConfig.h"; sourceTree = "<group>"; };
 		B3B48AE02F49DBA20057C9BF /* NSObject+LookinConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+LookinConfig.m"; sourceTree = "<group>"; };
+		B3B48AE22F4A16B00057C9BF /* FPSLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FPSLabel.swift; sourceTree = "<group>"; };
 		C1MUSIC02203D5D1100000001 /* MusicHomeDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicHomeDemoViewController.swift; sourceTree = "<group>"; };
 		C1MUSIC04203D5D1100000001 /* MusicHomeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicHomeCell.swift; sourceTree = "<group>"; };
 		C1MUSIC06203D5D1100000001 /* horizontal_section.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = horizontal_section.json; sourceTree = "<group>"; };
@@ -131,8 +133,8 @@
 			isa = PBXGroup;
 			children = (
 				A1000002203D5D1100000001 /* AppDelegate.swift */,
-				A1000004203D5D1100000001 /* DemoListViewController.swift */,
 				A1000033203D5D1100000001 /* Demos */,
+				B3B48AE32F4A16B00057C9BF /* Utils */,
 				A1000034203D5D1100000001 /* Resources */,
 				A1000013203D5D1100000001 /* Info.plist */,
 				B3B48ADF2F49DBA20057C9BF /* NSObject+LookinConfig.h */,
@@ -153,6 +155,7 @@
 		A1000033203D5D1100000001 /* Demos */ = {
 			isa = PBXGroup;
 			children = (
+				A1000004203D5D1100000001 /* DemoListViewController.swift */,
 				C1MUSIC09203D5D1100000001 /* MusicHome */,
 				B3B48ADC2F48521B0057C9BF /* TemplateXDemoCell.swift */,
 				A1000006203D5D1100000001 /* BasicRenderDemoViewController.swift */,
@@ -231,6 +234,14 @@
 				B3B48AD82F47A7620057C9BF /* incremental_update.json */,
 			);
 			path = Performance;
+			sourceTree = "<group>";
+		};
+		B3B48AE32F4A16B00057C9BF /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				B3B48AE22F4A16B00057C9BF /* FPSLabel.swift */,
+			);
+			path = Utils;
 			sourceTree = "<group>";
 		};
 		C1MUSIC09203D5D1100000001 /* MusicHome */ = {
@@ -396,6 +407,7 @@
 				B3B48AE12F49DBA20057C9BF /* NSObject+LookinConfig.m in Sources */,
 				A1000007203D5D1100000001 /* DataBindingDemoViewController.swift in Sources */,
 				A1000009203D5D1100000001 /* IncrementalUpdateDemoViewController.swift in Sources */,
+				B3B48AE42F4A16B00057C9BF /* FPSLabel.swift in Sources */,
 				A100000B203D5D1100000001 /* LayoutDemoViewController.swift in Sources */,
 				A100000D203D5D1100000001 /* ComponentShowcaseViewController.swift in Sources */,
 				B3B48ADD2F48521B0057C9BF /* TemplateXDemoCell.swift in Sources */,

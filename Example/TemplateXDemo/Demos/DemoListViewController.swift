@@ -75,6 +75,7 @@ class DemoListViewController: UITableViewController {
         let demo = demos[indexPath.row]
         let viewController = demo.action()
         viewController.title = demo.title
+        viewController.navigationItem.largeTitleDisplayMode = .never
         navigationController?.pushViewController(viewController, animated: true)
     }
 }

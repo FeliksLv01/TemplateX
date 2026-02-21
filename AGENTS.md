@@ -210,6 +210,84 @@ public protocol Component: AnyObject {
 - `list` - 列表
 - `flex` / `container` - Flex 布局容器
 
+#### ListComponent 属性详解
+
+`list` 组件支持以下 props：
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| direction | String | "vertical" | 滚动方向："horizontal" / "vertical" |
+| columns | Int | 1 | 列数（垂直滚动时有效） |
+| rows | Int | - | 行数（横向滚动 + rows > 1 时使用纵向优先布局） |
+| rowSpacing | CGFloat | 0 | 行间距 |
+| columnSpacing | CGFloat | 0 | 列间距 |
+| showsIndicator | Bool | true | 是否显示滚动条 |
+| bounces | Bool | true | 是否有弹性效果 |
+| isPagingEnabled | Bool | false | 是否启用分页滚动 |
+| itemWidth | CGFloat | - | 固定 item 宽度（横向滚动时优先使用） |
+| itemHeight | CGFloat | - | 固定 item 高度 |
+| estimatedItemHeight | CGFloat/String | - | 预估 item 高度，支持表达式（如 `"${itemWidth + 50}"`） |
+| autoAdjustHeight | Bool | false | 自动调整列表高度（根据 Cell 最大高度） |
+| items | String | - | 数据源绑定表达式（如 `"${section.items}"`） |
+| itemTemplate | Object | - | Cell 模板 JSON |
+| contentInsetLeft/Right/Top/Bottom | CGFloat | 0 | 内容边距 |
+
+**autoAdjustHeight 使用场景**：
+
+适用于横向滚动列表，Cell 高度不固定时自动调整列表容器高度。工作流程：
+1. 遍历所有数据项，计算每个 Cell 的渲染高度
+2. 取最大高度作为列表容器高度
+3. 所有 Cell 使用统一的最大高度
+
+```json
+{
+  "type": "list",
+  "props": {
+    "direction": "horizontal",
+    "autoAdjustHeight": true,
+    "estimatedItemHeight": 150,
+    "items": "${section.items}",
+    "itemTemplate": { ... }
+  },
+  "style": {
+    "width": "100%"
+  }
+}
+```
+
+**estimatedItemHeight 表达式支持**：
+
+`estimatedItemHeight` 支持表达式，可以在数据绑定阶段动态计算：
+
+```json
+{
+  "type": "list",
+  "props": {
+    "direction": "horizontal",
+    "itemWidth": 100,
+    "estimatedItemHeight": "${itemWidth * 1.5 + 20}",
+    "items": "${items}"
+  }
+}
+```
+
+**lineHeight 解析规则**：
+
+文本组件的 `lineHeight` 属性采用智能解析：
+- `lineHeight <= 4`：视为倍数（如 1.3 = 1.3 倍行高）
+- `lineHeight > 4`：视为像素值（如 20 = 20pt 行高）
+
+```json
+{
+  "type": "text",
+  "props": { "text": "Hello" },
+  "style": {
+    "fontSize": 14,
+    "lineHeight": 1.5
+  }
+}
+```
+
 ### 5. 扩展机制
 
 #### 自定义组件注册
@@ -350,8 +428,9 @@ ExpressionEngine.shared.registerFunctions([func1, func2, func3])
 
 8. **引擎预热（warmUp）**
    - `TemplateX.warmUp()` 在 App 启动时异步调用
-   - 预热内容：ComponentRegistry、TemplateParser、YogaNodePool、RenderEngine
+   - 预热内容：ComponentRegistry、TemplateParser、YogaNodePool、RenderEngine、ImageLoader
    - 消除首次渲染的冷启动开销（从 6ms 降到 <1ms）
+   - **SDWebImage 预热**：触发 `SDWebImageManager`、`SDImageCache`、`SDWebImageDownloader` 单例初始化，避免首次加载图片时的 ~3ms 开销
 
 9. **视图样式残留 Bug 修复**
    - **问题**：增量更新时，复用视图的样式属性可能残留（如背景色）

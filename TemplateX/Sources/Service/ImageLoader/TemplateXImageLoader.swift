@@ -53,6 +53,12 @@ public protocol TemplateXImageLoader: AnyObject {
     ///
     /// - Parameter type: 缓存类型
     func clearCache(type: ImageCacheType)
+    
+    /// 预热图片加载器
+    ///
+    /// 触发懒加载的单例初始化，避免首次使用时的开销。
+    /// 建议在 App 启动时的后台线程调用。
+    func warmUp()
 }
 
 // MARK: - Default Implementation
@@ -61,4 +67,5 @@ public extension TemplateXImageLoader {
     func cancelLoad(for imageView: UIImageView) {}
     func prefetchImages(urls: [String]) {}
     func clearCache(type: ImageCacheType) {}
+    func warmUp() {}
 }

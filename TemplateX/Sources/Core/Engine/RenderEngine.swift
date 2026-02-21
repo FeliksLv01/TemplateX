@@ -187,54 +187,61 @@ public final class TemplateXRenderEngine {
         // 重置统计
         viewCreationStats.reset()
         
-        // 使用新的性能监控系统
-        let session = config.enablePerformanceMonitor 
-            ? PerformanceMonitor.shared.beginTrace("render", templateId: component.id)
-            : nil
-        defer { session?.end() }
-        
         // 0. 预处理 ListComponent：计算 Cell 最大高度，更新 style.height
         preProcessListComponents(component, containerWidth: containerSize.width)
         
-        // 1. 计算布局
-        let layoutStart = CACurrentMediaTime()
-        let layoutResults: [String: LayoutResult]
-        if let session = session {
-            layoutResults = session.measure("layout") {
-                layoutEngine.calculateLayout(for: component, containerSize: containerSize)
-            }
-        } else {
-            layoutResults = layoutEngine.calculateLayout(for: component, containerSize: containerSize)
+        // 性能监控：只在启用时创建 session
+        if config.enablePerformanceMonitor {
+            return renderWithMonitoring(component: component, containerSize: containerSize)
         }
-        let layoutTime = (CACurrentMediaTime() - layoutStart) * 1000
+        
+        // 快速路径：无监控开销
+        // 1. 计算布局
+        let layoutResults = layoutEngine.calculateLayout(for: component, containerSize: containerSize)
         
         // 2. 应用布局结果
-        let applyLayoutStart = CACurrentMediaTime()
         applyLayoutResults(layoutResults, to: component)
-        let applyLayoutTime = (CACurrentMediaTime() - applyLayoutStart) * 1000
         
         // 3. 创建视图树
-        let createViewStart = CACurrentMediaTime()
-        let rootView: UIView
-        if let session = session {
-            rootView = session.measure("createView") {
-                createViewTree(component)
-            }
-        } else {
-            rootView = createViewTree(component)
-        }
-        let createViewTime = (CACurrentMediaTime() - createViewStart) * 1000
+        let rootView = createViewTree(component)
         
         // 4. 更新视图
-        let updateViewStart = CACurrentMediaTime()
-        if let session = session {
-            session.measure("updateView") {
-                updateViewTree(component)
-            }
-        } else {
+        updateViewTree(component)
+        
+        // 5. 缓存渲染状态
+        let viewId = generateViewIdentifier(rootView)
+        renderedComponents[viewId] = component
+        
+        return rootView
+    }
+    
+    /// 带性能监控的渲染（独立方法，避免闭包开销影响主路径）
+    private func renderWithMonitoring(
+        component: Component,
+        containerSize: CGSize
+    ) -> UIView {
+        let session = PerformanceMonitor.shared.beginTrace("render", templateId: component.id)
+        defer { session.end() }
+        
+        // 1. 计算布局
+        let layoutResults = session.measure("layout") {
+            layoutEngine.calculateLayout(for: component, containerSize: containerSize)
+        }
+        
+        // 2. 应用布局结果
+        session.measure("applyLayout") {
+            applyLayoutResults(layoutResults, to: component)
+        }
+        
+        // 3. 创建视图树
+        let rootView = session.measure("createView") {
+            createViewTree(component)
+        }
+        
+        // 4. 更新视图
+        session.measure("updateView") {
             updateViewTree(component)
         }
-        let updateViewTime = (CACurrentMediaTime() - updateViewStart) * 1000
         
         // 5. 缓存渲染状态
         let viewId = generateViewIdentifier(rootView)
@@ -403,16 +410,7 @@ public final class TemplateXRenderEngine {
         // 使用栈模拟递归
         var stack: [Component] = [component]
         
-        TXLogger.debug("[preProcess] START: root=\(component.id), type=\(type(of: component)), children.count=\(component.children.count)")
-        
         while let comp = stack.popLast() {
-            TXLogger.debug("[preProcess] visiting: id=\(comp.id), type=\(type(of: comp)), children.count=\(comp.children.count)")
-            
-            // 调试：检查 ListComponent
-            if let listComponent = comp as? ListComponent {
-                TXLogger.debug("[preProcess] ListComponent: id=\(listComponent.id), autoAdjustHeight=\(listComponent.props.autoAdjustHeight), itemHeight=\(String(describing: listComponent.props.itemHeight)), cellTemplate=\(listComponent.cellTemplate != nil), dataSource.count=\(listComponent.dataSource.count)")
-            }
-            
             // 检查是否是 ListComponent 且开启了 autoAdjustHeight
             if let listComponent = comp as? ListComponent,
                listComponent.props.autoAdjustHeight,
@@ -449,7 +447,6 @@ public final class TemplateXRenderEngine {
                     let listHeight = maxHeight + insets.top + insets.bottom
                     listComponent.style.height = .point(listHeight)
                     listComponent.cachedMaxItemHeight = maxHeight
-                    TXLogger.debug("[RenderEngine] preProcessListComponents: \(listComponent.id) height=\(listHeight), cellMaxHeight=\(maxHeight)")
                 }
             }
             

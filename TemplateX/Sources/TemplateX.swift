@@ -194,6 +194,9 @@ public enum TemplateX {
         // 4. 触发 TemplateXRenderEngine 单例初始化
         _ = TemplateXRenderEngine.shared
         
+        // 5. 预热图片加载器（触发 SDWebImage 单例初始化，避免首次加载图片时的 ~3ms 开销）
+        ServiceRegistry.shared.imageLoader.warmUp()
+        
         let elapsed = (CACurrentMediaTime() - start) * 1000
         TXLogger.info("TemplateX.warmUp completed in \(String(format: "%.2f", elapsed))ms")
     }

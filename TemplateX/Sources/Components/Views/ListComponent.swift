@@ -838,7 +838,6 @@ class TemplateXCell: UICollectionViewCell {
                 view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
                 contentRootView = view
                 currentTemplateId = templateId
-                TXLogger.debug("[TemplateXCell] configure success: templateId=\(templateId), containerSize=\(containerSize)")
             } else {
                 TXLogger.error("[TemplateXCell] configure FAILED: renderWithCache returned nil, templateId=\(templateId), containerSize=\(containerSize)")
             }
