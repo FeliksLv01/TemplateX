@@ -10,6 +10,8 @@
 - **视图复用**: 视图池化和组件缓存，减少内存分配
 - **XML 编译器**: 开发时使用 XML，编译为优化的 JSON
 
+![screenshot](./Docs/screenshot.png)
+
 ## 架构
 
 ```
@@ -62,6 +64,7 @@ import TemplateXService
 
 func application(_ application: UIApplication, didFinishLaunchingWithOptions ...) -> Bool {
     // 注册 ImageLoader（必须，否则 fatalError）
+    // 也可自行遵循协议实现
     TemplateX.registerImageLoader(SDWebImageLoader())
     
     // 预热引擎（推荐）
