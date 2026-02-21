@@ -11,15 +11,48 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
     struct Props: ComponentProps {
         var direction: String?
         var columns: Int?
+        
+        /// 横向滚动时，垂直方向的行数（用于 3×n 网格布局）
+        var rows: Int?
+        
         var rowSpacing: CGFloat?
         var columnSpacing: CGFloat?
         @Default<False>
         var showsIndicator: Bool
         @Default<True>
         var bounces: Bool
+        /// 预估 item 高度（固定值）
         var estimatedItemHeight: CGFloat?
+        /// 预估 item 高度表达式（如 "${itemWidth + 50}"，支持动态计算）
+        var estimatedItemHeightExpr: String?
         var loadMoreThreshold: CGFloat?
         var cellTemplate: String?
+        
+        // MARK: - 新增属性
+        
+        /// 分页滚动（适用于横向滑动的 Banner 或网格）
+        @Default<False>
+        var isPagingEnabled: Bool
+        
+        /// 固定 item 宽度（横向滚动时优先使用）
+        var itemWidth: CGFloat?
+        
+        /// 固定 item 高度（垂直滚动时优先使用）
+        var itemHeight: CGFloat?
+        
+        /// 数据源绑定表达式（如 "${section.items}"）
+        var items: String?
+        
+        /// 内容边距（支持从 JSON 解析）
+        var contentInsetLeft: CGFloat?
+        var contentInsetRight: CGFloat?
+        var contentInsetTop: CGFloat?
+        var contentInsetBottom: CGFloat?
+        
+        /// 自动调整列表高度（根据 Cell 最大高度）
+        /// 适用于横向滚动列表，动态调整列表容器高度
+        @Default<False>
+        var autoAdjustHeight: Bool
         
         /// 滚动方向
         var scrollDirection: ScrollDirection {
@@ -42,8 +75,17 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
     /// 数据源
     var dataSource: [Any] = [] {
         didSet {
+            // 数据变化时清除高度缓存
+            cachedMaxItemHeight = nil
             if dataSource.count != oldValue.count || dataSource.count > 0 {
-                collectionView?.reloadData()
+                // 如果 collectionView 还没有有效的 frame，延迟到 applyLayout 再 reload
+                if let cv = collectionView, cv.frame.width > 0 && cv.frame.height > 0 {
+                    cv.reloadData()
+                    // 重置滚动位置到起点（考虑 contentInset）
+                    cv.contentOffset = CGPoint(x: -cv.contentInset.left, y: -cv.contentInset.top)
+                } else {
+                    needsReloadAfterLayout = true
+                }
             }
         }
     }
@@ -60,6 +102,12 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
     /// 预加载管理器
     var preloadManager: ListPreloadManager?
     
+    /// 缓存的最大 Cell 高度（用于横向滚动列表统一高度）
+    var cachedMaxItemHeight: CGFloat?
+    
+    /// 解析后的预估高度（支持表达式计算）
+    var resolvedEstimatedItemHeight: CGFloat?
+    
     // MARK: - 事件回调
     
     var onItemClick: ((Int, Any) -> Void)?
@@ -71,6 +119,9 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
     private weak var collectionView: UICollectionView?
     private var listDataSource: ListDataSource?
     private var listDelegate: ListDelegate?
+    
+    /// 标记是否需要在 applyLayout 后执行 reloadData
+    private var needsReloadAfterLayout = false
     
     // MARK: - 自定义 Props 解析
     
@@ -84,9 +135,32 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         props.columnSpacing = json.cgFloat("columnSpacing")
         props.showsIndicator = json.bool("showsIndicator", default: true)
         props.bounces = json.bool("bounces", default: true)
-        props.estimatedItemHeight = json.cgFloat("estimatedItemHeight")
         props.loadMoreThreshold = json.cgFloat("loadMoreThreshold")
         props.cellTemplate = json.string("cellTemplate")
+        
+        // estimatedItemHeight 支持数字或表达式
+        if let heightValue = json.cgFloat("estimatedItemHeight") {
+            props.estimatedItemHeight = heightValue
+        } else if let heightExpr = json.string("estimatedItemHeight") {
+            props.estimatedItemHeightExpr = heightExpr
+        }
+        
+        // 新增属性解析
+        props.rows = json.int("rows")
+        props.isPagingEnabled = json.bool("isPagingEnabled", default: false)
+        props.itemWidth = json.cgFloat("itemWidth")
+        props.itemHeight = json.cgFloat("itemHeight")
+        props.items = json.string("items")
+        
+        // 内容边距
+        props.contentInsetLeft = json.cgFloat("contentInsetLeft")
+        props.contentInsetRight = json.cgFloat("contentInsetRight")
+        props.contentInsetTop = json.cgFloat("contentInsetTop")
+        props.contentInsetBottom = json.cgFloat("contentInsetBottom")
+        
+        // 自动调整高度
+        props.autoAdjustHeight = json.bool("autoAdjustHeight", default: false)
+        
         return props
     }
     
@@ -96,8 +170,18 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         
         // 解析 Cell 模板
         if let propsJson = jsonWrapper?.props {
-            // 解析内容边距
-            contentInset = propsJson.edgeInsets("contentInset")
+            // 解析内容边距（优先使用单独属性，其次使用 contentInset 对象）
+            if props.contentInsetLeft != nil || props.contentInsetRight != nil ||
+               props.contentInsetTop != nil || props.contentInsetBottom != nil {
+                contentInset = EdgeInsets(
+                    top: props.contentInsetTop ?? 0,
+                    left: props.contentInsetLeft ?? 0,
+                    bottom: props.contentInsetBottom ?? 0,
+                    right: props.contentInsetRight ?? 0
+                )
+            } else {
+                contentInset = propsJson.edgeInsets("contentInset")
+            }
             
             // Cell 模板 - 支持多种方式
             cellTemplateId = props.cellTemplate
@@ -105,10 +189,14 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
             // 优先使用 itemTemplate（新格式）
             if let itemTemplateJson = propsJson.child("itemTemplate") {
                 cellTemplate = itemTemplateJson
+                TXLogger.debug("[ListComponent] didParseProps: found itemTemplate, keys=\(itemTemplateJson.rawDictionary.keys)")
             }
             // 回退到 cell（旧格式）
             else if let cellJson = propsJson.child("cell") {
                 cellTemplate = cellJson
+                TXLogger.debug("[ListComponent] didParseProps: found cell template")
+            } else {
+                TXLogger.warning("[ListComponent] didParseProps: NO cellTemplate found! propsJson.keys=\(propsJson.rawDictionary.keys)")
             }
         }
     }
@@ -124,6 +212,7 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         collectionView.showsHorizontalScrollIndicator = props.showsIndicator && props.scrollDirection == .horizontal
         collectionView.bounces = props.bounces
         collectionView.contentInset = contentInset.uiEdgeInsets
+        collectionView.isPagingEnabled = props.isPagingEnabled
         
         // 注册 Cell
         collectionView.register(TemplateXCell.self, forCellWithReuseIdentifier: TemplateXCell.reuseIdentifier)
@@ -140,6 +229,14 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         self.collectionView = collectionView
         self.view = collectionView
         
+        // 如果 dataSource 已经有数据，标记需要在 applyLayout 后 reloadData
+        // 此时 frame 还是 (0,0,0,0)，直接 reloadData 不会触发 cellForItemAt
+        TXLogger.debug("[ListComponent] createView: id=\(id), dataSource.count=\(self.dataSource.count), cellTemplate=\(cellTemplate != nil), frame=\(collectionView.frame)")
+        if !self.dataSource.isEmpty {
+            needsReloadAfterLayout = true
+            TXLogger.debug("[ListComponent] createView: needsReloadAfterLayout = true")
+        }
+        
         return collectionView
     }
     
@@ -149,11 +246,40 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         view.bounces = props.bounces
         view.contentInset = contentInset.uiEdgeInsets
         
-        // 更新布局
-        if let layout = view.collectionViewLayout as? UICollectionViewFlowLayout {
+        // 更新布局参数
+        if let layout = view.collectionViewLayout as? VerticalGridFlowLayout {
+            // 纵向优先布局
+            layout.rows = props.rows ?? 3
+            layout.rowSpacing = props.rowSpacing ?? 0
+            layout.columnSpacing = props.columnSpacing ?? 0
+            // 不设置 sectionInset，边距由 collectionView.contentInset 处理
+            layout.isPagingEnabled = props.isPagingEnabled
+            
+            // 计算 itemSize（需要在布局计算时更新）
+            // itemSize 会在 ListDataSource 中计算并设置
+            
+            // VerticalGridFlowLayout 自己处理分页，禁用系统分页
+            view.isPagingEnabled = false
+            
+            // 分页模式下使用快速减速，让手势更灵敏
+            if props.isPagingEnabled {
+                view.decelerationRate = .fast
+            }
+        } else if let layout = view.collectionViewLayout as? UICollectionViewFlowLayout {
+            // 标准 FlowLayout
             layout.scrollDirection = props.scrollDirection == .horizontal ? .horizontal : .vertical
-            layout.minimumLineSpacing = props.rowSpacing ?? 0
-            layout.minimumInteritemSpacing = props.columnSpacing ?? 0
+            
+            // 注意：FlowLayout 的 lineSpacing/interitemSpacing 语义与滚动方向相关
+            // - 横向滚动：lineSpacing = 列间距，interitemSpacing = 行间距
+            // - 纵向滚动：lineSpacing = 行间距，interitemSpacing = 列间距
+            if props.scrollDirection == .horizontal {
+                layout.minimumLineSpacing = props.columnSpacing ?? 0
+                layout.minimumInteritemSpacing = props.rowSpacing ?? 0
+            } else {
+                layout.minimumLineSpacing = props.rowSpacing ?? 0
+                layout.minimumInteritemSpacing = props.columnSpacing ?? 0
+            }
+            view.isPagingEnabled = props.isPagingEnabled
         }
         
         // 处理 auto 高度
@@ -181,19 +307,60 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         }
         
         view.frame = newFrame
+        
+        // frame 设置后，如果有待加载的数据，执行 reloadData
+        if needsReloadAfterLayout, let collectionView = collectionView {
+            needsReloadAfterLayout = false
+            TXLogger.debug("[ListComponent] applyLayout: reloadData after frame set, frame=\(collectionView.frame)")
+            collectionView.reloadData()
+            // 重置滚动位置到起点（考虑 contentInset）
+            collectionView.contentOffset = CGPoint(x: -collectionView.contentInset.left, y: -collectionView.contentInset.top)
+        }
     }
     
     // MARK: - Private
     
     private func createCollectionViewLayout() -> UICollectionViewLayout {
+        // 横向滚动 + rows 参数 → 使用纵向优先布局
+        if props.scrollDirection == .horizontal, let rows = props.rows, rows > 1 {
+            let layout = VerticalGridFlowLayout()
+            layout.rows = rows
+            layout.rowSpacing = props.rowSpacing ?? 0
+            layout.columnSpacing = props.columnSpacing ?? 0
+            // 不设置 sectionInset，边距由 collectionView.contentInset 处理
+            layout.isPagingEnabled = props.isPagingEnabled
+            layout.columnsPerPage = 1  // 每页显示 1 列
+            return layout
+        }
+        
+        // 默认使用 FlowLayout
         let layout = UICollectionViewFlowLayout()
         
         layout.scrollDirection = props.scrollDirection == .horizontal ? .horizontal : .vertical
-        layout.minimumLineSpacing = props.rowSpacing ?? 0
-        layout.minimumInteritemSpacing = props.columnSpacing ?? 0
         
-        // 如果是单列，使用预估高度
-        if (props.columns ?? 1) == 1 {
+        // 注意：FlowLayout 的 lineSpacing/interitemSpacing 语义与滚动方向相关
+        if props.scrollDirection == .horizontal {
+            layout.minimumLineSpacing = props.columnSpacing ?? 0
+            layout.minimumInteritemSpacing = props.rowSpacing ?? 0
+            
+            // 横向滚动：设置初始 itemSize，后续由 sizeForItemAt 更新
+            // 优先级：cachedMaxItemHeight > resolvedEstimatedItemHeight > props.itemHeight > props.estimatedItemHeight > 100
+            let itemWidth = props.itemWidth ?? 100
+            let itemHeight = cachedMaxItemHeight 
+                ?? resolvedEstimatedItemHeight 
+                ?? props.itemHeight 
+                ?? props.estimatedItemHeight 
+                ?? 100
+            layout.itemSize = CGSize(width: itemWidth, height: itemHeight)
+            TXLogger.debug("[ListComponent] createLayout: horizontal itemSize=(\(itemWidth), \(itemHeight))")
+        } else {
+            layout.minimumLineSpacing = props.rowSpacing ?? 0
+            layout.minimumInteritemSpacing = props.columnSpacing ?? 0
+        }
+        
+        // 垂直滚动 + 单列：使用预估高度（自动尺寸计算）
+        // 横向滚动不使用 estimatedItemSize，由 sizeForItemAt 控制
+        if props.scrollDirection == .vertical && (props.columns ?? 1) == 1 {
             layout.estimatedItemSize = CGSize(
                 width: UIScreen.main.bounds.width,
                 height: props.estimatedItemHeight ?? 44
@@ -256,6 +423,8 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         cloned.cellTemplate = self.cellTemplate
         cloned.cellTemplateId = self.cellTemplateId
         cloned.contentInset = self.contentInset
+        cloned.resolvedEstimatedItemHeight = self.resolvedEstimatedItemHeight
+        // 不复制 cachedMaxItemHeight，让新实例重新计算
         return cloned
     }
 }
@@ -272,7 +441,9 @@ private class ListDataSource: NSObject, UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return component?.dataSource.count ?? 0
+        let count = component?.dataSource.count ?? 0
+        TXLogger.debug("[ListDataSource] numberOfItemsInSection: \(count), component=\(component != nil)")
+        return count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -289,6 +460,12 @@ private class ListDataSource: NSObject, UICollectionViewDataSource {
         if let cellTemplate = component.cellTemplate {
             let cellSize = calculateCellSize(collectionView: collectionView, component: component)
             let templateId = component.cellTemplateId ?? "list_cell_\(component.id)"
+            
+            // 更新 VerticalGridFlowLayout 的 itemSize（只需要设置一次）
+            if indexPath.item == 0,
+               let layout = collectionView.collectionViewLayout as? VerticalGridFlowLayout {
+                layout.itemSize = cellSize
+            }
             
             // 尝试使用预加载的视图
             if let preloadManager = component.preloadManager,
@@ -313,29 +490,66 @@ private class ListDataSource: NSObject, UICollectionViewDataSource {
     }
     
     private func calculateCellSize(collectionView: UICollectionView, component: ListComponent) -> CGSize {
-        let columns = CGFloat(max(1, component.props.columns ?? 1))
-        let totalSpacing = (component.props.columnSpacing ?? 0) * (columns - 1)
         let insets = component.contentInset
         
         if component.props.scrollDirection == .vertical {
+            // 垂直滚动：根据 columns 计算 itemWidth
+            let columns = CGFloat(max(1, component.props.columns ?? 1))
+            let totalSpacing = (component.props.columnSpacing ?? 0) * (columns - 1)
+            
             var containerWidth = collectionView.bounds.width
             if containerWidth == 0 {
                 containerWidth = component.layoutResult.frame.width
             }
             
-            let availableWidth = containerWidth - insets.left - insets.right - totalSpacing
-            let itemWidth = availableWidth / columns
+            // 优先使用固定的 itemWidth，否则根据 columns 计算
+            let itemWidth: CGFloat
+            if let fixedWidth = component.props.itemWidth {
+                itemWidth = fixedWidth
+            } else {
+                let availableWidth = containerWidth - insets.left - insets.right - totalSpacing
+                itemWidth = availableWidth / columns
+            }
             
-            return CGSize(width: itemWidth, height: component.props.estimatedItemHeight ?? 44)
+            // 优先使用固定的 itemHeight，否则使用 estimatedItemHeight
+            let itemHeight = component.props.itemHeight ?? component.props.estimatedItemHeight ?? 44
+            
+            return CGSize(width: itemWidth, height: itemHeight)
         } else {
+            // 横向滚动：根据 rows 计算 itemHeight
+            let rows = CGFloat(max(1, component.props.rows ?? 1))
+            let totalSpacing = (component.props.rowSpacing ?? 0) * (rows - 1)
+            
             var containerHeight = collectionView.bounds.height
             if containerHeight == 0 {
                 containerHeight = component.layoutResult.frame.height
             }
             
-            let availableHeight = containerHeight - insets.top - insets.bottom - totalSpacing
-            let itemHeight = availableHeight / columns
-            return CGSize(width: component.props.estimatedItemHeight ?? 44, height: itemHeight)
+            var containerWidth = collectionView.bounds.width
+            if containerWidth == 0 {
+                containerWidth = component.layoutResult.frame.width
+            }
+            
+            // 优先使用固定的 itemWidth，否则根据容器宽度自动计算
+            let itemWidth: CGFloat
+            if let fixedWidth = component.props.itemWidth {
+                itemWidth = fixedWidth
+            } else {
+                // 横向滚动时，itemWidth = 容器宽度 - 左右 inset
+                // 适用于分页滚动场景，每页显示一列
+                itemWidth = containerWidth - insets.left - insets.right
+            }
+            
+            // 优先使用固定的 itemHeight，否则根据 rows 计算
+            let itemHeight: CGFloat
+            if let fixedHeight = component.props.itemHeight {
+                itemHeight = fixedHeight
+            } else {
+                let availableHeight = containerHeight - insets.top - insets.bottom - totalSpacing
+                itemHeight = availableHeight / rows
+            }
+            
+            return CGSize(width: itemWidth, height: itemHeight)
         }
     }
 }
@@ -424,38 +638,85 @@ private class ListDelegate: NSObject, UICollectionViewDelegate, UICollectionView
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         guard let component = component else {
+            TXLogger.debug("[ListDelegate] sizeForItemAt: component is nil")
             return CGSize(width: 100, height: 100)
+        }
+        
+        TXLogger.debug("[ListDelegate] sizeForItemAt: index=\(indexPath.item), collectionView.bounds=\(collectionView.bounds)")
+        
+        // VerticalGridFlowLayout 自己管理 itemSize，不需要 delegate
+        if let layout = collectionViewLayout as? VerticalGridFlowLayout {
+            return layout.itemSize
         }
         
         let itemWidth = calculateItemWidth(collectionView: collectionView, component: component)
         
-        // 优先使用预加载管理器的高度缓存
-        if let preloadManager = component.preloadManager,
-           let cachedHeight = preloadManager.cachedHeight(for: indexPath.item) {
-            if component.props.scrollDirection == .vertical {
-                return CGSize(width: itemWidth, height: cachedHeight)
-            } else {
-                return CGSize(width: cachedHeight, height: itemWidth)
+        // 1. 如果有固定 itemHeight，直接使用
+        if let fixedHeight = component.props.itemHeight {
+            return CGSize(width: itemWidth, height: fixedHeight)
+        }
+        
+        // 2. 如果有缓存的最大高度，直接使用（横向滚动场景）
+        if let cachedMaxHeight = component.cachedMaxItemHeight {
+            return CGSize(width: itemWidth, height: cachedMaxHeight)
+        }
+        
+        // 3. 横向滚动列表：计算所有 Cell 的最大高度
+        if component.props.scrollDirection == .horizontal,
+           let cellTemplate = component.cellTemplate,
+           !component.dataSource.isEmpty {
+            
+            let templateId = component.cellTemplateId ?? "list_cell_\(component.id)"
+            var maxHeight: CGFloat = 0
+            
+            // 遍历所有数据计算高度，取最大值
+            for (index, itemData) in component.dataSource.enumerated() {
+                var context: [String: Any] = ["item": itemData, "index": index]
+                if let dictData = itemData as? [String: Any] {
+                    for (key, value) in dictData {
+                        context[key] = value
+                    }
+                }
+                
+                let height = TemplateXRenderEngine.shared.calculateHeight(
+                    json: cellTemplate.rawDictionary,
+                    templateId: templateId,
+                    data: context,
+                    containerWidth: itemWidth,
+                    useCache: true
+                )
+                maxHeight = max(maxHeight, height)
+            }
+            
+            // 缓存最大高度
+            if maxHeight > 0 {
+                component.cachedMaxItemHeight = maxHeight
+                TXLogger.debug("[ListComponent] cachedMaxItemHeight = \(maxHeight)")
+                return CGSize(width: itemWidth, height: maxHeight)
             }
         }
         
-        // 如果有 Cell 模板，计算实际高度
-        if let cellTemplate = component.cellTemplate,
+        // 4. 垂直滚动列表：每个 Cell 独立计算高度
+        if component.props.scrollDirection == .vertical,
+           let cellTemplate = component.cellTemplate,
            indexPath.item < component.dataSource.count {
             
-            let itemData = component.dataSource[indexPath.item]
-            
-            var context: [String: Any] = [:]
-            if let dictData = itemData as? [String: Any] {
-                context = dictData
-            } else {
-                context["item"] = itemData
+            // 优先使用预加载管理器的高度缓存
+            if let preloadManager = component.preloadManager,
+               let cachedHeight = preloadManager.cachedHeight(for: indexPath.item) {
+                return CGSize(width: itemWidth, height: cachedHeight)
             }
-            context["index"] = indexPath.item
+            
+            let itemData = component.dataSource[indexPath.item]
+            var context: [String: Any] = ["item": itemData, "index": indexPath.item]
+            if let dictData = itemData as? [String: Any] {
+                for (key, value) in dictData {
+                    context[key] = value
+                }
+            }
             
             let templateId = component.cellTemplateId ?? "list_cell_\(component.id)"
-            
-            let height = TemplateXRenderEngine.shared.calculateHeight(
+            let calculatedHeight = TemplateXRenderEngine.shared.calculateHeight(
                 json: cellTemplate.rawDictionary,
                 templateId: templateId,
                 data: context,
@@ -463,38 +724,65 @@ private class ListDelegate: NSObject, UICollectionViewDelegate, UICollectionView
                 useCache: true
             )
             
-            if height > 0 {
-                if component.props.scrollDirection == .vertical {
-                    return CGSize(width: itemWidth, height: height)
-                } else {
-                    return CGSize(width: height, height: itemWidth)
-                }
+            if calculatedHeight > 0 {
+                return CGSize(width: itemWidth, height: calculatedHeight)
             }
         }
         
-        // 回退到预估高度
-        if component.props.scrollDirection == .vertical {
-            return CGSize(width: itemWidth, height: component.props.estimatedItemHeight ?? 44)
-        } else {
-            let itemHeight = calculateItemHeight(collectionView: collectionView, component: component)
-            return CGSize(width: component.props.estimatedItemHeight ?? 44, height: itemHeight)
-        }
+        // 5. 回退到预估高度
+        let fallbackHeight = component.props.estimatedItemHeight ?? 44
+        return CGSize(width: itemWidth, height: fallbackHeight)
     }
     
     private func calculateItemWidth(collectionView: UICollectionView, component: ListComponent) -> CGFloat {
-        let columns = CGFloat(max(1, component.props.columns ?? 1))
-        let totalSpacing = (component.props.columnSpacing ?? 0) * (columns - 1)
+        // 优先使用固定的 itemWidth
+        if let fixedWidth = component.props.itemWidth {
+            return fixedWidth
+        }
+        
         let insets = component.contentInset
-        let availableWidth = collectionView.bounds.width - insets.left - insets.right - totalSpacing
-        return availableWidth / columns
+        
+        if component.props.scrollDirection == .vertical {
+            // 垂直滚动：根据 columns 计算
+            let columns = CGFloat(max(1, component.props.columns ?? 1))
+            let totalSpacing = (component.props.columnSpacing ?? 0) * (columns - 1)
+            let availableWidth = collectionView.bounds.width - insets.left - insets.right - totalSpacing
+            return availableWidth / columns
+        } else {
+            // 横向滚动：itemWidth = 容器宽度 - 左右 inset（适用于分页滚动）
+            return collectionView.bounds.width - insets.left - insets.right
+        }
     }
     
     private func calculateItemHeight(collectionView: UICollectionView, component: ListComponent) -> CGFloat {
-        let columns = CGFloat(max(1, component.props.columns ?? 1))
-        let totalSpacing = (component.props.columnSpacing ?? 0) * (columns - 1)
+        // 优先使用固定的 itemHeight
+        if let fixedHeight = component.props.itemHeight {
+            return fixedHeight
+        }
+        
+        // 根据滚动方向选择正确的参数
+        let rowCount: CGFloat
+        let spacing: CGFloat
+        
+        if component.props.scrollDirection == .horizontal {
+            // 横向滚动：使用 rows 参数（垂直方向的行数）
+            rowCount = CGFloat(max(1, component.props.rows ?? 1))
+            spacing = component.props.rowSpacing ?? 0
+        } else {
+            // 垂直滚动：使用 columns 参数（向后兼容）
+            rowCount = CGFloat(max(1, component.props.columns ?? 1))
+            spacing = component.props.columnSpacing ?? 0
+        }
+        
+        let totalSpacing = spacing * (rowCount - 1)
         let insets = component.contentInset
         let availableHeight = collectionView.bounds.height - insets.top - insets.bottom - totalSpacing
-        return availableHeight / columns
+        let calculatedHeight = availableHeight / rowCount
+        
+        // 诊断日志
+        TXLogger.verbose("[ListComponent] calculateItemHeight: direction=\(component.props.scrollDirection), rows=\(Int(rowCount)), availableHeight=\(availableHeight), spacing=\(totalSpacing) -> itemHeight=\(calculatedHeight)")
+        
+        return calculatedHeight
     }
 }
 
@@ -550,6 +838,9 @@ class TemplateXCell: UICollectionViewCell {
                 view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
                 contentRootView = view
                 currentTemplateId = templateId
+                TXLogger.debug("[TemplateXCell] configure success: templateId=\(templateId), containerSize=\(containerSize)")
+            } else {
+                TXLogger.error("[TemplateXCell] configure FAILED: renderWithCache returned nil, templateId=\(templateId), containerSize=\(containerSize)")
             }
         } else {
             if let view = contentRootView {

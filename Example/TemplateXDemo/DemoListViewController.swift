@@ -34,6 +34,11 @@ class DemoListViewController: UITableViewController {
             "性能测试",
             "渲染性能基准测试",
             { PerformanceDemoViewController() }
+        ),
+        (
+            "网易云音乐首页",
+            "复杂列表场景：嵌套横向滚动 + 网格分页",
+            { MusicHomeDemoViewController() }
         )
     ]
     

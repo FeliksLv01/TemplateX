@@ -37,6 +37,11 @@
 		B3B48ADA2F47A7620057C9BF /* basic_render.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AD72F47A7620057C9BF /* basic_render.json */; };
 		B3B48ADB2F47A7620057C9BF /* incremental_update.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AD82F47A7620057C9BF /* incremental_update.json */; };
 		B3B48ADD2F48521B0057C9BF /* TemplateXDemoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B48ADC2F48521B0057C9BF /* TemplateXDemoCell.swift */; };
+		B3B48AE12F49DBA20057C9BF /* NSObject+LookinConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = B3B48AE02F49DBA20057C9BF /* NSObject+LookinConfig.m */; };
+		C1MUSIC01203D5D1100000001 /* MusicHomeDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1MUSIC02203D5D1100000001 /* MusicHomeDemoViewController.swift */; };
+		C1MUSIC03203D5D1100000001 /* MusicHomeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1MUSIC04203D5D1100000001 /* MusicHomeCell.swift */; };
+		C1MUSIC05203D5D1100000001 /* horizontal_section.json in Resources */ = {isa = PBXBuildFile; fileRef = C1MUSIC06203D5D1100000001 /* horizontal_section.json */; };
+		C1MUSIC07203D5D1100000001 /* grid_section.json in Resources */ = {isa = PBXBuildFile; fileRef = C1MUSIC08203D5D1100000001 /* grid_section.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -74,6 +79,13 @@
 		B3B48AD72F47A7620057C9BF /* basic_render.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = basic_render.json; sourceTree = "<group>"; };
 		B3B48AD82F47A7620057C9BF /* incremental_update.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = incremental_update.json; sourceTree = "<group>"; };
 		B3B48ADC2F48521B0057C9BF /* TemplateXDemoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateXDemoCell.swift; sourceTree = "<group>"; };
+		B3B48ADE2F49DBA20057C9BF /* TemplateXDemo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TemplateXDemo-Bridging-Header.h"; sourceTree = "<group>"; };
+		B3B48ADF2F49DBA20057C9BF /* NSObject+LookinConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+LookinConfig.h"; sourceTree = "<group>"; };
+		B3B48AE02F49DBA20057C9BF /* NSObject+LookinConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+LookinConfig.m"; sourceTree = "<group>"; };
+		C1MUSIC02203D5D1100000001 /* MusicHomeDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicHomeDemoViewController.swift; sourceTree = "<group>"; };
+		C1MUSIC04203D5D1100000001 /* MusicHomeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicHomeCell.swift; sourceTree = "<group>"; };
+		C1MUSIC06203D5D1100000001 /* horizontal_section.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = horizontal_section.json; sourceTree = "<group>"; };
+		C1MUSIC08203D5D1100000001 /* grid_section.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = grid_section.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,6 +135,9 @@
 				A1000033203D5D1100000001 /* Demos */,
 				A1000034203D5D1100000001 /* Resources */,
 				A1000013203D5D1100000001 /* Info.plist */,
+				B3B48ADF2F49DBA20057C9BF /* NSObject+LookinConfig.h */,
+				B3B48AE02F49DBA20057C9BF /* NSObject+LookinConfig.m */,
+				B3B48ADE2F49DBA20057C9BF /* TemplateXDemo-Bridging-Header.h */,
 			);
 			path = TemplateXDemo;
 			sourceTree = "<group>";
@@ -138,6 +153,7 @@
 		A1000033203D5D1100000001 /* Demos */ = {
 			isa = PBXGroup;
 			children = (
+				C1MUSIC09203D5D1100000001 /* MusicHome */,
 				B3B48ADC2F48521B0057C9BF /* TemplateXDemoCell.swift */,
 				A1000006203D5D1100000001 /* BasicRenderDemoViewController.swift */,
 				A1000008203D5D1100000001 /* DataBindingDemoViewController.swift */,
@@ -152,6 +168,7 @@
 		A1000034203D5D1100000001 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				C1MUSIC0A203D5D1100000001 /* MusicHome */,
 				B3B48AD92F47A7620057C9BF /* Performance */,
 				B3B48AB22F47A71B0057C9BF /* Basic */,
 				B3B48ABB2F47A71B0057C9BF /* Components */,
@@ -216,6 +233,24 @@
 			path = Performance;
 			sourceTree = "<group>";
 		};
+		C1MUSIC09203D5D1100000001 /* MusicHome */ = {
+			isa = PBXGroup;
+			children = (
+				C1MUSIC02203D5D1100000001 /* MusicHomeDemoViewController.swift */,
+				C1MUSIC04203D5D1100000001 /* MusicHomeCell.swift */,
+			);
+			path = MusicHome;
+			sourceTree = "<group>";
+		};
+		C1MUSIC0A203D5D1100000001 /* MusicHome */ = {
+			isa = PBXGroup;
+			children = (
+				C1MUSIC06203D5D1100000001 /* horizontal_section.json */,
+				C1MUSIC08203D5D1100000001 /* grid_section.json */,
+			);
+			path = MusicHome;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -250,6 +285,7 @@
 				TargetAttributes = {
 					A1000040203D5D1100000001 = {
 						CreatedOnToolsVersion = 15.0;
+						LastSwiftMigration = 2620;
 					};
 				};
 			};
@@ -296,6 +332,8 @@
 				B3B48AD42F47A71B0057C9BF /* aspect_ratio.json in Resources */,
 				B3B48AD52F47A71B0057C9BF /* text_demo.json in Resources */,
 				B3B48AD62F47A71B0057C9BF /* flexbox_row.json in Resources */,
+				C1MUSIC05203D5D1100000001 /* horizontal_section.json in Resources */,
+				C1MUSIC07203D5D1100000001 /* grid_section.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -332,9 +370,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -351,12 +393,15 @@
 				A1000001203D5D1100000001 /* AppDelegate.swift in Sources */,
 				A1000003203D5D1100000001 /* DemoListViewController.swift in Sources */,
 				A1000005203D5D1100000001 /* BasicRenderDemoViewController.swift in Sources */,
+				B3B48AE12F49DBA20057C9BF /* NSObject+LookinConfig.m in Sources */,
 				A1000007203D5D1100000001 /* DataBindingDemoViewController.swift in Sources */,
 				A1000009203D5D1100000001 /* IncrementalUpdateDemoViewController.swift in Sources */,
 				A100000B203D5D1100000001 /* LayoutDemoViewController.swift in Sources */,
 				A100000D203D5D1100000001 /* ComponentShowcaseViewController.swift in Sources */,
 				B3B48ADD2F48521B0057C9BF /* TemplateXDemoCell.swift in Sources */,
 				A100000F203D5D1100000001 /* PerformanceDemoViewController.swift in Sources */,
+				C1MUSIC01203D5D1100000001 /* MusicHomeDemoViewController.swift in Sources */,
+				C1MUSIC03203D5D1100000001 /* MusicHomeCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -488,6 +533,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L6XGXKP989;
@@ -508,6 +554,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.felikslv.templatex.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "TemplateXDemo/TemplateXDemo-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -519,6 +567,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L6XGXKP989;
@@ -539,6 +588,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.felikslv.templatex.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "TemplateXDemo/TemplateXDemo-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

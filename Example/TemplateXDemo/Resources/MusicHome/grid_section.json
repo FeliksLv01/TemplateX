@@ -1,0 +1,116 @@
+{
+    "type": "container",
+    "id": "grid_section",
+    "style": {
+        "width": "100%",
+        "height": "auto",
+        "flexDirection": "column",
+        "marginBottom": 25
+    },
+    "children": [
+        {
+            "type": "text",
+            "id": "section_title",
+            "style": {
+                "width": "100%",
+                "height": "auto",
+                "fontSize": 18,
+                "fontWeight": "semibold",
+                "textColor": "#333333",
+                "marginLeft": 16,
+                "marginBottom": 12
+            },
+            "props": {
+                "text": "${section.title}"
+            }
+        },
+        {
+            "type": "list",
+            "id": "grid_list",
+            "style": {
+                "width": "100%",
+                "height": 220
+            },
+            "props": {
+                "direction": "horizontal",
+                "rows": 3,
+                "rowSpacing": 12,
+                "columnSpacing": 16,
+                "isPagingEnabled": true,
+                "showsIndicator": false,
+                "contentInsetLeft": 16,
+                "contentInsetRight": 32,
+                "items": "${section.items}",
+                "itemTemplate": {
+                    "type": "container",
+                    "id": "grid_item",
+                    "style": {
+                        "width": "100%",
+                        "height": "100%",
+                        "flexDirection": "row",
+                        "alignItems": "center",
+                        "paddingRight": 12
+                    },
+                    "children": [
+                        {
+                            "type": "image",
+                            "id": "cover",
+                            "style": {
+                                "width": 56,
+                                "height": 56,
+                                "cornerRadius": 6,
+                                "backgroundColor": "#F0F0F0"
+                            },
+                            "props": {
+                                "src": "${item.coverUrl}",
+                                "contentMode": "scaleAspectFill"
+                            }
+                        },
+                        {
+                            "type": "container",
+                            "id": "info",
+                            "style": {
+                                "flexGrow": 1,
+                                "height": "auto",
+                                "flexDirection": "column",
+                                "marginLeft": 10,
+                                "justifyContent": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "title",
+                                    "style": {
+                                        "width": "100%",
+                                        "height": "auto",
+                                        "fontSize": 14,
+                                        "textColor": "#333333",
+                                        "numberOfLines": 1
+                                    },
+                                    "props": {
+                                        "text": "${item.title}"
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "id": "subtitle",
+                                    "style": {
+                                        "width": "100%",
+                                        "height": "auto",
+                                        "marginTop": 4,
+                                        "fontSize": 12,
+                                        "textColor": "#999999",
+                                        "numberOfLines": 1
+                                    },
+                                    "props": {
+                                        "text": "${item.subtitle}"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

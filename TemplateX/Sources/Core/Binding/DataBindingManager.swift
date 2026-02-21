@@ -65,10 +65,28 @@ public final class DataBindingManager {
                 resolveExpressions(json: json, data: data, component: baseComponent)
             }
             
-            // 特殊处理 ListComponent：将 data["items"] 绑定到 dataSource
+            // 特殊处理 ListComponent：绑定 dataSource 和 estimatedItemHeight
             if let listComponent = baseComponent as? ListComponent {
-                if let items = data["items"] as? [Any] {
+                // 方式 1：通过 props.items 表达式绑定
+                if let itemsExpr = listComponent.props.items,
+                   expressionEngine.containsBinding(itemsExpr) {
+                    if let items = expressionEngine.resolveBinding(itemsExpr, context: data) as? [Any] {
+                        listComponent.dataSource = items
+                    }
+                }
+                // 方式 2：回退到 data["items"] 直接绑定（兼容旧方式）
+                else if let items = data["items"] as? [Any] {
                     listComponent.dataSource = items
+                }
+                
+                // 解析 estimatedItemHeightExpr 表达式
+                if let heightExpr = listComponent.props.estimatedItemHeightExpr,
+                   expressionEngine.containsBinding(heightExpr) {
+                    if let height = expressionEngine.resolveBinding(heightExpr, context: data) as? CGFloat {
+                        listComponent.resolvedEstimatedItemHeight = height
+                    } else if let heightNum = expressionEngine.resolveBinding(heightExpr, context: data) as? NSNumber {
+                        listComponent.resolvedEstimatedItemHeight = CGFloat(heightNum.doubleValue)
+                    }
                 }
             }
         }

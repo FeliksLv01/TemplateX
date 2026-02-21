@@ -435,12 +435,22 @@ private func measureTextSize(
     
     let font = UIFont.systemFont(ofSize: fontSize, weight: fontWeight)
     
+    // lineHeight 解析：
+    // - 如果 <= 4，认为是倍数（如 1.3 表示 1.3 倍行高）
+    // - 如果 > 4，认为是像素值（如 20 表示 20pt 行高）
+    let actualLineHeight: CGFloat?
+    if let lh = lineHeight {
+        actualLineHeight = lh <= 4 ? fontSize * lh : lh
+    } else {
+        actualLineHeight = nil
+    }
+    
     var attributes: [NSAttributedString.Key: Any] = [.font: font]
     
-    if let lineHeight = lineHeight {
+    if let actualLH = actualLineHeight {
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.minimumLineHeight = lineHeight
-        paragraphStyle.maximumLineHeight = lineHeight
+        paragraphStyle.minimumLineHeight = actualLH
+        paragraphStyle.maximumLineHeight = actualLH
         attributes[.paragraphStyle] = paragraphStyle
     }
     
@@ -464,7 +474,7 @@ private func measureTextSize(
     
     // 处理行数限制
     if numberOfLines > 0 {
-        let singleLineHeight = lineHeight ?? font.lineHeight
+        let singleLineHeight = actualLineHeight ?? font.lineHeight
         let maxHeight = singleLineHeight * CGFloat(numberOfLines)
         resultHeight = min(resultHeight, maxHeight)
     }

@@ -170,21 +170,23 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: BaseComponent, Comp
     /// 解析 Props（使用 Codable 自动解析）
     /// 子类可重写以自定义解析逻辑
     class func parseProps(from json: JSONWrapper?) -> P {
-        return parsePropsWithError(from: json).props
-    }
-    
-    /// 解析 Props 并返回错误信息
-    class func parsePropsWithError(from json: JSONWrapper?) -> (props: P, error: Error?) {
-        guard let json = json else { return (P(), nil) }
+        guard let json = json else { return P() }
         
         do {
             let data = try JSONSerialization.data(withJSONObject: json.rawDictionary)
             let props = try JSONDecoder().decode(P.self, from: data)
-            return (props, nil)
+            return props
         } catch {
             TXLogger.warning("parseProps failed: \(error), using default")
-            return (P(), error)
+            return P()
         }
+    }
+    
+    /// 解析 Props 并返回错误信息
+    /// 注意：此方法直接调用 parseProps，子类应该重写 parseProps 而不是此方法
+    class func parsePropsWithError(from json: JSONWrapper?) -> (props: P, error: Error?) {
+        // 直接调用 parseProps，让子类重写生效
+        return (parseProps(from: json), nil)
     }
     
     // MARK: - Init

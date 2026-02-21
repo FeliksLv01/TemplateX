@@ -215,8 +215,18 @@ final class TextComponent: TemplateXComponent<UILabel, TextComponent.Props> {
         // 行高
         if let lh = props.lineHeight ?? style.lineHeight {
             let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.minimumLineHeight = lh
-            paragraphStyle.maximumLineHeight = lh
+            // lineHeight 解析：
+            // - 如果 <= 4，认为是倍数（如 1.3 表示 1.3 倍行高）
+            // - 如果 > 4，认为是像素值（如 20 表示 20pt 行高）
+            let fontSize = props.fontSize ?? style.fontSize ?? 14
+            let actualLineHeight: CGFloat
+            if lh <= 4 {
+                actualLineHeight = fontSize * lh
+            } else {
+                actualLineHeight = lh
+            }
+            paragraphStyle.minimumLineHeight = actualLineHeight
+            paragraphStyle.maximumLineHeight = actualLineHeight
             paragraphStyle.alignment = label.textAlignment
             attributes[.paragraphStyle] = paragraphStyle
         }

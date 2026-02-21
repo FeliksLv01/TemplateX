@@ -1,0 +1,95 @@
+{
+    "type": "container",
+    "id": "horizontal_section",
+    "style": {
+        "width": "100%",
+        "height": "auto",
+        "flexDirection": "column",
+        "marginBottom": 25
+    },
+    "children": [
+        {
+            "type": "container",
+            "id": "section_header",
+            "style": {
+                "width": "100%",
+                "height": 42,
+                "justifyContent": "center",
+                "paddingLeft": 16
+            },
+            "children": [
+                {
+                    "type": "text",
+                    "id": "section_title",
+                    "style": {
+                        "fontSize": 18,
+                        "fontWeight": "semibold",
+                        "textColor": "#333333"
+                    },
+                    "props": {
+                        "text": "${section.title}"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "list",
+            "id": "horizontal_list",
+            "style": {
+                "width": "100%",
+                "height": "auto"
+            },
+            "props": {
+                "direction": "horizontal",
+                "columnSpacing": 10,
+                "itemWidth": 127,
+                "showsIndicator": false,
+                "contentInsetLeft": 16,
+                "contentInsetRight": 16,
+                "autoAdjustHeight": true,
+                "estimatedItemHeight": 152,
+                "items": "${section.items}",
+                "itemTemplate": {
+                    "type": "container",
+                    "id": "item_card",
+                    "style": {
+                        "width": "100%",
+                        "height": "auto",
+                        "flexDirection": "column"
+                    },
+                    "children": [
+                        {
+                            "type": "image",
+                            "id": "cover",
+                            "style": {
+                                "width": "100%",
+                                "aspectRatio": 1,
+                                "cornerRadius": 8,
+                                "backgroundColor": "#F0F0F0"
+                            },
+                            "props": {
+                                "src": "${item.coverUrl}",
+                                "contentMode": "scaleAspectFill"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "id": "title",
+                            "style": {
+                                "width": "100%",
+                                "height": "auto",
+                                "marginTop": 8,
+                                "fontSize": 13,
+                                "textColor": "#333333",
+                                "lineHeight": 1.3
+                            },
+                            "props": {
+                                "text": "${item.title}"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

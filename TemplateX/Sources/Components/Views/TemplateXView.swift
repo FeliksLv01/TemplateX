@@ -552,6 +552,9 @@ public class TemplateXView: UIView {
                 DataBindingManager.shared.bind(data: data, to: component)
             }
             
+            // 2.5 预处理 ListComponent（计算 autoAdjustHeight 列表的高度）
+            TemplateXRenderEngine.shared.preProcessListComponents(component, containerWidth: containerSize.width)
+            
             // 3. 计算布局（使用传入的 containerSize，避免死锁）
             let layoutResults = YogaLayoutEngine.shared.calculateLayout(
                 for: component,

@@ -138,6 +138,7 @@ enum StyleKey: Int {
         map["letterSpacing"] = .letterSpacing
         map["numberOfLines"] = .numberOfLines
         map["lines"] = .lines
+        map["maxLines"] = .numberOfLines  // maxLines 作为 numberOfLines 的别名
         
         return map
     }()

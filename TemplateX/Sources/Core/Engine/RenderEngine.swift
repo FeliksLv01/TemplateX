@@ -193,6 +193,9 @@ public final class TemplateXRenderEngine {
             : nil
         defer { session?.end() }
         
+        // 0. 预处理 ListComponent：计算 Cell 最大高度，更新 style.height
+        preProcessListComponents(component, containerWidth: containerSize.width)
+        
         // 1. 计算布局
         let layoutStart = CACurrentMediaTime()
         let layoutResults: [String: LayoutResult]
@@ -380,6 +383,79 @@ public final class TemplateXRenderEngine {
     /// 绑定数据到组件树
     private func bindData(_ data: [String: Any], to component: Component) {
         dataBindingManager.bind(data: data, to: component)
+    }
+    
+    // MARK: - ListComponent 预处理
+    
+    /// 预处理 ListComponent：在 Yoga 布局前计算 Cell 最大高度，更新 style.height
+    ///
+    /// 解决问题：横向滚动列表的高度需要根据 Cell 内容动态计算，但 Yoga 布局时无法获取 Cell 高度
+    /// 方案：在布局前遍历所有 ListComponent，如果开启了 autoAdjustHeight，则预先计算 Cell 最大高度
+    /// 预处理 ListComponent：在 Yoga 布局前计算 Cell 最大高度，更新 style.height
+    ///
+    /// 解决问题：横向滚动列表的高度需要根据 Cell 内容动态计算，但 Yoga 布局时无法获取 Cell 高度
+    /// 方案：在布局前遍历所有 ListComponent，如果开启了 autoAdjustHeight，则预先计算 Cell 最大高度
+    ///
+    /// - Parameters:
+    ///   - component: 根组件
+    ///   - containerWidth: 容器宽度
+    public func preProcessListComponents(_ component: Component, containerWidth: CGFloat) {
+        // 使用栈模拟递归
+        var stack: [Component] = [component]
+        
+        TXLogger.debug("[preProcess] START: root=\(component.id), type=\(type(of: component)), children.count=\(component.children.count)")
+        
+        while let comp = stack.popLast() {
+            TXLogger.debug("[preProcess] visiting: id=\(comp.id), type=\(type(of: comp)), children.count=\(comp.children.count)")
+            
+            // 调试：检查 ListComponent
+            if let listComponent = comp as? ListComponent {
+                TXLogger.debug("[preProcess] ListComponent: id=\(listComponent.id), autoAdjustHeight=\(listComponent.props.autoAdjustHeight), itemHeight=\(String(describing: listComponent.props.itemHeight)), cellTemplate=\(listComponent.cellTemplate != nil), dataSource.count=\(listComponent.dataSource.count)")
+            }
+            
+            // 检查是否是 ListComponent 且开启了 autoAdjustHeight
+            if let listComponent = comp as? ListComponent,
+               listComponent.props.autoAdjustHeight,
+               listComponent.props.itemHeight == nil,
+               let cellTemplate = listComponent.cellTemplate,
+               !listComponent.dataSource.isEmpty {
+                
+                let itemWidth = listComponent.props.itemWidth ?? (containerWidth - listComponent.contentInset.left - listComponent.contentInset.right)
+                let templateId = listComponent.cellTemplateId ?? "list_cell_\(listComponent.id)"
+                var maxHeight: CGFloat = 0
+                
+                // 遍历所有数据计算高度，取最大值
+                for (index, itemData) in listComponent.dataSource.enumerated() {
+                    var context: [String: Any] = ["item": itemData, "index": index]
+                    if let dictData = itemData as? [String: Any] {
+                        for (key, value) in dictData {
+                            context[key] = value
+                        }
+                    }
+                    
+                    let height = calculateHeight(
+                        json: cellTemplate.rawDictionary,
+                        templateId: templateId,
+                        data: context,
+                        containerWidth: itemWidth,
+                        useCache: true
+                    )
+                    maxHeight = max(maxHeight, height)
+                }
+                
+                // 更新 style.height 和缓存
+                if maxHeight > 0 {
+                    let insets = listComponent.contentInset
+                    let listHeight = maxHeight + insets.top + insets.bottom
+                    listComponent.style.height = .point(listHeight)
+                    listComponent.cachedMaxItemHeight = maxHeight
+                    TXLogger.debug("[RenderEngine] preProcessListComponents: \(listComponent.id) height=\(listHeight), cellMaxHeight=\(maxHeight)")
+                }
+            }
+            
+            // 子组件入栈
+            stack.append(contentsOf: comp.children)
+        }
     }
     
     // MARK: - 布局
@@ -979,6 +1055,7 @@ extension TemplateXRenderEngine {
             prototype = cached
         } else {
             guard let parsed = templateParser.parse(json: json) else {
+                TXLogger.error("[RenderEngine] renderWithCache FAILED: parse returned nil, templateId=\(templateId), json.keys=\(json.keys)")
                 return nil
             }
             componentTemplateCache[templateId] = parsed
@@ -1051,12 +1128,18 @@ extension TemplateXRenderEngine {
             bindData(data, to: component)
         }
         
+        // 3.5 预处理 ListComponent（计算 autoAdjustHeight 列表的高度）
+        preProcessListComponents(component, containerWidth: containerWidth)
+        
         // 4. 计算布局（使用 NaN 高度让 Yoga 自动计算）
         let containerSize = CGSize(width: containerWidth, height: .nan)
         let layoutResults = layoutEngine.calculateLayout(for: component, containerSize: containerSize)
         
-        // 5. 获取根组件高度
-        let height = layoutResults[component.id]?.frame.height ?? 0
+        // 5. 获取根组件高度（包含 margin）
+        let frameHeight = layoutResults[component.id]?.frame.height ?? 0
+        let marginTop = component.style.margin.top
+        let marginBottom = component.style.margin.bottom
+        let height = frameHeight + marginTop + marginBottom
         
         // 6. 缓存结果
         if useCache {
