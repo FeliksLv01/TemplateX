@@ -55,15 +55,6 @@ public final class TemplateXRenderEngine {
         /// 更新动画时长
         public var updateAnimationDuration: TimeInterval = 0.25
         
-        /// 是否优先使用并发渲染
-        /// 
-        /// 当设置为 true 时：
-        /// - 单个渲染：parse + layout 在子线程执行
-        /// - 批量渲染：多个模板并发处理
-        /// 
-        /// 注意：createView 始终在主线程执行（UIKit 要求）
-        public var preferConcurrentRender: Bool = false
-        
         public init() {}
     }
     
