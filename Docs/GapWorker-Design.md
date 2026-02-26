@@ -428,6 +428,346 @@ TemplateX/Sources/
 
 ---
 
+## 原理深入解析
+
+### 核心思想
+
+**GapWorker 的本质：利用"帧间空闲时间"提前渲染即将出现的 Cell，让滚动更流畅。**
+
+传统渲染的问题：
+
+```
+用户滚动 → Cell 进入屏幕 → 立刻开始渲染 → 渲染耗时 10ms → 16.6ms 帧预算耗尽 → 掉帧卡顿
+```
+
+GapWorker 的解决思路：
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  一帧 16.6ms（60fps）的时间分配                                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  ├── 主线程渲染（约 8ms）──┼── 空闲时间（约 8ms）──┤               │
+│                            │                                      │
+│      处理当前帧              │    GapWorker 在这里                  │
+│      - 布局                 │    偷偷预渲染下一屏 Cell              │
+│      - 绘制                 │                                      │
+│      - 动画                 │                                      │
+│                                                                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 时间预算计算
+
+#### 1. 静态预算（初始化时计算）
+
+```
+每帧可用时间 = 1秒 / 刷新率
+闲时预算 = 每帧可用时间 / 2
+```
+
+| 刷新率 | 每帧时间 | 闲时预算 |
+|--------|---------|---------|
+| 60fps | 16.67ms | **8.33ms** |
+| 120fps (ProMotion) | 8.33ms | **4.17ms** |
+
+**为什么除以 2？**
+- 前半帧给主线程渲染（布局、绘制、动画）
+- 后半帧给 GapWorker 做预取
+
+代码实现：
+
+```swift
+// TemplateXGapWorker.swift
+maxEstimateDuration = 1_000_000_000 / Int64(refreshRate) / 2
+//                    ↑ 1秒=10亿纳秒   ↑ 刷新率           ↑ 取一半
+```
+
+#### 2. 动态预算（每帧实时计算）
+
+每帧 VSYNC 回调时，根据**实际剩余时间**计算本帧预算：
+
+```swift
+@objc func vsyncCallback(_ displayLink: CADisplayLink) {
+    let now = CACurrentMediaTime()              // 当前时刻（回调被执行的时间）
+    let targetTimestamp = displayLink.targetTimestamp  // 下一帧 VSYNC 的时间
+    let remainingTime = targetTimestamp - now   // 剩余时间
+    
+    // 取剩余时间的一半作为本帧预算
+    let budget = remainingTime / 2
+    
+    // 剩余不到 1ms，跳过本帧
+    if budget < 0.001 { return }
+    
+    flushTasks(timeBudget: budget)
+}
+```
+
+**时间线图解**：
+
+```
+VSYNC_N (timestamp)              VSYNC_N+1 (targetTimestamp)
+    │                                  │
+    ▼                                  ▼
+    ├──────────── 16.67ms ─────────────┤
+    │                                  │
+    │  ┌──────────┐  ┌───────────────┐ │
+    │  │ 主线程    │  │ DisplayLink  │ │
+    │  │ 渲染工作  │  │ 回调触发      │ │
+    │  │          │  │   ↓          │ │
+    │  │          │  │  now         │ │
+    │  └──────────┘  └───────────────┘ │
+    │                  │               │
+    │                  │<── 剩余时间 ──>│
+    │                  │               │
+    │             remainingTime        │
+    │          = targetTimestamp - now │
+```
+
+**关键点：`targetTimestamp` 是系统提供的确定值**
+
+屏幕刷新是固定频率的，系统提前知道下一帧什么时候到来：
+- 60fps 屏幕：每 16.67ms 一次 VSYNC
+- 120fps 屏幕：每 8.33ms 一次 VSYNC
+
+所以 `targetTimestamp` 不是"预测"，而是系统告诉你的确定时间。
+
+---
+
+### 任务耗时测量
+
+#### 1. 单次任务耗时（墙钟时间）
+
+执行前后打点计时：
+
+```swift
+let taskStart = CACurrentMediaTime()   // 记录开始时间
+task.run()                              // 执行任务（parse + bind + layout）
+let taskDuration = CACurrentMediaTime() - taskStart  // 耗时（秒）
+```
+
+`CACurrentMediaTime()` 是高精度时钟，精度到纳秒级。
+
+#### 2. 加权平均耗时（用于预测）
+
+单次耗时波动大，所以用**加权平均**来估算未来任务的耗时：
+
+```
+新平均值 = 旧平均值 × 75% + 本次耗时 × 25%
+```
+
+代码实现：
+
+```swift
+func updateAverageBindTime(templateId: String, newDuration: Int64) {
+    let oldAverage = averageBindTimes[templateId] ?? newDuration
+    // 加权平均：旧值占 3/4，新值占 1/4
+    averageBindTimes[templateId] = (oldAverage * 3 / 4) + (newDuration / 4)
+}
+```
+
+**例子**：
+
+| 执行次数 | 本次耗时 | 平均值计算 | 新平均值 |
+|---------|---------|-----------|---------|
+| 1 | 4ms | 首次直接用 | **4ms** |
+| 2 | 6ms | 4×0.75 + 6×0.25 | **4.5ms** |
+| 3 | 3ms | 4.5×0.75 + 3×0.25 | **4.125ms** |
+| 4 | 5ms | 4.125×0.75 + 5×0.25 | **4.34ms** |
+
+**为什么用加权平均？**
+- 平滑波动，避免单次异常值影响估算
+- 新值权重 25%，逐渐适应变化
+- 旧值权重 75%，保持稳定性
+
+#### 3. 墙钟时间的精度问题
+
+单纯在任务前后打点，测量的是**墙钟时间（Wall Clock Time）**，不是**CPU 时间**。
+
+如果测量期间有其他任务在执行（系统后台任务、其他 GCD 队列），测量结果会偏大。
+
+**为什么 Lynx 和 TemplateX 仍然用墙钟时间？**
+
+1. **GapWorker 在主线程执行，且时机特殊**：在 VSYNC 回调的后半段，主线程渲染已完成，干扰较少
+2. **加权平均会平滑异常值**：偶尔一次被干扰导致偏大，只占 25% 权重
+3. **预算本身就是保守的**：只用帧时间的一半，即使估算偏大也不影响主线程渲染
+
+---
+
+### CADisplayLink 工作机制
+
+#### 1. RunLoop 触发时机
+
+CADisplayLink 是加在 **RunLoop** 上的，它的回调会在 **RunLoop 处理 Timer 阶段** 被调用：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     RunLoop 一次循环                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. 处理 Source0（触摸事件、手势）                            │
+│                    ↓                                         │
+│  2. 处理 Source1（系统端口事件）                              │
+│                    ↓                                         │
+│  3. 处理 Timer（CADisplayLink 在这里触发）  ← DisplayLink    │
+│                    ↓                                         │
+│  4. 处理 Observer                                            │
+│                    ↓                                         │
+│  5. 处理 GCD main queue                                      │
+│                    ↓                                         │
+│  6. 如果没事干 → 休眠                                        │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**当 `vsyncCallback` 被调用时，说明 RunLoop 已经处理完了"更高优先级"的任务**：
+
+| 优先级 | 任务类型 |
+|--------|---------|
+| 高 | 触摸事件、手势 |
+| 中 | UI 布局、绘制 |
+| 低 | Timer（包括 CADisplayLink） |
+
+#### 2. 主线程阻塞时的行为
+
+如果主线程被阻塞，CADisplayLink 回调会被**延迟或跳过**：
+
+```
+正常情况：
+VSYNC_1     VSYNC_2     VSYNC_3
+   │           │           │
+   ▼           ▼           ▼
+   回调1       回调2       回调3    ← 每帧都触发
+
+
+主线程阻塞：
+VSYNC_1     VSYNC_2     VSYNC_3     VSYNC_4
+   │           │           │           │
+   ▼           │           │           ▼
+   回调1       ✗           ✗          回调2   ← 中间的被跳过
+         └─── 主线程阻塞 50ms ───┘
+```
+
+**关键点：CADisplayLink 不会排队，错过的帧直接丢弃**
+
+这是 CADisplayLink 自身的逻辑，避免回调堆积导致雪崩：
+
+```
+❌ 错误设计（假设会排队）：
+阻塞 100ms（错过 6 帧）→ 恢复后连续触发 6 次回调 → 主线程又被阻塞
+
+✅ 正确设计（实际行为）：
+阻塞 100ms（错过 6 帧）→ 恢复后只触发最新的回调 → 主线程继续正常工作
+```
+
+#### 3. 回调延后的处理
+
+回调可能被延后，这正是 GapWorker 每帧实时计算剩余时间的原因：
+
+```swift
+let remainingTime = targetTimestamp - now
+
+// remainingTime < 0 意味着已经掉帧了
+// remainingTime < 1ms 意味着没有足够时间
+if remainingTime < 0.001 { 
+    return  // 跳过，等下一帧
+}
+```
+
+**GapWorker 不假设"有多少时间可用"，而是每帧实时计算剩余时间：**
+- 剩余时间多 → 多执行几个任务
+- 剩余时间少 → 少执行或跳过
+- 已经超时 → 直接跳过
+
+---
+
+### CADisplayLink 计算帧率原理
+
+利用 `timestamp` 的间隔计算帧率（这也验证了跳帧不会排队）：
+
+```swift
+var lastTimestamp: CFTimeInterval = 0
+
+@objc func displayLinkCallback(_ link: CADisplayLink) {
+    if lastTimestamp > 0 {
+        let delta = link.timestamp - lastTimestamp
+        let fps = 1.0 / delta
+        print("当前帧率: \(fps)")
+    }
+    lastTimestamp = link.timestamp
+}
+```
+
+**输出示例**：
+
+```
+回调间隔: 16.67ms → fps = 60
+回调间隔: 16.67ms → fps = 60
+回调间隔: 50.00ms → fps = 20  ← 检测到掉帧（跳过了 2 帧）
+回调间隔: 16.67ms → fps = 60
+```
+
+---
+
+### Lynx vs TemplateX 的实现差异
+
+| 机制 | Lynx | TemplateX (iOS) |
+|------|------|-----------------|
+| VSYNC 信号来源 | 引擎内部 Compositor | CADisplayLink |
+| 任务调度 | TaskRunner (类似 GCD) | RunLoop |
+| 闲时检测 | 渲染流水线完成后主动回调 | RunLoop Timer 阶段 |
+| 跨平台 | ✅ Android/iOS 统一 | ❌ iOS only |
+
+**Lynx 有自己的渲染引擎，能精确知道渲染完成时机**：
+
+```cpp
+void PageView::OnVSync() {
+    PerformLayout();      // 1. Layout
+    PerformPaint();       // 2. Paint  
+    PerformComposite();   // 3. Composite
+    // 4. 渲染完成，现在调用 GapWorker
+    FlushGapTaskIfNecessary(target_end_time);
+}
+```
+
+**TemplateX 使用 UIKit，渲染由系统控制，通过 CADisplayLink 间接获取时机**：
+
+- CADisplayLink 回调触发时，RunLoop 已处理完高优先级任务
+- 虽然不是精确的"渲染完成"时机，但足够接近
+
+---
+
+### 一个完整示例
+
+假设 60fps，每帧预算 8ms：
+
+```
+第 1 帧：
+├── 剩余预算: 8ms
+├── 任务队列: [Cell6(预估3ms), Cell7(预估3ms), Cell8(预估3ms)]
+│
+├── Cell6: 预估3ms < 8ms → 执行 → 实际耗时2.5ms → 剩余5.5ms
+├── Cell7: 预估3ms < 5.5ms → 执行 → 实际耗时3ms → 剩余2.5ms
+├── Cell8: 预估3ms > 2.5ms → 跳过（等下一帧）
+│
+└── 本帧完成: Cell6, Cell7
+
+第 2 帧：
+├── 剩余预算: 8ms
+├── 任务队列: [Cell8(预估2.8ms), Cell9(预估2.8ms), Cell10(预估2.8ms)]
+│                    ↑ 平均耗时已更新
+│
+├── Cell8: 执行 → 剩余5.2ms
+├── Cell9: 执行 → 剩余2.4ms
+├── Cell10: 跳过
+│
+└── 本帧完成: Cell8, Cell9
+```
+
+---
+
 ## 参考资料
 
 ### Lynx 源码位置
