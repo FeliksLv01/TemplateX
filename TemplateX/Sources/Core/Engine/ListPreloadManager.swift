@@ -681,6 +681,10 @@ public final class ListPreloadManager {
     /// 创建视图树
     private func createViewTree(for component: Component) -> UIView {
         let view = component.createView()
+        // 统一设置 component.view，组件内部无需再手动设置
+        if component.view == nil {
+            component.view = view
+        }
         view.frame = component.layoutResult.frame
         
         for child in component.children {

@@ -264,11 +264,11 @@ public final class YogaLayoutEngine {
     private func setupTextMeasureFunc(node: YGNodeRef, textComponent: TextComponent) {
         let context = TextMeasureContext(
             text: textComponent.text,
-            fontSize: textComponent.fontSize ?? textComponent.style.fontSize ?? 14,
-            fontWeight: parseFontWeight(textComponent.fontWeight ?? textComponent.style.fontWeight),
-            lineHeight: textComponent.lineHeight,
-            letterSpacing: textComponent.letterSpacing,
-            numberOfLines: textComponent.numberOfLines
+            fontSize: textComponent.style.fontSize ?? 14,
+            fontWeight: parseFontWeight(textComponent.style.fontWeight),
+            lineHeight: textComponent.style.lineHeight,
+            letterSpacing: textComponent.style.letterSpacing,
+            numberOfLines: textComponent.style.numberOfLines ?? 0
         )
         
         let contextPtr = Unmanaged.passRetained(context).toOpaque()

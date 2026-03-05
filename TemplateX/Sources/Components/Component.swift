@@ -165,10 +165,10 @@ open class BaseComponent: Component {
     
     /// 上次应用到视图的样式
     /// 用于增量更新时跳过未变化的属性设置
-    private var _lastAppliedStyle: ComponentStyle?
+    private var _previousStyle: ComponentStyle?
     
     /// 上次应用的 frame
-    private var _lastAppliedFrame: CGRect = .zero
+    private var _previousFrame: CGRect = .zero
     
     /// 是否需要强制应用样式（视图复用时设置为 true）
     public var forceApplyStyle: Bool = false
@@ -212,10 +212,9 @@ open class BaseComponent: Component {
     // MARK: - View 生命周期
     
     /// 创建视图 - 子类重写
+    /// 注意：无需手动设置 self.view，由 RenderEngine 统一处理
     open func createView() -> UIView {
-        let view = UIView()
-        self.view = view
-        return view
+        return UIView()
     }
     
     /// 更新视图 - 应用布局和样式
@@ -233,12 +232,12 @@ open class BaseComponent: Component {
         let newFrame = layoutResult.frame
         
         // 优化：frame 未变化时跳过
-        if !forceApplyStyle && _lastAppliedFrame == newFrame {
+        if !forceApplyStyle && _previousFrame == newFrame {
             return
         }
         
         view.frame = newFrame
-        _lastAppliedFrame = newFrame
+        _previousFrame = newFrame
     }
     
     /// 应用样式到视图
@@ -248,7 +247,7 @@ open class BaseComponent: Component {
         guard let view = view else { return }
         
         // 保存旧样式用于比较
-        let oldStyle = _lastAppliedStyle
+        let oldStyle = _previousStyle
         
         // 优化：样式未变化时跳过（但需要检查 frame 变化导致的渐变层更新）
         let styleUnchanged = !forceApplyStyle && oldStyle == style
@@ -259,7 +258,7 @@ open class BaseComponent: Component {
         }
         
         // 记录当前样式
-        _lastAppliedStyle = style
+        _previousStyle = style
         forceApplyStyle = false
         
         // === 显示控制 ===
@@ -475,6 +474,8 @@ public final class ComponentRegistry {
     }
     
     /// 创建组件
+    /// - 返回 nil 表示类型未注册
+    /// - 解析失败时仍返回组件实例（设置 parseError）
     public func createComponent(type: String, from json: JSONWrapper) -> Component? {
         let start = CACurrentMediaTime()
         guard let factory = factories[type] else {

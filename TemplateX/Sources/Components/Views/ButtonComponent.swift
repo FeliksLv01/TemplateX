@@ -4,24 +4,39 @@ import UIKit
 
 /// 按钮组件
 /// 支持文字、图标、背景色、点击状态等
+///
+/// 文本样式从 style 读取：fontSize, fontWeight, textColor
 final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent.Props> {
     
     // MARK: - Props
     
     struct Props: ComponentProps {
+        /// 按钮标题
         var title: String?
+        /// 按钮标题（别名）
         var text: String?
-        var titleColor: String?
+        /// 标题颜色（优先于 style.textColor）
+        var titleColor: ColorValue?
+        /// 左侧图标
         var iconLeft: String?
+        /// 左侧图标（别名）
         var icon: String?
+        /// 右侧图标
         var iconRight: String?
+        /// 图标尺寸
         var iconSize: CGFloat?
+        /// 图标与文字间距
         var iconSpacing: CGFloat?
+        /// 是否禁用
         @Default<False> var disabled: Bool
-        var titleColorHighlighted: String?
-        var titleColorDisabled: String?
-        var backgroundColorHighlighted: String?
-        var backgroundColorDisabled: String?
+        /// 高亮状态标题颜色
+        var titleColorHighlighted: ColorValue?
+        /// 禁用状态标题颜色
+        var titleColorDisabled: ColorValue?
+        /// 高亮状态背景色
+        var backgroundColorHighlighted: ColorValue?
+        /// 禁用状态背景色
+        var backgroundColorDisabled: ColorValue?
         
         /// 按钮标题（兼容 title 和 text）
         var buttonTitle: String? { title ?? text }
@@ -34,28 +49,6 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
     
     override class var typeIdentifier: String { "button" }
     
-    // MARK: - 便捷属性访问器（供 DiffPatcher 等外部使用）
-    
-    var title: String? {
-        get { props.buttonTitle }
-        set { props.title = newValue }
-    }
-    
-    var isDisabled: Bool {
-        get { props.disabled }
-        set { props.disabled = newValue }
-    }
-    
-    var iconLeft: String? {
-        get { props.leftIcon }
-        set { props.iconLeft = newValue }
-    }
-    
-    var iconRight: String? {
-        get { props.iconRight }
-        set { props.iconRight = newValue }
-    }
-    
     // MARK: - 事件回调
     
     var onClick: (() -> Void)?
@@ -65,7 +58,6 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
     override func createView() -> UIView {
         let button = TemplateXButton(type: .custom)
         button.addTarget(self, action: #selector(handleTap), for: .touchUpInside)
-        self.view = button
         return button
     }
     
@@ -79,32 +71,27 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
         view.setTitle(props.buttonTitle, for: .normal)
         
         // 文字颜色 - 优先从 props 读取，其次从 style 读取
-        let titleColor: UIColor
-        if let propsColor = props.titleColor, let color = parseColor(propsColor) {
-            titleColor = color
-        } else {
-            titleColor = style.textColor ?? .white
-        }
+        let titleColor = props.titleColor?.color ?? style.textColor ?? .white
         view.setTitleColor(titleColor, for: .normal)
         view.setTitleColor(
-            parseColor(props.titleColorHighlighted) ?? titleColor.withAlphaComponent(0.7),
+            props.titleColorHighlighted?.color ?? titleColor.withAlphaComponent(0.7),
             for: .highlighted
         )
         view.setTitleColor(
-            parseColor(props.titleColorDisabled) ?? titleColor.withAlphaComponent(0.5),
+            props.titleColorDisabled?.color ?? titleColor.withAlphaComponent(0.5),
             for: .disabled
         )
         
         // 字体 - 从 style 读取
         let fontSize = style.fontSize ?? 14
-        let fontWeight = parseFontWeight(style.fontWeight)
+        let fontWeight = style.fontWeight.flatMap { FontWeightValue($0).weight } ?? .regular
         view.titleLabel?.font = UIFont.systemFont(ofSize: fontSize, weight: fontWeight)
         
         // 背景色
         view.normalBackgroundColor = style.backgroundColor
-        view.highlightedBackgroundColor = parseColor(props.backgroundColorHighlighted)
+        view.highlightedBackgroundColor = props.backgroundColorHighlighted?.color
             ?? style.backgroundColor?.withAlphaComponent(0.8)
-        view.disabledBackgroundColor = parseColor(props.backgroundColorDisabled)
+        view.disabledBackgroundColor = props.backgroundColorDisabled?.color
             ?? style.backgroundColor?.withAlphaComponent(0.5)
         
         // 状态
@@ -134,29 +121,6 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
     func setDisabled(_ disabled: Bool) {
         props.disabled = disabled
         (view as? UIButton)?.isEnabled = !disabled
-    }
-    
-    // MARK: - Parse Helpers
-    
-    private func parseColor(_ colorString: String?) -> UIColor? {
-        guard let str = colorString else { return nil }
-        return UIColor(hexString: str)
-    }
-    
-    private func parseFontWeight(_ weight: String?) -> UIFont.Weight {
-        guard let weight = weight else { return .regular }
-        switch weight.lowercased() {
-        case "thin", "100": return .thin
-        case "ultralight", "200": return .ultraLight
-        case "light", "300": return .light
-        case "regular", "normal", "400": return .regular
-        case "medium", "500": return .medium
-        case "semibold", "600": return .semibold
-        case "bold", "700": return .bold
-        case "heavy", "800": return .heavy
-        case "black", "900": return .black
-        default: return .regular
-        }
     }
 }
 

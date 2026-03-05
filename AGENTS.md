@@ -73,14 +73,12 @@ TemplateX/                               # Git 仓库根目录
 │       │   │   ├── ViewDiffer.swift         # Diff 算法
 │       │   │   └── DiffPatcher.swift        # Patch 应用
 │       │   ├── Cache/
-│       │   │   ├── ComponentPool.swift      # 组件池
 │       │   │   └── LRUCache.swift           # LRU 缓存
 │       │   ├── Event/
 │       │   │   ├── EventManager.swift       # 事件管理
 │       │   │   └── GestureHandler.swift     # 手势处理
 │       │   └── Performance/
-│       │       ├── PerformanceMonitor.swift # 性能监控
-│       │       └── PreRenderOptimizer.swift # 预渲染优化
+│       │       └── PerformanceMonitor.swift # 性能监控
 │       ├── Components/
 │       │   ├── Component.swift              # 组件协议 + 基类 + 注册表
 │       │   ├── Views/
@@ -398,61 +396,56 @@ ExpressionEngine.shared.registerFunctions([func1, func2, func3])
    - 支持在子线程计算布局
    - YogaNodePool 节点复用 + 批量获取（`acquireBatch`）
 
-2. **组件复用**
-   - ComponentPool 组件复用
-   - 按组件类型分类存储
-   - 列表场景使用 UICollectionView 内置复用机制
-
-3. **UIView 创建优化**
+2. **UIView 创建优化**
    - UIView 创建耗时极低（<0.1ms），无需独立视图池
    - 列表场景依赖 UICollectionView/UITableView 内置 Cell 复用
 
-4. **移除不必要的锁**
-   - ComponentPool、EventManager、GestureHandlerManager 只在主线程访问，无需锁
-   - 真正需要锁的场景：PreRenderOptimizer（后台预渲染）、LRUCache（通用缓存）
+ 3. **移除不必要的锁**
+    - EventManager、GestureHandlerManager 只在主线程访问，无需锁
+    - 真正需要锁的场景：LRUCache（通用缓存）
 
-5. **LRUCache.ObjectPool Bug 修复**
+  4. **LRUCache.ObjectPool Bug 修复**
    - `let lock` → `var lock`（os_unfair_lock 必须是 var）
    - 移除 `var l = lock` 副本创建
 
-6. **渲染时机优化**
-   - 在 `viewDidLoad` 同步渲染，避免白屏
-   - 渲染耗时 ~10ms，不影响 push 动画流畅度
-
-7. **日志系统优化（TXLogger）**
+ 5. **渲染时机优化**
+    - 在 `viewDidLoad` 同步渲染，避免白屏
+    - 渲染耗时 ~10ms，不影响 push 动画流畅度
+ 
+ 6. **日志系统优化（TXLogger）**
    - iOS 14+ 使用 `os.Logger`（高性能，支持 Instruments）
    - iOS 14 以下使用 `print` fallback（带开关）
    - 统一接口 `TXLogger`，自动选择实现
    - 日志级别：error, warning, info, debug, trace, verbose
    - verbose 级别仅 DEBUG 模式输出
 
-8. **引擎预热（warmUp）**
-   - `TemplateX.warmUp()` 在 App 启动时异步调用
-   - 预热内容：ComponentRegistry、TemplateParser、YogaNodePool、RenderEngine、ImageLoader
-   - 消除首次渲染的冷启动开销（从 6ms 降到 <1ms）
-   - **SDWebImage 预热**：触发 `SDWebImageManager`、`SDImageCache`、`SDWebImageDownloader` 单例初始化，避免首次加载图片时的 ~3ms 开销
-
-9. **视图样式残留 Bug 修复**
+ 7. **引擎预热（warmUp）**
+    - `TemplateX.warmUp()` 在 App 启动时异步调用
+    - 预热内容：ComponentRegistry、TemplateParser、YogaNodePool、RenderEngine、ImageLoader
+    - 消除首次渲染的冷启动开销（从 6ms 降到 <1ms）
+    - **SDWebImage 预热**：触发 `SDWebImageManager`、`SDImageCache`、`SDWebImageDownloader` 单例初始化，避免首次加载图片时的 ~3ms 开销
+ 
+ 8. **视图样式残留 Bug 修复**
    - **问题**：增量更新时，复用视图的样式属性可能残留（如背景色）
    - **原因**：`applyStyle()` 只在样式属性有值时设置，不会在属性为 nil 时重置
    - **修复**：改为无条件应用所有样式属性，确保视图状态与组件样式一致
    - **影响**：backgroundColor、cornerRadius、borderWidth、shadowOpacity 等属性现在每次都会被设置
 
-10. **updateView 阶段优化**
-    - **样式缓存**：`_lastAppliedStyle` 缓存上次应用的样式，样式未变化时跳过
-    - **frame 缓存**：`_lastAppliedFrame` 缓存上次 frame，位置未变化时跳过
-    - **UIFont 缓存**：`TextComponent` 中缓存 UIFont，只在字体参数变化时重建
-    - **图片 URL 缓存**：`ImageComponent` 避免重复加载相同图片
-    - **forceApplyStyle 标记**：视图复用时强制应用样式
-
-11. **Parser 解析优化（StyleParser）**
+ 9. **updateView 阶段优化**
+     - **样式缓存**：`_lastAppliedStyle` 缓存上次应用的样式，样式未变化时跳过
+     - **frame 缓存**：`_lastAppliedFrame` 缓存上次 frame，位置未变化时跳过
+     - **UIFont 缓存**：`TextComponent` 中缓存 UIFont，只在字体参数变化时重建
+     - **图片 URL 缓存**：`ImageComponent` 避免重复加载相同图片
+     - **forceApplyStyle 标记**：视图复用时强制应用样式
+ 
+ 10. **Parser 解析优化（StyleParser）**
     - **批量解析模式**：一次遍历 JSON 字典，根据 key 分发到对应属性
     - **StyleKey 枚举映射**：字符串 key → 枚举值，O(1) 哈希查找
     - **静态枚举映射表**：FlexDirection/JustifyContent 等枚举使用预构建的静态字典
     - **减少字典查找**：原逐属性查询 40+ 次 → 现一次遍历
     - **消除重复类型转换**：在分发时直接处理类型
 
-12. **Yoga 剪枝优化（Incremental Layout）**
+ 11. **Yoga 剪枝优化（Incremental Layout）**
     - **原理**：复用组件上缓存的 YGNode，只在样式变化时重新计算布局
     - **效果**：二次布局计算跳过未变化的节点，Yoga 内部会 skip clean 节点
     - **开关**：`YogaLayoutEngine.shared.enableIncrementalLayout = true`（默认开启）

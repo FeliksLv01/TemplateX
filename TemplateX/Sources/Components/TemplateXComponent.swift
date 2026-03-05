@@ -96,7 +96,8 @@ public protocol ComponentFactory {
     static var typeIdentifier: String { get }
     
     /// 从 JSON 创建组件
-    static func create(from json: JSONWrapper) -> Component?
+    /// 解析失败时仍返回组件实例（设置 parseError），保证总是返回有效对象
+    static func create(from json: JSONWrapper) -> Component
 }
 
 // MARK: - ComponentProps 协议
@@ -119,6 +120,12 @@ public struct EmptyProps: ComponentProps {
 /// - V: 关联的 UIView 子类
 /// - P: 组件属性结构体（遵循 ComponentProps）
 ///
+/// 使用 @dynamicMemberLookup 自动转发 props 属性访问，无需手写访问器：
+/// ```swift
+/// let textComponent = TextComponent()
+/// textComponent.text = "Hello"  // 自动转发到 props.text
+/// ```
+///
 /// 使用示例：
 /// ```swift
 /// // 简单组件（无特有属性）
@@ -137,12 +144,27 @@ public struct EmptyProps: ComponentProps {
 ///     }
 /// }
 /// ```
+@dynamicMemberLookup
 open class TemplateXComponent<V: UIView, P: ComponentProps>: BaseComponent, ComponentFactory {
     
     // MARK: - Properties
     
     /// 组件特有属性（自动解析、自动克隆）
     var props: P = P()
+    
+    // MARK: - Dynamic Member Lookup
+    
+    /// 动态成员查找：自动转发到 props（读写）
+    /// 使用示例：`component.text = "Hello"` 等价于 `component.props.text = "Hello"`
+    public subscript<T>(dynamicMember keyPath: WritableKeyPath<P, T>) -> T {
+        get { props[keyPath: keyPath] }
+        set { props[keyPath: keyPath] = newValue }
+    }
+    
+    /// 动态成员查找：自动转发到 props（只读）
+    public subscript<T>(dynamicMember keyPath: KeyPath<P, T>) -> T {
+        props[keyPath: keyPath]
+    }
     
     // MARK: - ComponentFactory
     
@@ -152,7 +174,8 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: BaseComponent, Comp
     }
     
     /// 工厂方法（自动处理解析和初始化）
-    public static func create(from json: JSONWrapper) -> Component? {
+    /// 解析失败时仍返回组件实例（设置 parseError），保证总是返回有效对象
+    public static func create(from json: JSONWrapper) -> Component {
         let id = json.id ?? UUID().uuidString
         let component = Self.init(id: id, type: typeIdentifier)
         component.jsonWrapper = json
@@ -203,11 +226,11 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: BaseComponent, Comp
     // MARK: - View Lifecycle
     
     /// 创建视图（子类可重写）
-    /// 注意：解析错误由 RenderEngine 统一处理，会显示 errorView
+    /// 注意：
+    /// - 解析错误由 RenderEngine 统一处理，会显示 errorView
+    /// - 无需手动设置 self.view，由 RenderEngine 统一处理
     open override func createView() -> UIView {
-        let view = V()
-        self.view = view
-        return view
+        return V()
     }
     
     /// 更新视图

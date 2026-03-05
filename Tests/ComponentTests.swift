@@ -17,10 +17,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ViewComponent.create(from: json) else {
-            XCTFail("Failed to create ViewComponent")
-            return
-        }
+        let component = ViewComponent.create(from: json)
         
         XCTAssertEqual(component.id, "test_view")
         XCTAssertEqual(component.type, "view")
@@ -35,10 +32,7 @@ final class ComponentTests: XCTestCase {
             "id": "view_test"
         ])
         
-        guard let component = ViewComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = ViewComponent.create(from: json)
         
         let view = component.createView()
         
@@ -62,10 +56,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = TextComponent.create(from: json) else {
-            XCTFail("Failed to create TextComponent")
-            return
-        }
+        let component = TextComponent.create(from: json)
         
         XCTAssertEqual(component.type, "text")
     }
@@ -82,10 +73,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = TextComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = TextComponent.create(from: json)
         
         let view = component.createView()
         
@@ -119,10 +107,7 @@ final class ComponentTests: XCTestCase {
                 ]
             ])
             
-            guard let component = TextComponent.create(from: json) else {
-                XCTFail("Failed to create component for alignment: \(alignStr)")
-                continue
-            }
+            let component = TextComponent.create(from: json)
             
             let view = component.createView()
             component.updateView()
@@ -149,10 +134,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ImageComponent.create(from: json) else {
-            XCTFail("Failed to create ImageComponent")
-            return
-        }
+        let component = ImageComponent.create(from: json)
         
         XCTAssertEqual(component.type, "image")
         
@@ -177,10 +159,7 @@ final class ComponentTests: XCTestCase {
                 ]
             ])
             
-            guard let component = ImageComponent.create(from: json) else {
-                XCTFail("Failed to create component for mode: \(modeStr)")
-                continue
-            }
+            let component = ImageComponent.create(from: json)
             
             let view = component.createView()
             component.updateView()
@@ -206,10 +185,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ButtonComponent.create(from: json) else {
-            XCTFail("Failed to create ButtonComponent")
-            return
-        }
+        let component = ButtonComponent.create(from: json)
         
         XCTAssertEqual(component.type, "button")
         
@@ -226,10 +202,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ButtonComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = ButtonComponent.create(from: json)
         
         let view = component.createView()
         component.bindings["title"] = "Submit"
@@ -252,10 +225,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = InputComponent.create(from: json) else {
-            XCTFail("Failed to create InputComponent")
-            return
-        }
+        let component = InputComponent.create(from: json)
         
         XCTAssertEqual(component.type, "input")
         
@@ -272,10 +242,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = InputComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = InputComponent.create(from: json)
         
         let view = component.createView()
         component.bindings["placeholder"] = "Enter your email"
@@ -299,10 +266,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = FlexLayoutComponent.create(from: json) else {
-            XCTFail("Failed to create FlexLayoutComponent")
-            return
-        }
+        let component = FlexLayoutComponent.create(from: json)
         
         XCTAssertEqual(component.type, "flex")
     }
@@ -316,10 +280,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = FlexLayoutComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = FlexLayoutComponent.create(from: json)
         
         let view = component.createView()
         XCTAssertNotNil(view)
@@ -337,10 +298,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ScrollComponent.create(from: json) else {
-            XCTFail("Failed to create ScrollComponent")
-            return
-        }
+        let component = ScrollComponent.create(from: json)
         
         XCTAssertEqual(component.type, "scroll")
         
@@ -360,10 +318,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ListComponent.create(from: json) else {
-            XCTFail("Failed to create ListComponent")
-            return
-        }
+        let component = ListComponent.create(from: json)
         
         XCTAssertEqual(component.type, "list")
         
@@ -383,10 +338,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = GridComponent.create(from: json) else {
-            XCTFail("Failed to create GridComponent")
-            return
-        }
+        let component = GridComponent.create(from: json)
         
         XCTAssertEqual(component.type, "grid")
         
@@ -443,10 +395,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ViewComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = ViewComponent.create(from: json)
         
         XCTAssertEqual(component.style.width, .matchParent)
         XCTAssertEqual(component.style.height, .wrapContent)
@@ -466,10 +415,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ViewComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = ViewComponent.create(from: json)
         
         XCTAssertEqual(component.style.width, .fixed(150))
         XCTAssertEqual(component.style.height, .fixed(75))
@@ -485,10 +431,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ViewComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = ViewComponent.create(from: json)
         
         XCTAssertEqual(component.style.width, .percent(0.5))
         XCTAssertEqual(component.style.height, .percent(0.25))
@@ -506,10 +449,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ViewComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = ViewComponent.create(from: json)
         
         XCTAssertEqual(component.style.shadowRadius, 4)
         XCTAssertEqual(component.style.shadowOpacity, 0.3, accuracy: 0.01)
@@ -526,10 +466,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ViewComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = ViewComponent.create(from: json)
         
         XCTAssertEqual(component.style.display, .none)
     }
@@ -543,10 +480,7 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let component = ViewComponent.create(from: json) else {
-            XCTFail("Failed to create component")
-            return
-        }
+        let component = ViewComponent.create(from: json)
         
         XCTAssertEqual(component.style.visibility, .hidden)
     }
@@ -664,18 +598,16 @@ final class ComponentTests: XCTestCase {
             ]
         ])
         
-        guard let original = TextComponent.create(from: json) else {
-            XCTFail("Failed to create TextComponent")
-            return
-        }
+        let original = TextComponent.create(from: json)
         
         let cloned = original.clone()
         
         XCTAssertTrue(cloned is TextComponent)
         XCTAssertEqual(cloned.id, original.id)
         
-        if let clonedText = cloned as? TextComponent {
-            XCTAssertEqual(clonedText.text, original.text)
+        if let clonedText = cloned as? TextComponent,
+           let originalText = original as? TextComponent {
+            XCTAssertEqual(clonedText.text, originalText.text)
         }
     }
 }

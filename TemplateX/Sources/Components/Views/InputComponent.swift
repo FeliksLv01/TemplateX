@@ -4,6 +4,9 @@ import UIKit
 
 /// 输入框组件
 /// 支持单行/多行输入、placeholder、键盘类型等
+///
+/// Props 只包含内容属性，文本样式统一从 style 读取：
+/// - style.fontSize, style.fontWeight, style.textColor
 final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
     
     // MARK: - Props
@@ -11,7 +14,7 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
     struct Props: ComponentProps {
         @Default<TextInput> var inputType: String
         var placeholder: String?
-        var placeholderColor: String?
+        var placeholderColor: ColorValue?  // 使用强类型
         var text: String?
         var value: String?  // 别名
         var maxLength: Int?
@@ -34,33 +37,6 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
     
     override class var typeIdentifier: String { "input" }
     
-    // MARK: - 便捷属性访问器（供 DiffPatcher 等外部使用）
-    
-    var text: String {
-        get { props.resolvedText }
-        set { props.text = newValue; currentText = newValue }
-    }
-    
-    var placeholder: String? {
-        get { props.placeholder }
-        set { props.placeholder = newValue }
-    }
-    
-    var inputType: String {
-        get { props.inputType }
-        set { props.inputType = newValue }
-    }
-    
-    var isDisabled: Bool {
-        get { props.disabled }
-        set { props.disabled = newValue }
-    }
-    
-    var isReadOnly: Bool {
-        get { props.readOnly }
-        set { props.readOnly = newValue }
-    }
-    
     // MARK: - 输入类型枚举
     
     enum InputType: String {
@@ -76,9 +52,6 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
     
     /// 当前文本（运行时状态）
     var currentText: String = ""
-    
-    /// 解析后的占位文字颜色
-    private var placeholderUIColor: UIColor = .placeholderText
     
     // MARK: - 事件回调
     
@@ -103,7 +76,6 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
     
     override func didParseProps() {
         currentText = props.resolvedText
-        placeholderUIColor = parseColor(props.placeholderColor) ?? .placeholderText
         // 输入框默认裁剪
         style.clipsToBounds = true
     }
@@ -128,7 +100,6 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
         textField.component = self
         
         self.textField = textField
-        self.view = textField
         return textField
     }
     
@@ -147,7 +118,6 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
         textView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         
         self.textView = textView
-        self.view = container
         return container
     }
     
@@ -167,14 +137,15 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
         // 从 style 读取文字样式
         textField.textColor = style.textColor ?? .label
         let fontSize = style.fontSize ?? 14
-        let fontWeight = parseFontWeight(style.fontWeight)
+        let fontWeight = FontWeightValue(style.fontWeight).weight
         textField.font = UIFont.systemFont(ofSize: fontSize, weight: fontWeight)
         
         // Placeholder
         if let placeholder = props.placeholder {
+            let placeholderColor = props.placeholderColor?.color ?? .placeholderText
             textField.attributedPlaceholder = NSAttributedString(
                 string: placeholder,
-                attributes: [.foregroundColor: placeholderUIColor]
+                attributes: [.foregroundColor: placeholderColor]
             )
         }
         
@@ -202,7 +173,7 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
         // 从 style 读取文字样式
         textView.textColor = style.textColor ?? .label
         let fontSize = style.fontSize ?? 14
-        let fontWeight = parseFontWeight(style.fontWeight)
+        let fontWeight = FontWeightValue(style.fontWeight).weight
         textView.font = UIFont.systemFont(ofSize: fontSize, weight: fontWeight)
         
         // 内边距 - 从 style 读取
@@ -223,7 +194,7 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
         // Placeholder - 使用 TemplateXTextView 的内置 placeholder 功能
         if let templateXTextView = textView as? TemplateXTextView {
             templateXTextView.placeholder = props.placeholder
-            templateXTextView.placeholderColor = placeholderUIColor
+            templateXTextView.placeholderColor = props.placeholderColor?.color ?? .placeholderText
         }
     }
     
@@ -296,43 +267,6 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
     func clear() {
         setText("")
         onTextChange?("")
-    }
-    
-    // MARK: - Parse Helpers
-    
-    private func parseFontWeight(_ weight: String?) -> UIFont.Weight {
-        guard let weight = weight else { return .regular }
-        switch weight.lowercased() {
-        case "thin", "100": return .thin
-        case "ultralight", "200": return .ultraLight
-        case "light", "300": return .light
-        case "regular", "normal", "400": return .regular
-        case "medium", "500": return .medium
-        case "semibold", "600": return .semibold
-        case "bold", "700": return .bold
-        case "heavy", "800": return .heavy
-        case "black", "900": return .black
-        default: return .regular
-        }
-    }
-    
-    private func parseColor(_ colorString: String?) -> UIColor? {
-        guard let colorString = colorString else { return nil }
-        // 简单的颜色解析，支持 #RRGGBB 格式
-        if colorString.hasPrefix("#") {
-            var hexString = colorString.dropFirst()
-            if hexString.count == 6 {
-                var rgbValue: UInt64 = 0
-                Scanner(string: String(hexString)).scanHexInt64(&rgbValue)
-                return UIColor(
-                    red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
-                    green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
-                    blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
-                    alpha: 1.0
-                )
-            }
-        }
-        return nil
     }
 }
 

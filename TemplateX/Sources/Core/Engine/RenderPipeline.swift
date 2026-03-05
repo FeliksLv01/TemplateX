@@ -400,6 +400,10 @@ final class RenderPipeline {
                 view = existingView
             } else {
                 view = component.createView()
+                // 统一设置 component.view，组件内部无需再手动设置
+                if component.view == nil {
+                    component.view = view
+                }
             }
             
             // 设置属性

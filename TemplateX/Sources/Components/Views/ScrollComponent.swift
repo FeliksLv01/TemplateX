@@ -57,7 +57,6 @@ final class ScrollComponent: TemplateXComponent<TemplateXScrollView, ScrollCompo
     override func createView() -> UIView {
         let scrollView = TemplateXScrollView()
         scrollView.delegate = scrollView
-        self.view = scrollView
         return scrollView
     }
     

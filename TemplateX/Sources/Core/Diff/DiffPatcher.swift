@@ -229,6 +229,10 @@ public final class DiffPatcher {
         
         // 创建视图
         let view = component.createView()
+        // 统一设置 component.view，组件内部无需再手动设置
+        if component.view == nil {
+            component.view = view
+        }
         
         // 标记组件 ID
         view.accessibilityIdentifier = component.id

@@ -139,12 +139,12 @@ public final class DataBindingManager {
         switch key {
         case "text":
             if let textComponent = component as? TextComponent {
-                textComponent.text = stringValue(value)
+                textComponent.props.text = stringValue(value)
             }
             
         case "src", "source", "imageUrl", "url":
             if let imageComponent = component as? ImageComponent {
-                imageComponent.src = stringValue(value)
+                imageComponent.props.src = stringValue(value)
             }
             
         case "visible", "visibility":
@@ -173,22 +173,20 @@ public final class DataBindingManager {
             }
             
         case "color", "textColor":
-            if let textComponent = component as? TextComponent,
-               let colorValue = colorValue(value) {
-                textComponent.textColor = colorValue
+            // 文本颜色统一设置到 style
+            if let colorValue = colorValue(value) {
+                component.style.textColor = colorValue
             }
             
         case "fontSize":
-            if let textComponent = component as? TextComponent {
-                textComponent.fontSize = cgFloatValue(value)
-            }
+            // 字体大小统一设置到 style
+            component.style.fontSize = cgFloatValue(value)
             
         case "numberOfLines", "lines", "maxLines":
-            if let textComponent = component as? TextComponent {
-                textComponent.numberOfLines = intValue(value)
-            }
+            // 行数统一设置到 style
+            component.style.numberOfLines = intValue(value)
             
-        // 布局属性 - 现在统一在 style 中
+        // 布局属性 - 统一在 style 中
         case "width":
             let dim = dimensionValue(value)
             component.style.width = dim

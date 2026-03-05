@@ -247,16 +247,9 @@ public struct ComponentSnapshot: Hashable {
     private static func hashComponentProps(_ component: Component) -> Int {
         var hasher = Hasher()
         
-        // TextComponent
+        // TextComponent - 只 hash props.text，其他文本属性已在 hashStyle 中处理
         if let textComponent = component as? TextComponent {
             hasher.combine(textComponent.text)
-            hasher.combine(textComponent.fontSize)
-            hasher.combine(textComponent.fontWeight)
-            hasher.combine(String(describing: textComponent.textColor))
-            hasher.combine(textComponent.textAlignment.rawValue)
-            hasher.combine(textComponent.numberOfLines)
-            hasher.combine(textComponent.lineHeight)
-            hasher.combine(textComponent.letterSpacing)
             return hasher.finalize()
         }
         
@@ -271,7 +264,7 @@ public struct ComponentSnapshot: Hashable {
         // ButtonComponent
         if let buttonComponent = component as? ButtonComponent {
             hasher.combine(buttonComponent.title)
-            hasher.combine(buttonComponent.isDisabled)
+            hasher.combine(buttonComponent.disabled)
             return hasher.finalize()
         }
         
@@ -280,7 +273,7 @@ public struct ComponentSnapshot: Hashable {
             hasher.combine(inputComponent.text)
             hasher.combine(inputComponent.placeholder)
             hasher.combine(inputComponent.inputType)
-            hasher.combine(inputComponent.isDisabled)
+            hasher.combine(inputComponent.disabled)
             return hasher.finalize()
         }
         

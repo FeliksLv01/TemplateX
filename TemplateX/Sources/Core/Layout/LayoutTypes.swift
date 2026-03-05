@@ -358,6 +358,8 @@ public struct ComponentStyle: Equatable {
     public var letterSpacing: CGFloat?
     /// 行数（0 表示不限制）
     public var numberOfLines: Int?
+    /// 换行模式
+    public var lineBreakMode: NSLineBreakMode?
     
     // MARK: - Init
     

@@ -227,7 +227,6 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         self.listDataSource = dataSource
         self.listDelegate = delegate
         self.collectionView = collectionView
-        self.view = collectionView
         
         // 如果 dataSource 已经有数据，标记需要在 applyLayout 后 reloadData
         // 此时 frame 还是 (0,0,0,0)，直接 reloadData 不会触发 cellForItemAt
@@ -907,7 +906,6 @@ final class GridComponent: TemplateXComponent<SelfSizingCollectionView, GridComp
         
         listComponent = list
         let view = list.createView()
-        self.view = view
         return view
     }
     

@@ -45,14 +45,6 @@ public struct TemplateXConfig {
     /// 是否启用布局缓存
     public var enableLayoutCache: Bool = true
     
-    // MARK: - 视图复用
-    
-    /// 是否启用视图复用池（默认 true）
-    public var enableViewRecycling: Bool = true
-    
-    /// 是否启用组件池（默认 true）
-    public var enableComponentPool: Bool = true
-    
     // MARK: - 性能监控
     
     /// 是否启用性能监控（默认 false）
@@ -123,8 +115,6 @@ public struct TemplateXConfig {
             config.enableSyncFlush = true
             config.syncFlushTimeoutMs = 50  // 更短的超时
             config.enableIncrementalLayout = true
-            config.enableViewRecycling = true
-            config.enableComponentPool = true
             config.threadStrategy = .layoutOnBackground
         }
     }

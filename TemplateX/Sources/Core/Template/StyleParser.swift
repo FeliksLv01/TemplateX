@@ -51,6 +51,7 @@ enum StyleKey: Int {
     case textAlign
     case lineHeight, letterSpacing
     case numberOfLines, lines
+    case lineBreakMode, ellipsize
     
     // 静态映射表：字符串 -> 枚举
     // 一次初始化，后续 O(1) 查找
@@ -139,6 +140,8 @@ enum StyleKey: Int {
         map["numberOfLines"] = .numberOfLines
         map["lines"] = .lines
         map["maxLines"] = .numberOfLines  // maxLines 作为 numberOfLines 的别名
+        map["lineBreakMode"] = .lineBreakMode
+        map["ellipsize"] = .ellipsize
         
         return map
     }()
@@ -239,6 +242,25 @@ private let textAlignMap: [String: TextAlign] = [
     "justified": .justified,
     "start": .start,
     "end": .end
+]
+
+/// LineBreakMode 静态映射
+private let lineBreakModeMap: [String: NSLineBreakMode] = [
+    "tail": .byTruncatingTail,
+    "end": .byTruncatingTail,
+    "truncatingTail": .byTruncatingTail,
+    "head": .byTruncatingHead,
+    "start": .byTruncatingHead,
+    "truncatingHead": .byTruncatingHead,
+    "middle": .byTruncatingMiddle,
+    "truncatingMiddle": .byTruncatingMiddle,
+    "wordwrap": .byWordWrapping,
+    "wrap": .byWordWrapping,
+    "wordWrapping": .byWordWrapping,
+    "charwrap": .byCharWrapping,
+    "charWrapping": .byCharWrapping,
+    "clip": .byClipping,
+    "clipping": .byClipping
 ]
 
 // MARK: - StyleParser
@@ -435,6 +457,10 @@ enum StyleParser {
                     style.numberOfLines = i
                 } else if let d = value as? Double {
                     style.numberOfLines = Int(d)
+                }
+            case .lineBreakMode, .ellipsize:
+                if let str = value as? String, let mode = lineBreakModeMap[str] {
+                    style.lineBreakMode = mode
                 }
             }
         }
