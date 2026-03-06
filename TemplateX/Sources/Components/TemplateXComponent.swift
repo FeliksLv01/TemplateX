@@ -257,10 +257,7 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: BaseComponent, Comp
     /// 克隆组件（自动克隆 props）
     open override func clone() -> Component {
         let cloned = Self.init(id: self.id, type: self.type)
-        cloned.style = self.style
-        cloned.bindings = self.bindings
-        cloned.events = self.events
-        cloned.jsonWrapper = self.jsonWrapper
+        copyBaseProperties(to: cloned)
         cloned.props = self.props  // 结构体直接赋值即深拷贝
         return cloned
     }

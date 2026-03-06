@@ -328,7 +328,7 @@ public class TemplateXView: UIView {
         let containerSize = effectiveContainerSize
         
         // 1. 克隆组件树并绑定新数据
-        let newComponent = cloneComponentTree(rootComponent)
+        let newComponent = rootComponent.cloneTree()
         DataBindingManager.shared.bind(data: data, to: newComponent)
         
         // 2. 计算 Diff
@@ -410,17 +410,6 @@ public class TemplateXView: UIView {
         for child in component.children {
             updateViewProperties(child)
         }
-    }
-    
-    /// 深度克隆组件树
-    private func cloneComponentTree(_ component: Component) -> Component {
-        let cloned = component.clone()
-        for child in component.children {
-            let clonedChild = cloneComponentTree(child)
-            clonedChild.parent = cloned
-            cloned.children.append(clonedChild)
-        }
-        return cloned
     }
     
     /// 重新加载

@@ -571,6 +571,7 @@ final class ComponentTests: XCTestCase {
         original.style.backgroundColor = .red
         original.style.cornerRadius = 8
         original.bindings["key"] = "value"
+        original.layoutResult = LayoutResult(x: 10, y: 20, width: 100, height: 50)
         
         let cloned = original.clone()
         
@@ -579,6 +580,12 @@ final class ComponentTests: XCTestCase {
         XCTAssertEqual(cloned.style.width, original.style.width)
         XCTAssertEqual(cloned.style.height, original.style.height)
         XCTAssertEqual(cloned.style.cornerRadius, original.style.cornerRadius)
+        
+        // 验证 layoutResult 被正确复制
+        XCTAssertEqual(cloned.layoutResult.x, 10)
+        XCTAssertEqual(cloned.layoutResult.y, 20)
+        XCTAssertEqual(cloned.layoutResult.width, 100)
+        XCTAssertEqual(cloned.layoutResult.height, 50)
         
         // 确保是深拷贝
         cloned.style.cornerRadius = 16
@@ -599,15 +606,77 @@ final class ComponentTests: XCTestCase {
         ])
         
         let original = TextComponent.create(from: json)
+        original.layoutResult = LayoutResult(x: 0, y: 0, width: 200, height: 30)
         
         let cloned = original.clone()
         
         XCTAssertTrue(cloned is TextComponent)
         XCTAssertEqual(cloned.id, original.id)
         
+        // 验证 layoutResult 被正确复制（修复前 TemplateXComponent.clone() 遗漏了此属性）
+        XCTAssertEqual(cloned.layoutResult.width, 200)
+        XCTAssertEqual(cloned.layoutResult.height, 30)
+        
         if let clonedText = cloned as? TextComponent,
            let originalText = original as? TextComponent {
             XCTAssertEqual(clonedText.text, originalText.text)
         }
+    }
+    
+    func testCloneTree() {
+        // 构建组件树：parent -> [child1, child2 -> [grandchild]]
+        let parent = BaseComponent(id: "parent", type: "view")
+        parent.style.width = .fixed(375)
+        parent.layoutResult = LayoutResult(x: 0, y: 0, width: 375, height: 600)
+        
+        let child1 = BaseComponent(id: "child1", type: "text")
+        child1.style.height = .fixed(40)
+        child1.layoutResult = LayoutResult(x: 0, y: 0, width: 375, height: 40)
+        
+        let child2 = BaseComponent(id: "child2", type: "view")
+        child2.style.height = .fixed(100)
+        
+        let grandchild = BaseComponent(id: "grandchild", type: "text")
+        grandchild.bindings["text"] = "${data.title}"
+        
+        parent.addChild(child1)
+        parent.addChild(child2)
+        child2.addChild(grandchild)
+        
+        // 执行 cloneTree
+        let clonedParent = parent.cloneTree()
+        
+        // 验证根节点
+        XCTAssertEqual(clonedParent.id, "parent")
+        XCTAssertEqual(clonedParent.layoutResult.width, 375)
+        XCTAssertNil(clonedParent.parent)
+        
+        // 验证子节点数量
+        XCTAssertEqual(clonedParent.children.count, 2)
+        
+        // 验证 child1
+        let clonedChild1 = clonedParent.children[0]
+        XCTAssertEqual(clonedChild1.id, "child1")
+        XCTAssertEqual(clonedChild1.layoutResult.height, 40)
+        XCTAssertTrue(clonedChild1.parent === clonedParent)
+        
+        // 验证 child2 及 grandchild
+        let clonedChild2 = clonedParent.children[1]
+        XCTAssertEqual(clonedChild2.id, "child2")
+        XCTAssertTrue(clonedChild2.parent === clonedParent)
+        XCTAssertEqual(clonedChild2.children.count, 1)
+        
+        let clonedGrandchild = clonedChild2.children[0]
+        XCTAssertEqual(clonedGrandchild.id, "grandchild")
+        XCTAssertTrue(clonedGrandchild.parent === clonedChild2)
+        XCTAssertEqual(clonedGrandchild.bindings["text"] as? String, "${data.title}")
+        
+        // 验证是独立的树（修改克隆不影响原树）
+        clonedParent.style.width = .fixed(320)
+        XCTAssertEqual(parent.style.width, .fixed(375))
+        
+        // 验证克隆的子组件不是同一个对象
+        XCTAssertFalse(clonedChild1 === child1)
+        XCTAssertFalse(clonedGrandchild === grandchild)
     }
 }

@@ -276,7 +276,7 @@ public final class TemplateXRenderEngine {
         
         // 1. 克隆组件树并绑定新数据
         session?.mark("clone_start")
-        let newComponent = cloneComponentTree(oldComponent)
+        let newComponent = oldComponent.cloneTree()
         bindData(data, to: newComponent)
         session?.mark("clone_end")
         
@@ -611,24 +611,6 @@ public final class TemplateXRenderEngine {
         for child in component.children {
             updateViewTree(child)
         }
-    }
-    
-    // MARK: - 组件克隆
-    
-    /// 深度克隆组件树
-    /// 使用 Component 协议的 clone() 方法，确保组件特有属性被正确复制
-    private func cloneComponentTree(_ component: Component) -> Component {
-        // 使用组件自身的 clone 方法（包含组件特有属性）
-        let cloned = component.clone()
-        
-        // 递归克隆子组件
-        for child in component.children {
-            let clonedChild = cloneComponentTree(child)
-            clonedChild.parent = cloned
-            cloned.children.append(clonedChild)
-        }
-        
-        return cloned
     }
     
     // MARK: - 工具方法
@@ -1057,7 +1039,7 @@ extension TemplateXRenderEngine {
         
         // 2. 克隆组件树
         let cloneStart = CACurrentMediaTime()
-        let component = cloneComponentTree(prototype)
+        let component = prototype.cloneTree()
         let cloneTime = (CACurrentMediaTime() - cloneStart) * 1000
         
         // 3. 绑定数据
@@ -1115,7 +1097,7 @@ extension TemplateXRenderEngine {
         }
         
         // 3. 克隆 + 绑定数据
-        let component = cloneComponentTree(prototype)
+        let component = prototype.cloneTree()
         if let data = data {
             bindData(data, to: component)
         }
@@ -1193,7 +1175,7 @@ extension TemplateXRenderEngine {
                         }
                         
                         // 克隆 + 绑定
-                        let component = self.cloneComponentTree(prototype)
+                        let component = prototype.cloneTree()
                         if let data = task.data {
                             self.dataBindingManager.bind(data: data, to: component)
                         }

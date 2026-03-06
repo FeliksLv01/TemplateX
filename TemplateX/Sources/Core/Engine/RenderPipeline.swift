@@ -246,7 +246,7 @@ final class RenderPipeline {
             
             // 1. 克隆组件树
             let parseStart = CACurrentMediaTime()
-            let component = self.cloneComponentTree(prototype)
+            let component = prototype.cloneTree()
             self.lastTiming.parseMs = (CACurrentMediaTime() - parseStart) * 1000
             
             // 检查取消
@@ -456,20 +456,6 @@ final class RenderPipeline {
         }
     }
     
-    // MARK: - 组件克隆
-    
-    private func cloneComponentTree(_ component: Component) -> Component {
-        let cloned = component.clone()
-        
-        for child in component.children {
-            let clonedChild = cloneComponentTree(child)
-            clonedChild.parent = cloned
-            cloned.children.append(clonedChild)
-        }
-        
-        return cloned
-    }
-    
     // MARK: - ListComponent 预处理
     
     /// 预处理 ListComponent
@@ -511,7 +497,7 @@ final class RenderPipeline {
                 for (index, itemData) in listComponent.dataSource.enumerated() {
                     guard let prototype = manager.componentPrototype else { break }
                     
-                    let clonedComponent = cloneComponentTree(prototype)
+                    let clonedComponent = prototype.cloneTree()
                     
                     var context: [String: Any] = [
                         "item": itemData,

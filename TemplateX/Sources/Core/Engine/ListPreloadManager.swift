@@ -232,7 +232,7 @@ public final class ListPreloadManager {
             // 批量计算高度
             for (index, itemData) in dataSource.enumerated() {
                 // 克隆组件
-                let component = self.cloneComponentTree(prototype)
+                let component = prototype.cloneTree()
                 
                 // 准备数据上下文
                 var context: [String: Any] = [
@@ -289,7 +289,7 @@ public final class ListPreloadManager {
             guard let self = self,
                   let prototype = self.componentPrototype else { return }
             
-            let component = self.cloneComponentTree(prototype)
+            let component = prototype.cloneTree()
             
             var context: [String: Any] = [
                 "item": data,
@@ -489,7 +489,7 @@ public final class ListPreloadManager {
                 let itemData = dataSource[index]
                 
                 // 克隆组件
-                let component = self.cloneComponentTree(prototype)
+                let component = prototype.cloneTree()
                 
                 // 准备数据上下文
                 var context: [String: Any] = [
@@ -653,19 +653,6 @@ public final class ListPreloadManager {
     }
     
     // MARK: - 私有方法
-    
-    /// 克隆组件树
-    private func cloneComponentTree(_ component: Component) -> Component {
-        let cloned = component.clone()
-        
-        for child in component.children {
-            let clonedChild = cloneComponentTree(child)
-            clonedChild.parent = cloned
-            cloned.children.append(clonedChild)
-        }
-        
-        return cloned
-    }
     
     /// 应用布局结果
     private func applyLayoutResults(_ results: [String: LayoutResult], to component: Component) {

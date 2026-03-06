@@ -184,7 +184,7 @@ open class BaseComponent: Component {
     // MARK: - 通用 JSON 解析方法
     
     /// 从 JSON 解析样式
-    /// JSON 结构：{ style: {...}, props: {...} }
+    /// JSON 结构：{ style: {...}, props: {...    }
     public func parseBaseParams(from json: JSONWrapper) {
         // 从 style 对象解析样式
         if let styleSource = json.child("style") {
@@ -359,14 +359,21 @@ open class BaseComponent: Component {
     
     // MARK: - 克隆
     
+    /// 将基类属性复制到目标组件（供子类 clone() 调用，避免重复代码和遗漏）
+    /// 不复制 view、children、parent（由 cloneTree 处理）
+    /// 不复制 yogaNode、lastLayoutStyle（增量布局缓存，由布局引擎重建）
+    public func copyBaseProperties(to target: BaseComponent) {
+        target.style = style
+        target.bindings = bindings
+        target.events = events
+        target.layoutResult = layoutResult
+        target.jsonWrapper = jsonWrapper
+    }
+    
     /// 克隆组件（深拷贝属性，不包括 view 和 children）
     open func clone() -> Component {
         let cloned = BaseComponent(id: id, type: type)
-        cloned.style = style
-        cloned.bindings = bindings
-        cloned.events = events
-        cloned.layoutResult = layoutResult
-        cloned.jsonWrapper = jsonWrapper
+        copyBaseProperties(to: cloned)
         return cloned
     }
     
@@ -506,5 +513,20 @@ public final class ComponentRegistry {
         // 交互组件
         register(ButtonComponent.self)
         register(InputComponent.self)
+    }
+}
+
+// MARK: - Component 扩展：递归克隆
+
+extension Component {
+    /// 递归克隆整棵组件树（clone 自身 + 递归克隆 children + 设置 parent）
+    public func cloneTree() -> Component {
+        let cloned = clone()
+        for child in children {
+            let clonedChild = child.cloneTree()
+            clonedChild.parent = cloned
+            cloned.children.append(clonedChild)
+        }
+        return cloned
     }
 }
