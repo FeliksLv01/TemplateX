@@ -93,6 +93,8 @@ TemplateX/                               # Git 仓库根目录
 │       │       └── FlexLayoutComponent.swift # Flex 布局容器
 │       └── Service/                         # Service 协议层
 │           ├── ServiceRegistry.swift        # DI 容器
+│           ├── ActionHandler/
+│           │   └── TemplateXActionHandler.swift # 事件动作处理协议
 │           ├── ImageLoader/
 │           │   └── TemplateXImageLoader.swift  # 图片加载协议
 │           └── LogProvider/
@@ -384,6 +386,106 @@ ExpressionEngine.shared.registerFunctions([func1, func2, func3])
 1. 克隆旧组件树，绑定新数据
 2. Diff 算法比较新旧组件树
 3. Patch 应用差异到视图
+
+### 7. 事件系统 (Event System)
+
+**文件**:
+- `Sources/Core/Event/EventManager.swift` — 事件注册、分发、动作执行
+- `Sources/Core/Event/GestureHandler.swift` — 手势识别（UITapGestureRecognizer 等）
+- `Sources/Service/ActionHandler/TemplateXActionHandler.swift` — 动作处理协议
+
+#### 架构
+
+事件从手势识别 → EventManager 分发 → ActionHandler 处理：
+
+```
+UITapGestureRecognizer (GestureHandler)
+        │
+        ▼
+EventManager.dispatch(context)
+        │
+        ├── handleEventAtTarget → executeAction
+        │       │
+        │       ├── .url(url, params) → executeURLAction()
+        │       │       │
+        │       │       ├── 1. 从 component.bindings 获取数据上下文
+        │       │       ├── 2. ExpressionEngine 求值 URL 和 params 中的 ${...}
+        │       │       └── 3. ServiceRegistry.actionHandler.handleAction(url:params:context:)
+        │       │
+        │       └── .custom(callback) → callback(context)
+        │
+        ├── 冒泡（可选）
+        └── 全局监听器通知
+```
+
+#### EventAction 类型
+
+只有两种动作类型：
+
+| 类型 | 用途 | 说明 |
+|------|------|------|
+| `.url(String, params:)` | JSON 模板事件 | URL + 参数传递给 ActionHandler |
+| `.custom(EventCallback)` | Swift 原生代码 | 闭包回调（如 ButtonComponent.onClick） |
+
+#### JSON 模板事件格式
+
+支持两种写法：
+
+```json
+// 简写：直接传 URL 字符串
+{
+  "type": "container",
+  "onTap": "app://detail?id=123"
+}
+
+// 完整配置：URL + params + 控制参数
+{
+  "type": "container",
+  "onTap": {
+    "url": "app://follow",
+    "params": {
+      "userId": "${user.id}",
+      "userName": "${user.name}"
+    },
+    "stopPropagation": true,
+    "throttle": 300
+  }
+}
+```
+
+**注意**：事件 key 为 `onTap`（不是 `onClick`）。Compiler 中 `AttributeMapper` 同时映射 `onClick` 和 `onTap` → `"tap"`，保持向后兼容。
+
+#### 表达式求值
+
+事件触发时（dispatch 阶段），URL 和 params 中的 `${...}` 表达式会被自动求值：
+- 数据上下文来自 `component.bindings`（DataBindingManager 在渲染时绑定的数据）
+- URL 中的表达式：`"app://detail?id=${post.id}"` → `"app://detail?id=42"`
+- params 中的表达式：`{ "userId": "${user.id}" }` → `{ "userId": "u_123" }`
+- 使用 `ExpressionEngine.resolveBindings()` 递归处理嵌套字典/数组
+
+#### ActionHandler 注册
+
+接入方实现 `TemplateXActionHandler` 协议处理事件：
+
+```swift
+class AppActionHandler: TemplateXActionHandler {
+    func handleAction(url: String, params: [String: Any], context: EventContext) {
+        guard let url = URL(string: url) else { return }
+        switch url.host {
+        case "follow":
+            let userId = params["userId"] as? String ?? ""
+            UserService.follow(userId: userId)
+        default:
+            Router.open(url, params: params)
+        }
+    }
+}
+
+// App 启动时注册
+TemplateX.registerActionHandler(AppActionHandler())
+```
+
+如果没有注册 ActionHandler，事件触发时会输出警告日志：`"ActionHandler not registered. Call TemplateX.registerActionHandler(...) to handle events."`
 
 ---
 

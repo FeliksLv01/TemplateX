@@ -380,6 +380,25 @@ extension TemplateX {
         ServiceRegistry.shared.registerLogProvider(provider)
     }
     
+    /// 注册事件动作处理器
+    ///
+    /// 注册后，模板中 events 的 url 和 params（表达式已求值）会通过此处理器传出。
+    ///
+    /// 使用示例：
+    /// ```swift
+    /// class AppActionHandler: TemplateXActionHandler {
+    ///     func handleAction(url: String, params: [String: Any], context: EventContext) {
+    ///         Router.open(url, params: params)
+    ///     }
+    /// }
+    /// TemplateX.registerActionHandler(AppActionHandler())
+    /// ```
+    ///
+    /// - Parameter handler: 动作处理器实例
+    public static func registerActionHandler(_ handler: TemplateXActionHandler) {
+        ServiceRegistry.shared.registerActionHandler(handler)
+    }
+    
     /// 获取当前图片加载器
     ///
     /// - Note: 如果未注册 ImageLoader，会触发 fatalError

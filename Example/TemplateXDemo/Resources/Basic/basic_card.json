@@ -9,6 +9,9 @@
         "backgroundColor": "#FFFFFF",
         "cornerRadius": 12
     },
+    "events": {
+        "onTap": "app://card_tap?id=basic_card"
+    },
     "children": [
         {
             "type": "text",
@@ -58,6 +61,14 @@
             },
             "props": {
                 "title": "了解更多"
+            },
+            "events": {
+                "onTap": {
+                    "url": "app://detail",
+                    "params": {
+                        "source": "basic_card"
+                    }
+                }
             }
         }
     ]

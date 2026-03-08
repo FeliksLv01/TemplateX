@@ -4,7 +4,7 @@ import UIKit
 
 /// 支持的事件类型
 public enum EventType: String, CaseIterable {
-    case tap = "onClick"
+    case tap = "onTap"
     case doubleTap = "onDoubleTap"
     case longPress = "onLongPress"
     case pan = "onPan"
@@ -88,19 +88,11 @@ public typealias EventCallback = (EventContext) -> Bool
 
 /// 事件触发的动作类型
 public enum EventAction {
-    /// 执行表达式
-    case expression(String)
+    /// URL 动作（params 中可能包含未求值的表达式模板）
+    /// 通过 ServiceRegistry.actionHandler 传递给接入方处理
+    case url(String, params: [String: Any]?)
     
-    /// 路由跳转
-    case route(String, params: [String: Any]?)
-    
-    /// 调用方法
-    case method(String, args: [Any]?)
-    
-    /// 发送消息
-    case message(String, payload: [String: Any]?)
-    
-    /// 自定义闭包
+    /// 自定义闭包（Swift 原生代码使用）
     case custom(EventCallback)
 }
 
@@ -195,17 +187,21 @@ public final class EventManager {
     }
     
     /// 从 JSON 配置绑定事件
+    ///
+    /// 支持两种格式：
+    /// 1. 简写 URL 字符串：`"onTap": "app://follow"`
+    /// 2. 完整配置：`"onTap": { "url": "app://follow", "params": { ... } }`
     public func bindEvents(from json: [String: Any], to componentId: String) {
         for (key, value) in json {
             guard let eventType = EventType(rawValue: key) else { continue }
             
             let binding: EventBinding
             
-            if let expr = value as? String {
-                // 简单表达式绑定
-                binding = EventBinding(type: eventType, action: .expression(expr))
+            if let urlString = value as? String {
+                // 简写：直接传 URL 字符串
+                binding = EventBinding(type: eventType, action: .url(urlString, params: nil))
             } else if let config = value as? [String: Any] {
-                // 复杂配置
+                // 完整配置
                 binding = parseEventConfig(type: eventType, config: config)
             } else {
                 continue
@@ -318,11 +314,6 @@ public final class EventManager {
             return false
         }
         
-        // 创建新的上下文，指向父组件
-        var bubbledContext = context
-        bubbledContext.component = parent
-        
-        // 修改 componentId（这里需要类型转换处理）
         let parentContext = EventContext(
             type: context.type,
             componentId: parent.id,
@@ -347,91 +338,50 @@ public final class EventManager {
     /// 执行事件动作
     private func executeAction(_ action: EventAction, context: EventContext) -> Bool {
         switch action {
-        case .expression(let expr):
-            return executeExpression(expr, context: context)
-            
-        case .route(let url, let params):
-            return executeRoute(url, params: params, context: context)
-            
-        case .method(let name, let args):
-            return executeMethod(name, args: args, context: context)
-            
-        case .message(let name, let payload):
-            return sendMessage(name, payload: payload, context: context)
+        case .url(let urlString, let rawParams):
+            return executeURLAction(urlString, rawParams: rawParams, context: context)
             
         case .custom(let callback):
             return callback(context)
         }
     }
     
-    private func executeExpression(_ expr: String, context: EventContext) -> Bool {
-        // 构建表达式上下文
-        var data: [String: Any] = [
-            "event": [
-                "type": context.type.rawValue,
-                "componentId": context.componentId,
-                "timestamp": context.timestamp
-            ]
-        ]
+    /// 执行 URL 动作
+    /// 1. 从组件 bindings 获取数据上下文
+    /// 2. 求值 URL 和 params 中的表达式
+    /// 3. 通过 ServiceRegistry.actionHandler 传递给接入方
+    private func executeURLAction(_ urlString: String, rawParams: [String: Any]?, context: EventContext) -> Bool {
+        // 从组件 bindings 获取数据上下文
+        let dataContext = context.component?.bindings ?? [:]
         
-        if let location = context.location {
-            data["event.x"] = location.x
-            data["event.y"] = location.y
+        // 求值 URL 中的表达式（如 "app://detail?id=${post.id}"）
+        let resolvedUrl: String
+        if expressionEngine.containsBinding(urlString) {
+            resolvedUrl = expressionEngine.resolveBinding(urlString, context: dataContext) as? String ?? urlString
+        } else {
+            resolvedUrl = urlString
         }
         
-        // 合并组件绑定数据
-        if let component = context.component {
-            data.merge(component.bindings) { _, new in new }
+        // 求值 params 中的表达式（递归处理嵌套字典/数组）
+        let resolvedParams: [String: Any]
+        if let rawParams = rawParams {
+            resolvedParams = expressionEngine.resolveBindings(rawParams, context: dataContext)
+        } else {
+            resolvedParams = [:]
         }
         
-        // 执行表达式
-        let result = expressionEngine.evaluate(expr, context: data)
+        // 通过 Service 传递给接入方
+        guard let handler = ServiceRegistry.shared.actionHandler else {
+            TXLogger.warning("ActionHandler not registered. Call TemplateX.registerActionHandler(...) to handle events.")
+            return false
+        }
+        
+        handler.handleAction(url: resolvedUrl, params: resolvedParams, context: context)
         
         if config.enableEventLog {
-            TXLogger.debug("EventManager Expression '\(expr)' = \(result)")
+            TXLogger.debug("EventManager URL Action: \(resolvedUrl), params: \(resolvedParams)")
         }
         
-        return true
-    }
-    
-    private func executeRoute(_ url: String, params: [String: Any]?, context: EventContext) -> Bool {
-        // 这里可以集成路由框架
-        NotificationCenter.default.post(
-            name: .templateXRouteEvent,
-            object: nil,
-            userInfo: [
-                "url": url,
-                "params": params ?? [:],
-                "context": context
-            ]
-        )
-        return true
-    }
-    
-    private func executeMethod(_ name: String, args: [Any]?, context: EventContext) -> Bool {
-        // 方法调用通过通知发送
-        NotificationCenter.default.post(
-            name: .templateXMethodEvent,
-            object: nil,
-            userInfo: [
-                "method": name,
-                "args": args ?? [],
-                "context": context
-            ]
-        )
-        return true
-    }
-    
-    private func sendMessage(_ name: String, payload: [String: Any]?, context: EventContext) -> Bool {
-        NotificationCenter.default.post(
-            name: .templateXMessageEvent,
-            object: nil,
-            userInfo: [
-                "message": name,
-                "payload": payload ?? [:],
-                "context": context
-            ]
-        )
         return true
     }
     
@@ -484,17 +434,21 @@ public final class EventManager {
         return path
     }
     
+    /// 解析事件配置
+    ///
+    /// 支持格式：
+    /// ```json
+    /// { "url": "app://follow", "params": { "userId": "${user.id}" } }
+    /// ```
     private func parseEventConfig(type: EventType, config: [String: Any]) -> EventBinding {
         var binding: EventBinding
         
-        if let expr = config["expression"] as? String {
-            binding = EventBinding(type: type, action: .expression(expr))
-        } else if let route = config["route"] as? String {
-            binding = EventBinding(type: type, action: .route(route, params: config["params"] as? [String: Any]))
-        } else if let method = config["method"] as? String {
-            binding = EventBinding(type: type, action: .method(method, args: config["args"] as? [Any]))
+        if let url = config["url"] as? String {
+            binding = EventBinding(type: type, action: .url(url, params: config["params"] as? [String: Any]))
         } else {
-            binding = EventBinding(type: type, action: .expression(""))
+            // 无 url 字段时，尝试将整个 config 作为 params，url 为空
+            TXLogger.warning("Event config missing 'url' field, ignored: \(config)")
+            binding = EventBinding(type: type, action: .url("", params: nil))
         }
         
         binding.stopPropagation = config["stopPropagation"] as? Bool ?? false
@@ -514,12 +468,4 @@ private class WeakHandler {
     init(_ handler: EventHandler) {
         self.handler = handler
     }
-}
-
-// MARK: - 通知名称
-
-extension Notification.Name {
-    public static let templateXRouteEvent = Notification.Name("com.templatex.event.route")
-    public static let templateXMethodEvent = Notification.Name("com.templatex.event.method")
-    public static let templateXMessageEvent = Notification.Name("com.templatex.event.message")
 }

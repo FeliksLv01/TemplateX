@@ -45,6 +45,29 @@ public final class ServiceRegistry {
         return _imageLoader != nil
     }
     
+    // MARK: - ActionHandler
+    
+    private var _actionHandler: TemplateXActionHandler?
+    
+    /// 注册事件动作处理器
+    ///
+    /// - Parameter handler: 动作处理器实例
+    public func registerActionHandler(_ handler: TemplateXActionHandler) {
+        _actionHandler = handler
+    }
+    
+    /// 获取事件动作处理器
+    ///
+    /// - Note: 未注册时返回 nil，触发事件时会打 warning 日志
+    public var actionHandler: TemplateXActionHandler? {
+        return _actionHandler
+    }
+    
+    /// 检查是否已注册事件动作处理器
+    public var hasActionHandler: Bool {
+        return _actionHandler != nil
+    }
+    
     // MARK: - LogProvider
     
     private var _logProvider: TemplateXLogProvider?
@@ -79,6 +102,7 @@ public final class ServiceRegistry {
     /// 重置所有服务（用于测试）
     public func reset() {
         _imageLoader = nil
+        _actionHandler = nil
         _logProvider = nil
     }
 }

@@ -49,16 +49,19 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
     
     override class var typeIdentifier: String { "button" }
     
-    // MARK: - 事件回调
-    
-    var onClick: (() -> Void)?
-    
     // MARK: - View Lifecycle
     
     override func createView() -> UIView {
         let button = TemplateXButton(type: .custom)
         button.addTarget(self, action: #selector(handleTap), for: .touchUpInside)
         return button
+    }
+    
+    /// 重写事件配置：UIButton 不能用 UITapGestureRecognizer（会被 UIButton 吞掉），
+    /// 只向 EventManager 注册事件绑定，实际触发在 handleTap 中通过 dispatch 完成
+    override func setupEvents() {
+        guard !events.isEmpty else { return }
+        EventManager.shared.bindEvents(from: events, to: id)
     }
     
     override func didParseProps() {
@@ -112,7 +115,17 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
     
     @objc private func handleTap() {
         guard !props.disabled else { return }
-        onClick?()
+        
+        // 2. 通过 EventManager 分发 onTap（处理 JSON 模板中的 url 事件）
+        if !events.isEmpty {
+            let context = EventContext(
+                type: .tap,
+                componentId: id,
+                view: view,
+                component: self
+            )
+            EventManager.shared.dispatch(context)
+        }
     }
     
     // MARK: - Public Methods

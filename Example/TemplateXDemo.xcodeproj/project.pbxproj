@@ -16,7 +16,6 @@
 		A100000B203D5D1100000001 /* LayoutDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000C203D5D1100000001 /* LayoutDemoViewController.swift */; };
 		A100000D203D5D1100000001 /* ComponentShowcaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000E203D5D1100000001 /* ComponentShowcaseViewController.swift */; };
 		A100000F203D5D1100000001 /* PerformanceDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000010203D5D1100000001 /* PerformanceDemoViewController.swift */; };
-		A1000011203D5D1100000001 /* home_card.json in Resources */ = {isa = PBXBuildFile; fileRef = A1000012203D5D1100000001 /* home_card.json */; };
 		B3B48AC62F47A71B0057C9BF /* list_demo.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AB62F47A71B0057C9BF /* list_demo.json */; };
 		B3B48AC72F47A71B0057C9BF /* counter_card.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48ABC2F47A71B0057C9BF /* counter_card.json */; };
 		B3B48AC82F47A71B0057C9BF /* style_demo.json in Resources */ = {isa = PBXBuildFile; fileRef = B3B48AB92F47A71B0057C9BF /* style_demo.json */; };
@@ -58,7 +57,6 @@
 		A100000C203D5D1100000001 /* LayoutDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutDemoViewController.swift; sourceTree = "<group>"; };
 		A100000E203D5D1100000001 /* ComponentShowcaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentShowcaseViewController.swift; sourceTree = "<group>"; };
 		A1000010203D5D1100000001 /* PerformanceDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceDemoViewController.swift; sourceTree = "<group>"; };
-		A1000012203D5D1100000001 /* home_card.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = home_card.json; sourceTree = "<group>"; };
 		A1000013203D5D1100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B3B48AB12F47A71B0057C9BF /* basic_card.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = basic_card.json; sourceTree = "<group>"; };
 		B3B48AB32F47A71B0057C9BF /* button_demo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = button_demo.json; sourceTree = "<group>"; };
@@ -177,7 +175,6 @@
 				B3B48ABB2F47A71B0057C9BF /* Components */,
 				B3B48ABE2F47A71B0057C9BF /* DataBinding */,
 				B3B48AC52F47A71B0057C9BF /* Layouts */,
-				A1000012203D5D1100000001 /* home_card.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -323,7 +320,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1000011203D5D1100000001 /* home_card.json in Resources */,
 				B3B48AC62F47A71B0057C9BF /* list_demo.json in Resources */,
 				B3B48AC72F47A71B0057C9BF /* counter_card.json in Resources */,
 				B3B48AC82F47A71B0057C9BF /* style_demo.json in Resources */,
