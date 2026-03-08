@@ -73,7 +73,7 @@ public protocol Component: AnyObject {
     var parseError: Error? { get set }
     
     /// 原始模板 JSON（数据绑定时使用）
-    var templateJSON: JSONWrapper? { get set }
+    var templateJSON: TXJSONNode? { get set }
     
     /// 组件状态标记（GapWorker 预加载状态）
     var componentFlags: ComponentFlags { get set }
@@ -103,6 +103,9 @@ public protocol Component: AnyObject {
     
     /// 从另一个组件复制属性（用于增量更新）
     func copyProps(from other: Component)
+    
+    /// 使用解析后的字典重新 decode props（数据绑定阶段调用）
+    func reloadProps(from resolved: [String: Any])
 }
 
 // MARK: - Component 默认实现
@@ -132,7 +135,7 @@ public final class ComponentRegistry {
     
     /// 注册的组件工厂（typeIdentifier → 工厂闭包）
     /// 使用闭包擦除 TemplateXComponent<V,P> 的泛型参数
-    private var factories: [String: (JSONWrapper) -> Component] = [:]
+    private var factories: [String: (TXJSONNode) -> Component] = [:]
     
     private init() {
         registerBuiltinComponents()
@@ -145,10 +148,10 @@ public final class ComponentRegistry {
         }
     }
     
-    /// 创建组件
+    /// 创建组件（仅引擎内部使用）
     /// - 返回 nil 表示类型未注册
     /// - 解析失败时仍返回组件实例（设置 parseError）
-    public func createComponent(type: String, from json: JSONWrapper) -> Component? {
+    func createComponent(type: String, from json: TXJSONNode) -> Component? {
         let start = CACurrentMediaTime()
         guard let factory = factories[type] else {
             TXLogger.error("Unknown component type: \(type)")

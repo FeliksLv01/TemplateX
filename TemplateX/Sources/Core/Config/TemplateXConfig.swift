@@ -86,11 +86,6 @@ public struct TemplateXConfig {
     /// 异步渲染队列优先级
     public var asyncRenderingQoS: DispatchQoS = .userInitiated
     
-    // MARK: - 组件配置
-    
-    /// 自定义组件工厂（可以覆盖内置组件）
-    public var componentFactories: [String: (JSONWrapper) -> Component] = [:]
-    
     // MARK: - Init
     
     /// 默认初始化

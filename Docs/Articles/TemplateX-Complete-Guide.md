@@ -241,13 +241,13 @@ sequenceDiagram
 
 ## 2. 模板解析与组件系统
 
-### 2.1 JSONWrapper
+### 2.1 TXJSONNode
 
-在开始解析模板之前，我们需要一个 JSON 访问的工具类。`JSONWrapper` 封装了字典和数组的访问操作，提供类型安全的方法。
+在开始解析模板之前，我们需要一个 JSON 访问的工具类。`TXJSONNode` 封装了字典和数组的访问操作，提供类型安全的方法。
 
 ```swift
 /// JSON 封装工具，提供类型安全的访问方法
-final class JSONWrapper {
+final class TXJSONNode {
     private let value: Any
     
     init(_ value: Any) {
@@ -274,9 +274,9 @@ final class JSONWrapper {
         dictionary?[key] as? Bool
     }
     
-    func child(_ key: String) -> JSONWrapper? {
+    func child(_ key: String) -> TXJSONNode? {
         guard let child = dictionary?[key] else { return nil }
-        return JSONWrapper(child)
+        return TXJSONNode(child)
     }
 }
 ```
@@ -326,11 +326,11 @@ final class TemplateParser {
     
     /// 解析 JSON 模板为组件树
     func parse(_ json: [String: Any]) -> Component {
-        let wrapper = JSONWrapper(json)
+        let wrapper = TXJSONNode(json)
         return parseNode(wrapper)
     }
     
-    private func parseNode(_ wrapper: JSONWrapper) -> Component {
+    private func parseNode(_ wrapper: TXJSONNode) -> Component {
         let type = wrapper.string("type") ?? "view"
         
         // 从注册表获取组件工厂
@@ -346,7 +346,7 @@ final class TemplateParser {
         if let childrenArray = wrapper.child("children")?.array {
             for child in childrenArray {
                 if let childDict = child as? [String: Any] {
-                    let childComponent = parseNode(JSONWrapper(childDict))
+                    let childComponent = parseNode(TXJSONNode(childDict))
                     component.children.append(childComponent)
                 }
             }
@@ -378,7 +378,7 @@ public protocol Component: AnyObject {
 /// 组件工厂协议
 public protocol ComponentFactory: AnyObject {
     static var typeIdentifier: String { get }
-    static func create(from json: JSONWrapper) -> Component
+    static func create(from json: TXJSONNode) -> Component
 }
 ```
 
@@ -508,12 +508,12 @@ final class ComponentRegistry {
 ```mermaid
 sequenceDiagram
     participant Parser as TemplateParser
-    participant JSON as JSONWrapper
+    participant JSON as TXJSONNode
     participant Factory as ComponentFactory
     participant Component as BaseComponent
     
     Parser->>JSON: child("props")
-    JSON-->>Parser: JSONWrapper
+    JSON-->>Parser: TXJSONNode
     
     Parser->>Factory: create(from: JSON)
     Factory->>Component: 初始化
@@ -534,7 +534,7 @@ public class ImageComponent: BaseComponent, ComponentFactory {
     var imageUrl: String?
     var contentMode: UIView.ContentMode = .scaleAspectFit
     
-    public static func create(from json: JSONWrapper) -> Component {
+    public static func create(from json: TXJSONNode) -> Component {
         let component = ImageComponent(
             id: json.string("id") ?? UUID().uuidString,
             type: typeIdentifier
@@ -621,7 +621,7 @@ public class VideoComponent: BaseComponent, ComponentFactory {
     var videoUrl: String?
     var autoplay: Bool = false
     
-    public static func create(from json: JSONWrapper) -> Component {
+    public static func create(from json: TXJSONNode) -> Component {
         let component = VideoComponent(
             id: json.string("id") ?? UUID().uuidString,
             type: typeIdentifier

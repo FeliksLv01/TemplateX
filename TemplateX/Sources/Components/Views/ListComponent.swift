@@ -91,7 +91,7 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
     }
     
     /// Cell 模板 JSON
-    var cellTemplate: JSONWrapper?
+    var cellTemplate: TXJSONNode?
     
     /// Cell 模板 ID
     var cellTemplateId: String?
@@ -125,7 +125,7 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
     
     // MARK: - 自定义 Props 解析
     
-    override class func parseProps(from json: JSONWrapper?) -> Props {
+    override class func parseProps(from json: TXJSONNode?) -> Props {
         guard let json = json else { return Props() }
         
         var props = Props()
@@ -810,7 +810,7 @@ class TemplateXCell: UICollectionViewCell {
     }
     
     func configure(
-        with template: JSONWrapper,
+        with template: TXJSONNode,
         templateId: String,
         data: Any,
         index: Int,
@@ -851,7 +851,7 @@ class TemplateXCell: UICollectionViewCell {
         }
     }
     
-    func configure(with template: JSONWrapper, data: Any, index: Int) {
+    func configure(with template: TXJSONNode, data: Any, index: Int) {
         configure(
             with: template,
             templateId: "default_cell_\(template.type ?? "unknown")",

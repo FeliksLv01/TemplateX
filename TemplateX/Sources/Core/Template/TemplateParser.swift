@@ -25,8 +25,8 @@ public final class TemplateParser {
     public func parse(json: [String: Any]) -> Component? {
         let start = CACurrentMediaTime()
         
-        // 细分：创建 JSONWrapper
-        let wrapper = JSONWrapper(json)
+        // 细分：创建 TXJSONNode
+        let wrapper = TXJSONNode(json)
         
         // 细分：解析节点树
         let result = parse(wrapper: wrapper)
@@ -34,8 +34,8 @@ public final class TemplateParser {
         return result
     }
     
-    /// 从 JSONWrapper 解析模板
-    public func parse(wrapper: JSONWrapper) -> Component? {
+    /// 从 TXJSONNode 解析模板（仅引擎内部使用）
+    func parse(wrapper: TXJSONNode) -> Component? {
         // 检查是否有 root 节点
         if let root = wrapper.child("root") {
             return parseNode(root)
@@ -48,7 +48,7 @@ public final class TemplateParser {
     // MARK: - 节点解析
     
     /// 递归解析节点
-    private func parseNode(_ json: JSONWrapper) -> Component? {
+    private func parseNode(_ json: TXJSONNode) -> Component? {
         // 获取组件类型
         guard let type = json.type else {
             TXLogger.warning("Node missing 'type' field")

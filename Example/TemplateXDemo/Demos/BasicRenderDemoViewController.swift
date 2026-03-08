@@ -56,8 +56,18 @@ class BasicRenderDemoViewController: UIViewController {
             return
         }
         
-        // 使用 TemplateXView 加载模板
-        templateView.loadTemplate(json: template)
+        // 模拟服务端下发的数据
+        let data: [String: Any] = [
+            "card": [
+                "id": "card_001",
+                "title": "Hello TemplateX!",
+                "subtitle": "高性能 iOS DSL 动态渲染框架",
+                "buttonText": "了解更多"
+            ]
+        ]
+        
+        // 模板 + 数据分离渲染
+        templateView.loadTemplate(json: template, data: data)
     }
     
     // MARK: - JSON Loading

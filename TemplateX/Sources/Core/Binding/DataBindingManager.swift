@@ -104,104 +104,46 @@ public final class DataBindingManager {
     
     /// 解析组件中的表达式
     private func resolveExpressions(
-        json: JSONWrapper,
+        json: TXJSONNode,
         data: [String: Any],
         component: any Component
     ) {
-        // 处理 props 中的表达式
+        // 处理 props 中的表达式 → 收集解析结果，统一通过 reloadProps 写回
         if let props = json.props {
+            var resolvedProps: [String: Any] = [:]
             for (key, value) in props.rawDictionary {
                 if let strValue = value as? String, expressionEngine.containsBinding(strValue) {
-                    let resolvedValue = expressionEngine.resolveBinding(strValue, context: data)
-                    applyResolvedValue(key: key, value: resolvedValue, to: component)
+                    if let resolved = expressionEngine.resolveBinding(strValue, context: data) {
+                        // 原始值是字符串（含 ${} 表达式），确保解析结果也是字符串
+                        // 避免 Int/Double/Bool 传入 JSONDecoder 时类型不匹配导致解码失败
+                        resolvedProps[key] = resolved is String ? resolved : "\(resolved)"
+                    }
+                }
+            }
+            if !resolvedProps.isEmpty {
+                component.reloadProps(from: resolvedProps)
+            }
+        }
+        
+        // 处理 style 中的表达式 → 逐属性更新，只转换有表达式的属性
+        if let styleSource = json.child("style") {
+            for (key, value) in styleSource.rawDictionary {
+                if let strValue = value as? String, expressionEngine.containsBinding(strValue) {
+                    if let resolved = expressionEngine.resolveBinding(strValue, context: data) {
+                        StyleParser.apply(key: key, value: resolved, to: &component.style)
+                    }
                 }
             }
         }
         
-        // 处理 bindings 中的表达式
+        // 处理 bindings 中的表达式 → 存到 component.bindings
         if let bindings = json.bindings {
             for (key, value) in bindings.rawDictionary {
                 if let strValue = value as? String, expressionEngine.containsBinding(strValue) {
                     let resolvedValue = expressionEngine.resolveBinding(strValue, context: data)
-                    applyResolvedValue(key: key, value: resolvedValue, to: component)
+                    component.bindings[key] = resolvedValue
                 }
             }
-        }
-    }
-    
-    /// 将解析后的值应用到组件
-    private func applyResolvedValue(key: String, value: Any?, to component: any Component) {
-        guard let value = value else { return }
-        
-        // 根据组件类型和属性名应用值
-        switch key {
-        case "text":
-            if let textComponent = component as? TextComponent {
-                textComponent.props.text = stringValue(value)
-            }
-            
-        case "src", "source", "imageUrl", "url":
-            if let imageComponent = component as? ImageComponent {
-                imageComponent.props.src = stringValue(value)
-            }
-            
-        case "visible", "visibility":
-            // 控制 visibility 属性（占空间但不可见）
-            let isVisible = boolValue(value)
-            component.style.visibility = isVisible ? .visible : .hidden
-            
-        case "display":
-            // 控制 display 属性（不占空间）
-            // 支持布尔值 true/false 或字符串 "flex"/"none"
-            let newDisplay: Display
-            if let boolVal = value as? Bool {
-                newDisplay = boolVal ? .flex : .none
-            } else {
-                let displayValue = stringValue(value).lowercased()
-                newDisplay = displayValue == "none" ? .none : .flex
-            }
-            component.style.display = newDisplay
-            
-        case "opacity", "alpha":
-            component.style.opacity = cgFloatValue(value)
-            
-        case "backgroundColor", "bgColor":
-            if let colorValue = colorValue(value) {
-                component.style.backgroundColor = colorValue
-            }
-            
-        case "color", "textColor":
-            // 文本颜色统一设置到 style
-            if let colorValue = colorValue(value) {
-                component.style.textColor = colorValue
-            }
-            
-        case "fontSize":
-            // 字体大小统一设置到 style
-            component.style.fontSize = cgFloatValue(value)
-            
-        case "numberOfLines", "lines", "maxLines":
-            // 行数统一设置到 style
-            component.style.numberOfLines = intValue(value)
-            
-        // 布局属性 - 统一在 style 中
-        case "width":
-            let dim = dimensionValue(value)
-            component.style.width = dim
-            
-        case "height":
-            let dim = dimensionValue(value)
-            component.style.height = dim
-            
-        case "flexGrow":
-            component.style.flexGrow = cgFloatValue(value)
-            
-        case "flexShrink":
-            component.style.flexShrink = cgFloatValue(value)
-            
-        default:
-            // 存储到 bindings 供组件自行处理
-            component.bindings[key] = value
         }
     }
     
@@ -241,98 +183,7 @@ public final class DataBindingManager {
             return childComponent
         }
     }
-    
-    // MARK: - Value Conversion Helpers
-    
-    private func stringValue(_ value: Any) -> String {
-        switch value {
-        case let str as String: return str
-        case let num as Double:
-            return num.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(num)) : String(num)
-        case let num as Int: return String(num)
-        case let bool as Bool: return bool ? "true" : "false"
-        default: return String(describing: value)
-        }
-    }
-    
-    private func intValue(_ value: Any) -> Int {
-        switch value {
-        case let num as Int: return num
-        case let num as Double: return Int(num)
-        case let str as String: return Int(str) ?? 0
-        default: return 0
-        }
-    }
-    
-    private func cgFloatValue(_ value: Any) -> CGFloat {
-        switch value {
-        case let num as Double: return CGFloat(num)
-        case let num as Int: return CGFloat(num)
-        case let num as CGFloat: return num
-        case let str as String: return CGFloat(Double(str) ?? 0)
-        default: return 0
-        }
-    }
-    
-    private func boolValue(_ value: Any) -> Bool {
-        switch value {
-        case let bool as Bool: return bool
-        case let num as Int: return num != 0
-        case let num as Double: return num != 0
-        case let str as String:
-            let lower = str.lowercased()
-            return lower == "true" || lower == "yes" || lower == "1"
-        default: return true
-        }
-    }
-    
-    private func colorValue(_ value: Any) -> UIColor? {
-        if let color = value as? UIColor {
-            return color
-        }
-        
-        if let str = value as? String {
-            return UIColor(hexString: str)
-        }
-        
-        return nil
-    }
-    
-    private func dimensionValue(_ value: Any) -> Dimension {
-        switch value {
-        case let dim as Dimension:
-            return dim
-        case let num as Double:
-            return .point(CGFloat(num))
-        case let num as Int:
-            return .point(CGFloat(num))
-        case let str as String:
-            return parseDimension(str)
-        default:
-            return .auto
-        }
-    }
-    
-    private func parseDimension(_ str: String) -> Dimension {
-        let trimmed = str.trimmingCharacters(in: .whitespaces)
-        
-        if trimmed == "auto" {
-            return .auto
-        }
-        
-        if trimmed.hasSuffix("%") {
-            let numStr = String(trimmed.dropLast())
-            if let num = Double(numStr) {
-                return .percent(CGFloat(num))
-            }
-        }
-        
-        if let num = Double(trimmed.replacingOccurrences(of: "px", with: "")) {
-            return .point(CGFloat(num))
-        }
-        
-        return .auto
-    }
+
 }
 
 // MARK: - UIColor Hex Extension

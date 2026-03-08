@@ -487,7 +487,7 @@ public class VideoComponent: BaseComponent, ComponentFactory {
     public static var typeIdentifier: String { "video" }
     
     /// 工厂方法：从 JSON 创建组件
-    public static func create(from json: JSONWrapper) -> Component {
+    public static func create(from json: TXJSONNode) -> Component {
         let component = VideoComponent(
             id: json.string("id") ?? UUID().uuidString,
             type: typeIdentifier

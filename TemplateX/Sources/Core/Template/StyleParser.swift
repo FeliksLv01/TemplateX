@@ -491,6 +491,158 @@ enum StyleParser {
         return style
     }
     
+    // MARK: - 单属性更新（数据绑定阶段使用）
+    
+    /// 将表达式解析后的值写入已有的 ComponentStyle
+    /// 只处理有表达式的属性，避免整体重新解析
+    static func apply(key: String, value: Any, to style: inout ComponentStyle) {
+        guard let styleKey = StyleKey.from(key) else { return }
+        
+        switch styleKey {
+        // ========== 尺寸 ==========
+        case .width:
+            style.width = parseDimension(value)
+        case .height:
+            style.height = parseDimension(value)
+        case .minWidth:
+            if let v = toCGFloat(value) { style.minWidth = v }
+        case .minHeight:
+            if let v = toCGFloat(value) { style.minHeight = v }
+        case .maxWidth:
+            if let v = toCGFloat(value) { style.maxWidth = v }
+        case .maxHeight:
+            if let v = toCGFloat(value) { style.maxHeight = v }
+            
+        // ========== 边距 ==========
+        case .margin:
+            style.margin = parseEdgeInsets(value)
+        case .marginTop:
+            if let v = toCGFloat(value) { style.margin.top = v }
+        case .marginLeft:
+            if let v = toCGFloat(value) { style.margin.left = v }
+        case .marginBottom:
+            if let v = toCGFloat(value) { style.margin.bottom = v }
+        case .marginRight:
+            if let v = toCGFloat(value) { style.margin.right = v }
+        case .marginHorizontal:
+            if let v = toCGFloat(value) { style.margin.left = v; style.margin.right = v }
+        case .marginVertical:
+            if let v = toCGFloat(value) { style.margin.top = v; style.margin.bottom = v }
+        case .padding:
+            style.padding = parseEdgeInsets(value)
+        case .paddingTop:
+            if let v = toCGFloat(value) { style.padding.top = v }
+        case .paddingLeft:
+            if let v = toCGFloat(value) { style.padding.left = v }
+        case .paddingBottom:
+            if let v = toCGFloat(value) { style.padding.bottom = v }
+        case .paddingRight:
+            if let v = toCGFloat(value) { style.padding.right = v }
+        case .paddingHorizontal:
+            if let v = toCGFloat(value) { style.padding.left = v; style.padding.right = v }
+        case .paddingVertical:
+            if let v = toCGFloat(value) { style.padding.top = v; style.padding.bottom = v }
+            
+        // ========== Flex ==========
+        case .flexGrow:
+            if let v = toCGFloat(value) { style.flexGrow = v }
+        case .flexShrink:
+            if let v = toCGFloat(value) { style.flexShrink = v }
+        case .flexBasis:
+            if let v = toCGFloat(value) { style.flexBasis = v }
+        case .flexDirection:
+            if let str = value as? String, let e = flexDirectionMap[str] { style.flexDirection = e }
+        case .flexWrap:
+            if let str = value as? String, let e = flexWrapMap[str] { style.flexWrap = e }
+        case .justifyContent:
+            if let str = value as? String, let e = justifyContentMap[str] { style.justifyContent = e }
+        case .alignItems:
+            if let str = value as? String, let e = alignItemsMap[str] { style.alignItems = e }
+        case .alignSelf:
+            if let str = value as? String, let e = alignSelfMap[str] { style.alignSelf = e }
+        case .alignContent:
+            if let str = value as? String, let e = alignContentMap[str] { style.alignContent = e }
+            
+        // ========== 定位 ==========
+        case .position, .positionType:
+            if let str = value as? String, let e = positionTypeMap[str] { style.positionType = e }
+        case .top:
+            if let v = toCGFloat(value) { style.position.top = v }
+        case .left:
+            if let v = toCGFloat(value) { style.position.left = v }
+        case .bottom:
+            if let v = toCGFloat(value) { style.position.bottom = v }
+        case .right:
+            if let v = toCGFloat(value) { style.position.right = v }
+            
+        // ========== 其他布局 ==========
+        case .aspectRatio:
+            if let v = toCGFloat(value) { style.aspectRatio = v }
+        case .overflow:
+            if let str = value as? String, let e = overflowMap[str] { style.overflow = e }
+            
+        // ========== 显示控制 ==========
+        case .display:
+            if let str = value as? String, let e = displayMap[str] { style.display = e }
+        case .visibility:
+            if let str = value as? String, let e = visibilityMap[str] { style.visibility = e }
+            
+        // ========== 背景 ==========
+        case .backgroundColor:
+            style.backgroundColor = parseColor(value)
+            
+        // ========== 圆角和边框 ==========
+        case .cornerRadius, .borderRadius:
+            if let v = toCGFloat(value) { style.cornerRadius = v }
+        case .borderWidth:
+            if let v = toCGFloat(value) { style.borderWidth = v }
+        case .borderColor:
+            style.borderColor = parseColor(value)
+            
+        // ========== 阴影 ==========
+        case .shadowColor:
+            style.shadowColor = parseColor(value)
+        case .shadowOffset:
+            if let arr = value as? [Any], arr.count >= 2 {
+                let x = (arr[0] as? Double) ?? (arr[0] as? Int).map { Double($0) } ?? 0
+                let y = (arr[1] as? Double) ?? (arr[1] as? Int).map { Double($0) } ?? 0
+                style.shadowOffset = CGSize(width: x, height: y)
+            }
+        case .shadowRadius:
+            if let v = toCGFloat(value) { style.shadowRadius = v }
+        case .shadowOpacity:
+            if let v = toCGFloat(value) { style.shadowOpacity = Float(v) }
+            
+        // ========== 透明度和裁剪 ==========
+        case .opacity:
+            if let v = toCGFloat(value) { style.opacity = v }
+        case .clipsToBounds:
+            if let b = value as? Bool { style.clipsToBounds = b }
+            
+        // ========== 文本 ==========
+        case .fontSize:
+            if let v = toCGFloat(value) { style.fontSize = v }
+        case .fontWeight:
+            if let str = value as? String { style.fontWeight = str }
+        case .textColor:
+            style.textColor = parseColor(value)
+        case .color:
+            // "color" 作为 textColor 的备选，仅在 textColor 未设置时生效
+            if style.textColor == nil { style.textColor = parseColor(value) }
+        case .textAlign:
+            if let str = value as? String, let e = textAlignMap[str] { style.textAlign = e }
+        case .lineHeight:
+            if let v = toCGFloat(value) { style.lineHeight = v }
+        case .letterSpacing:
+            if let v = toCGFloat(value) { style.letterSpacing = v }
+        case .numberOfLines, .lines:
+            if let i = value as? Int { style.numberOfLines = i }
+            else if let d = value as? Double { style.numberOfLines = Int(d) }
+        case .lineBreakMode, .ellipsize:
+            if let str = value as? String, let mode = lineBreakModeMap[str] { style.lineBreakMode = mode }
+        }
+    }
+    
     // MARK: - 私有辅助方法
     
     /// 转换为 CGFloat

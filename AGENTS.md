@@ -63,7 +63,7 @@ TemplateX/                               # Git 仓库根目录
 │       │   │   └── CellPrefetchTask.swift   # Cell 预取任务 + 缓存
 │       │   ├── Template/
 │       │   │   ├── TemplateParser.swift     # 模板解析器 + 缓存
-│       │   │   ├── JSONWrapper.swift        # JSON 封装工具
+│       │   │   ├── TXJSONNode.swift          # JSON 节点封装工具
 │       │   │   └── StyleParser.swift        # 样式批量解析器（性能优化）
 │       │   ├── Binding/
 │       │   │   └── DataBindingManager.swift # 数据绑定管理
@@ -301,7 +301,7 @@ public protocol ComponentFactory: AnyObject {
     static var typeIdentifier: String { get }
     
     /// 从 JSON 创建组件实例
-    static func create(from json: JSONWrapper) -> Component
+    static func create(from json: TXJSONNode) -> Component
 }
 ```
 
@@ -321,7 +321,7 @@ ComponentRegistry.shared.register(VideoComponent.self)
 public class VideoComponent: BaseComponent, ComponentFactory {
     public static var typeIdentifier: String { "video" }
     
-    public static func create(from json: JSONWrapper) -> Component {
+    public static func create(from json: TXJSONNode) -> Component {
         let component = VideoComponent(id: json.string("id") ?? UUID().uuidString, type: typeIdentifier)
         component.parseBaseParams(from: json)  // 解析通用样式
         // 解析 video 特有的 props

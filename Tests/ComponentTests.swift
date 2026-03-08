@@ -6,7 +6,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - ViewComponent Tests
     
     func testViewComponentCreation() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "container",
             "id": "test_view",
             "style": [
@@ -27,7 +27,7 @@ final class ComponentTests: XCTestCase {
     }
     
     func testViewComponentViewCreation() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "container",
             "id": "view_test"
         ])
@@ -43,7 +43,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - TextComponent Tests
     
     func testTextComponentCreation() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "text",
             "id": "test_text",
             "style": [
@@ -62,7 +62,7 @@ final class ComponentTests: XCTestCase {
     }
     
     func testTextComponentLabel() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "text",
             "id": "label_test",
             "style": [
@@ -96,7 +96,7 @@ final class ComponentTests: XCTestCase {
         ]
         
         for (alignStr, expected) in alignments {
-            let json = JSONWrapper([
+            let json = TXJSONNode([
                 "type": "text",
                 "id": "align_test",
                 "style": [
@@ -121,7 +121,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - ImageComponent Tests
     
     func testImageComponentCreation() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "image",
             "id": "test_image",
             "style": [
@@ -151,7 +151,7 @@ final class ComponentTests: XCTestCase {
         ]
         
         for (modeStr, expected) in modes {
-            let json = JSONWrapper([
+            let json = TXJSONNode([
                 "type": "image",
                 "id": "mode_test",
                 "props": [
@@ -173,7 +173,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - ButtonComponent Tests
     
     func testButtonComponentCreation() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "button",
             "id": "test_button",
             "style": [
@@ -194,7 +194,7 @@ final class ComponentTests: XCTestCase {
     }
     
     func testButtonComponentTitle() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "button",
             "id": "btn_title_test",
             "props": [
@@ -216,7 +216,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - InputComponent Tests
     
     func testInputComponentCreation() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "input",
             "id": "test_input",
             "props": [
@@ -234,7 +234,7 @@ final class ComponentTests: XCTestCase {
     }
     
     func testInputComponentPlaceholder() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "input",
             "id": "input_placeholder_test",
             "props": [
@@ -256,7 +256,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - FlexLayoutComponent Tests
     
     func testFlexLayoutVertical() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "container",
             "id": "vertical_layout",
             "style": [
@@ -272,7 +272,7 @@ final class ComponentTests: XCTestCase {
     }
     
     func testFlexLayoutHorizontal() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "container",
             "id": "horizontal_layout",
             "style": [
@@ -289,7 +289,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - ScrollComponent Tests
     
     func testScrollComponentCreation() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "scroll",
             "id": "scroll_view",
             "props": [
@@ -309,7 +309,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - ListComponent Tests
     
     func testListComponentCreation() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "list",
             "id": "list_view",
             "props": [
@@ -329,7 +329,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - GridComponent Tests
     
     func testGridComponentCreation() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "grid",
             "id": "grid_view",
             "props": [
@@ -359,7 +359,7 @@ final class ComponentTests: XCTestCase {
         for type in builtinTypes {
             let component = registry.createComponent(
                 type: type,
-                from: JSONWrapper(["type": type, "id": "test_\(type)"])
+                from: TXJSONNode(["type": type, "id": "test_\(type)"])
             )
             XCTAssertNotNil(component, "Failed to create component of type: \(type)")
         }
@@ -370,7 +370,7 @@ final class ComponentTests: XCTestCase {
         
         let component = registry.createComponent(
             type: "nonexistent_type",
-            from: JSONWrapper(["type": "nonexistent_type"])
+            from: TXJSONNode(["type": "nonexistent_type"])
         )
         
         XCTAssertNil(component)
@@ -379,7 +379,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - Style Tests
     
     func testStyleFromJSON() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "container",
             "id": "style_test",
             "style": [
@@ -406,7 +406,7 @@ final class ComponentTests: XCTestCase {
     }
     
     func testFixedDimension() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "container",
             "id": "fixed_test",
             "style": [
@@ -422,7 +422,7 @@ final class ComponentTests: XCTestCase {
     }
     
     func testPercentDimension() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "container",
             "id": "percent_test",
             "style": [
@@ -438,7 +438,7 @@ final class ComponentTests: XCTestCase {
     }
     
     func testStyleShadow() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "container",
             "id": "shadow_test",
             "style": [
@@ -458,7 +458,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - Display & Visibility Tests
     
     func testDisplayNone() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "container",
             "id": "display_test",
             "style": [
@@ -472,7 +472,7 @@ final class ComponentTests: XCTestCase {
     }
     
     func testVisibilityHidden() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "container",
             "id": "visibility_test",
             "style": [
@@ -593,7 +593,7 @@ final class ComponentTests: XCTestCase {
     }
     
     func testTextComponentClone() {
-        let json = JSONWrapper([
+        let json = TXJSONNode([
             "type": "text",
             "id": "text_clone_test",
             "style": [

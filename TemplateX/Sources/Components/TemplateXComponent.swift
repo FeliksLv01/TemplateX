@@ -163,7 +163,7 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: Component {
     public var parseError: Error?
     
     /// 原始模板 JSON（数据绑定时使用）
-    public var templateJSON: JSONWrapper?
+    public var templateJSON: TXJSONNode?
     
     /// 组件状态标记（GapWorker 预加载状态）
     public var componentFlags: ComponentFlags = []
@@ -209,7 +209,7 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: Component {
     
     /// 工厂方法（自动处理解析和初始化）
     /// 解析失败时仍返回组件实例（设置 parseError），保证总是返回有效对象
-    public static func create(from json: JSONWrapper) -> Component {
+    public static func create(from json: TXJSONNode) -> Component {
         let id = json.id ?? UUID().uuidString
         let component = Self.init(id: id, type: typeIdentifier)
         component.templateJSON = json
@@ -240,7 +240,7 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: Component {
     // MARK: - JSON 解析
     
     /// 从 JSON 解析基础参数（样式、事件、绑定）
-    public func parseBaseParams(from json: JSONWrapper) {
+    public func parseBaseParams(from json: TXJSONNode) {
         if let styleSource = json.child("style") {
             style = Self.parseStyle(from: styleSource)
         }
@@ -252,14 +252,14 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: Component {
         }
     }
     
-    /// 解析样式（布局 + 视觉 + 文本）
-    public static func parseStyle(from source: JSONWrapper) -> ComponentStyle {
+    /// 解析样式（布局 + 视觉 + 文本）（仅引擎内部使用）
+    static func parseStyle(from source: TXJSONNode) -> ComponentStyle {
         return StyleParser.parse(from: source.rawDictionary)
     }
     
     /// 解析 Props（使用 Codable 自动解析）
     /// 子类可重写以自定义解析逻辑
-    class func parseProps(from json: JSONWrapper?) -> P {
+    class func parseProps(from json: TXJSONNode?) -> P {
         guard let json = json else { return P() }
         
         do {
@@ -273,7 +273,7 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: Component {
     }
     
     /// 解析 Props 并返回错误信息
-    class func parsePropsWithError(from json: JSONWrapper?) -> (props: P, error: Error?) {
+    class func parsePropsWithError(from json: TXJSONNode?) -> (props: P, error: Error?) {
         return (parseProps(from: json), nil)
     }
     
@@ -418,6 +418,25 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: Component {
     open func copyProps(from other: Component) {
         guard let other = other as? Self else { return }
         self.props = other.props
+    }
+    
+    /// 使用解析后的字典重新 decode props
+    /// 数据绑定阶段调用：表达式求值后合并到原始 props 字典，重新 JSONDecoder
+    open func reloadProps(from resolved: [String: Any]) {
+        guard !resolved.isEmpty else { return }
+        
+        // 以原始 templateJSON.props 为基础，覆盖表达式解析后的值
+        var propsDict = templateJSON?.props?.rawDictionary ?? [:]
+        for (key, value) in resolved {
+            propsDict[key] = value
+        }
+        
+        do {
+            let data = try JSONSerialization.data(withJSONObject: propsDict)
+            self.props = try JSONDecoder().decode(P.self, from: data)
+        } catch {
+            TXLogger.verbose("reloadProps failed: \(error)")
+        }
     }
     
     // MARK: - 子组件管理

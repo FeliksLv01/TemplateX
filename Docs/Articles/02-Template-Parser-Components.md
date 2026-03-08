@@ -45,7 +45,7 @@ UIView (container)
         │ JSONSerialization       │
         ▼                         ▼
   ┌───────────┐             ┌───────────┐
-  │   Parse   │────────────▶│JSONWrapper│  ← 阶段1: JSON 包装
+  │   Parse   │────────────▶│TXJSONNode│  ← 阶段1: JSON 包装
   └───────────┘             └─────┬─────┘
                                   │
                                   ▼
@@ -97,30 +97,30 @@ for child in children {
 2. 嵌套访问代码冗长
 3. 重复解析相同字段
 
-### JSONWrapper 的设计
+### TXJSONNode 的设计
 
-`JSONWrapper` 是对 `[String: Any]` 的轻量包装：
+`TXJSONNode` 是对 `[String: Any]` 的轻量包装：
 
 ```swift
 @dynamicMemberLookup
-public final class JSONWrapper {
+public final class TXJSONNode {
     private let json: [String: Any]
-    private var childCache: [String: JSONWrapper] = [:]
+    private var childCache: [String: TXJSONNode] = [:]
     
     // 动态成员查找
-    public subscript(dynamicMember key: String) -> JSONWrapper? {
+    public subscript(dynamicMember key: String) -> TXJSONNode? {
         return child(key)
     }
     
     // 获取子对象（带缓存）
-    public func child(_ key: String) -> JSONWrapper? {
+    public func child(_ key: String) -> TXJSONNode? {
         if let cached = childCache[key] {
             return cached
         }
         guard let value = json[key] as? [String: Any] else {
             return nil
         }
-        let wrapper = JSONWrapper(value)
+        let wrapper = TXJSONNode(value)
         childCache[key] = wrapper
         return wrapper
     }
@@ -139,18 +139,18 @@ public final class JSONWrapper {
 // 传统方式
 let padding = (json["style"] as? [String: Any])?["padding"] as? Int ?? 0
 
-// JSONWrapper
+// TXJSONNode
 let padding = wrapper.style?.int("padding") ?? 0
 
 // 动态成员查找
-let padding = wrapper.style?.padding  // 返回 JSONWrapper?
+let padding = wrapper.style?.padding  // 返回 TXJSONNode?
 ```
 
 ### 关键设计点
 
 | 设计 | 说明 |
 |------|------|
-| **延迟解析** | 只在访问时创建子 JSONWrapper |
+| **延迟解析** | 只在访问时创建子 TXJSONNode |
 | **结果缓存** | 避免重复创建相同字段的 wrapper |
 | **类型安全** | 提供 `string()`, `int()` 等类型安全方法 |
 | **动态成员** | `@dynamicMemberLookup` 支持点语法 |
@@ -169,12 +169,12 @@ public final class TemplateParser {
     
     // 从 JSON 字典解析
     public func parse(json: [String: Any]) -> Component? {
-        let wrapper = JSONWrapper(json)
+        let wrapper = TXJSONNode(json)
         return parse(wrapper: wrapper)
     }
     
-    // 从 JSONWrapper 解析
-    public func parse(wrapper: JSONWrapper) -> Component? {
+    // 从 TXJSONNode 解析
+    public func parse(wrapper: TXJSONNode) -> Component? {
         if let root = wrapper.child("root") {
             return parseNode(root)
         }
@@ -182,7 +182,7 @@ public final class TemplateParser {
     }
     
     // 递归解析节点
-    private func parseNode(_ json: JSONWrapper) -> Component? {
+    private func parseNode(_ json: TXJSONNode) -> Component? {
         // 1. 获取组件类型
         guard let type = json.type else {
             return nil
@@ -243,7 +243,7 @@ public final class ComponentRegistry {
     }
     
     // 创建组件
-    public func createComponent(type: String, from json: JSONWrapper) -> Component? {
+    public func createComponent(type: String, from json: TXJSONNode) -> Component? {
         guard let factory = factories[type] else {
             TXLogger.error("Unknown component type: \(type)")
             return nil
@@ -349,7 +349,7 @@ open class BaseComponent: Component {
     public var events: [String: Any] = [:]
     
     // 通用样式解析
-    public func parseBaseParams(from json: JSONWrapper) {
+    public func parseBaseParams(from json: TXJSONNode) {
         if let styleSource = json.child("style") {
             style = Self.parseStyle(from: styleSource)
         }
@@ -399,7 +399,7 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: BaseComponent, Comp
     }
     
     /// 工厂方法
-    public static func create(from json: JSONWrapper) -> Component? {
+    public static func create(from json: TXJSONNode) -> Component? {
         let id = json.id ?? UUID().uuidString
         let component = Self.init(id: id, type: typeIdentifier)
         component.parseBaseParams(from: json)
@@ -408,7 +408,7 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: BaseComponent, Comp
     }
     
     /// 使用 Codable 自动解析 Props
-    class func parseProps(from json: JSONWrapper?) -> P {
+    class func parseProps(from json: TXJSONNode?) -> P {
         guard let json = json else { return P() }
         let data = try? JSONSerialization.data(withJSONObject: json.rawDictionary)
         return (try? JSONDecoder().decode(P.self, from: data!)) ?? P()
@@ -674,13 +674,13 @@ if let cached = TemplateCache.shared.get("home_card") {
 
 ## 性能优化
 
-### 1. JSONWrapper 缓存
+### 1. TXJSONNode 缓存
 
 ```swift
 // 子对象只解析一次
-private var childCache: [String: JSONWrapper] = [:]
+private var childCache: [String: TXJSONNode] = [:]
 
-public func child(_ key: String) -> JSONWrapper? {
+public func child(_ key: String) -> TXJSONNode? {
     if let cached = childCache[key] { return cached }
     // 解析并缓存...
 }

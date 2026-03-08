@@ -846,7 +846,7 @@ public final class DataBindingManager {
 
 ```swift
 private func resolveExpressions(
-    json: JSONWrapper,
+    json: TXJSONNode,
     data: [String: Any],
     component: BaseComponent
 ) {

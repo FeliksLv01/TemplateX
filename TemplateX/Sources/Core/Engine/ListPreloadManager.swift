@@ -55,8 +55,8 @@ public final class ListPreloadManager {
     
     // MARK: - 模板信息
     
-    /// Cell 模板 JSON
-    public let cellTemplate: JSONWrapper
+    /// Cell 模板 JSON（仅引擎内部使用）
+    let cellTemplate: TXJSONNode
     
     /// 模板 ID
     public let templateId: String
@@ -128,8 +128,8 @@ public final class ListPreloadManager {
     
     // MARK: - Init
     
-    public init(
-        cellTemplate: JSONWrapper,
+    init(
+        cellTemplate: TXJSONNode,
         templateId: String,
         containerWidth: CGFloat
     ) {

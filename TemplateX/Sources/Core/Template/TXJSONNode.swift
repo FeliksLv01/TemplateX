@@ -4,7 +4,7 @@ import Foundation
 
 /// JSON 包装器 - 延迟解析，按需读取，避免反序列化开销
 @dynamicMemberLookup
-public final class JSONWrapper {
+public final class TXJSONNode {
     
     // MARK: - Storage
     
@@ -12,10 +12,10 @@ public final class JSONWrapper {
     private let json: [String: Any]
     
     /// 缓存已解析的子对象
-    private var childCache: [String: JSONWrapper] = [:]
+    private var childCache: [String: TXJSONNode] = [:]
     
     /// 缓存已解析的数组
-    private var arrayCache: [String: [JSONWrapper]] = [:]
+    private var arrayCache: [String: [TXJSONNode]] = [:]
     
     // MARK: - Init
     
@@ -23,7 +23,7 @@ public final class JSONWrapper {
         self.json = json
     }
     
-    public convenience init?(data: Data) {
+    convenience init?(data: Data) {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return nil
         }
@@ -32,7 +32,7 @@ public final class JSONWrapper {
     
     // MARK: - 动态成员查找
     
-    public subscript(dynamicMember key: String) -> JSONWrapper? {
+    public subscript(dynamicMember key: String) -> TXJSONNode? {
         return child(key)
     }
     
@@ -40,7 +40,7 @@ public final class JSONWrapper {
     
     /// 获取子对象（延迟创建并缓存）
     @inline(__always)
-    public func child(_ key: String) -> JSONWrapper? {
+    public func child(_ key: String) -> TXJSONNode? {
         // 先查缓存
         if let cached = childCache[key] {
             return cached
@@ -51,13 +51,13 @@ public final class JSONWrapper {
             return nil
         }
         
-        let wrapper = JSONWrapper(value)
+        let wrapper = TXJSONNode(value)
         childCache[key] = wrapper
         return wrapper
     }
     
     /// 获取子对象数组（延迟创建并缓存）
-    public func array(_ key: String) -> [JSONWrapper] {
+    public func array(_ key: String) -> [TXJSONNode] {
         // 先查缓存
         if let cached = arrayCache[key] {
             return cached
@@ -68,13 +68,13 @@ public final class JSONWrapper {
             return []
         }
         
-        let wrappers = arr.map { JSONWrapper($0) }
+        let wrappers = arr.map { TXJSONNode($0) }
         arrayCache[key] = wrappers
         return wrappers
     }
     
     /// children 快捷访问
-    public var children: [JSONWrapper] {
+    public var children: [TXJSONNode] {
         return array("children")
     }
     
@@ -177,17 +177,17 @@ public final class JSONWrapper {
     }
     
     /// 属性对象
-    public var props: JSONWrapper? {
+    public var props: TXJSONNode? {
         child("props")
     }
     
     /// 绑定对象
-    public var bindings: JSONWrapper? {
+    public var bindings: TXJSONNode? {
         child("bindings")
     }
     
     /// 事件对象
-    public var events: JSONWrapper? {
+    public var events: TXJSONNode? {
         child("events")
     }
 }
@@ -196,10 +196,10 @@ public final class JSONWrapper {
 
 import UIKit
 
-extension JSONWrapper {
+extension TXJSONNode {
     
-    /// 解析颜色
-    public func color(_ key: String) -> UIColor? {
+    /// 解析颜色（仅引擎内部使用，如 StyleParser）
+    func color(_ key: String) -> UIColor? {
         guard let value = json[key] else { return nil }
         
         // 字符串颜色
@@ -264,11 +264,11 @@ extension UIColor {
 
 // MARK: - 尺寸解析
 
-extension JSONWrapper {
+extension TXJSONNode {
     
-    /// 解析尺寸值（返回 Dimension 类型）
+    /// 解析尺寸值（仅引擎内部使用，如 StyleParser）
     /// 支持：数字（固定点数）、百分比字符串（如 "50%"）、"auto"
-    public func dimension(_ key: String) -> Dimension {
+    func dimension(_ key: String) -> Dimension {
         guard let value = json[key] else {
             return .auto
         }
@@ -301,8 +301,8 @@ extension JSONWrapper {
         return .auto
     }
     
-    /// 解析边距
-    public func edgeInsets(_ key: String) -> EdgeInsets {
+    /// 解析边距（仅引擎内部使用，如 StyleParser）
+    func edgeInsets(_ key: String) -> EdgeInsets {
         guard let value = json[key] else {
             return .zero
         }

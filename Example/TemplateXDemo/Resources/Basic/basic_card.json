@@ -10,7 +10,7 @@
         "cornerRadius": 12
     },
     "events": {
-        "onTap": "app://card_tap?id=basic_card"
+        "onTap": "app://card_tap?id=${card.id}"
     },
     "children": [
         {
@@ -24,7 +24,7 @@
                 "textColor": "#333333"
             },
             "props": {
-                "text": "Hello TemplateX!"
+                "text": "${card.title}"
             }
         },
         {
@@ -38,7 +38,7 @@
                 "textColor": "#666666"
             },
             "props": {
-                "text": "高性能 iOS DSL 动态渲染框架"
+                "text": "${card.subtitle}"
             }
         },
         {
@@ -60,12 +60,14 @@
                 "fontWeight": "500"
             },
             "props": {
-                "title": "了解更多"
+                "title": "${card.buttonText}"
             },
             "events": {
                 "onTap": {
                     "url": "app://detail",
                     "params": {
+                        "cardId": "${card.id}",
+                        "cardTitle": "${card.title}",
                         "source": "basic_card"
                     }
                 }
