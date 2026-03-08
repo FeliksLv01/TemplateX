@@ -1,0 +1,1020 @@
+{
+  "sections": [
+    {
+      "title": "推荐歌单",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "R&B",
+          "coverUrl": "https://p1.music.126.net/cQNcZjQW9NktnwqUHRtlvw==/109951172692504747.jpg"
+        },
+        {
+          "title": "春风一吹想起你",
+          "coverUrl": "https://p1.music.126.net/04pkq2O--LD8kL7ywUV4Lg==/109951172696534664.jpg"
+        },
+        {
+          "title": "【旺盛生命力】春和景明 万物与生机",
+          "coverUrl": "https://p1.music.126.net/WlU7hTDOwExVAbTkC-XVqQ==/109951172414203244.jpg"
+        },
+        {
+          "title": "【高级感纯音】坠入春潮 万物生机的梦境",
+          "coverUrl": "https://p1.music.126.net/5AxYQDNKrHCepkBt0wknZg==/109951172438528900.jpg"
+        },
+        {
+          "title": "K-POP南韩",
+          "coverUrl": "https://p1.music.126.net/y6-diqE-afqzPJ64HE3UKw==/109951172405714825.jpg"
+        },
+        {
+          "title": "Top Barry杨博睿",
+          "coverUrl": "https://p1.music.126.net/BmPVuLavlMsDDZ48qqLWuQ==/109951172792699015.jpg"
+        },
+        {
+          "title": "他泰：旋律一响 让你想起了哪些剧",
+          "coverUrl": "https://p1.music.126.net/PyIJ5udkYJHTqgypDc3MxQ==/109951172366538667.jpg"
+        },
+        {
+          "title": "中文说唱新势力Top Barry的发迹之旅",
+          "coverUrl": "https://p1.music.126.net/BnBsq-VmwaSmAhufexYYlQ==/109951172552469048.jpg"
+        }
+      ]
+    },
+    {
+      "title": "新歌速递",
+      "type": "grid",
+      "items": [
+        {
+          "title": "第三个吻痕",
+          "coverUrl": "https://p1.music.126.net/XQSMKNZNba_AQ6zBMsA3PQ==/109951172780794085.jpg",
+          "subtitle": "何水水"
+        },
+        {
+          "title": "失眠了",
+          "coverUrl": "https://p1.music.126.net/RX7XkgADsQ6kXqcpeuEwxQ==/109951172703763721.jpg",
+          "subtitle": "吴琳珂Moske"
+        },
+        {
+          "title": "山歌王",
+          "coverUrl": "https://p1.music.126.net/HSngyd8I35RMNs3_FaS2-Q==/109951172746863944.jpg",
+          "subtitle": "功夫胖/GAI周延"
+        },
+        {
+          "title": "几面",
+          "coverUrl": "https://p1.music.126.net/m_V5243r7weTdiuJLoxAeg==/109951172709446147.jpg",
+          "subtitle": "森光"
+        },
+        {
+          "title": "千万次想象",
+          "coverUrl": "https://p1.music.126.net/9ClYvzwJ920rBPzeicTR_w==/109951172701024137.jpg",
+          "subtitle": "张杰"
+        },
+        {
+          "title": "永远不回头",
+          "coverUrl": "https://p1.music.126.net/QHq62wC5BGI-IlAq46JT8g==/109951172735089444.jpg",
+          "subtitle": "沈腾/尹正"
+        },
+        {
+          "title": "一吻",
+          "coverUrl": "https://p1.music.126.net/IW62HyLbHzLIlZx8CCc7Iw==/109951172766893093.jpg",
+          "subtitle": "李毅恩Lye/程屿"
+        },
+        {
+          "title": "海誓山盟",
+          "coverUrl": "https://p1.music.126.net/INw8QRU2n6IiPmsEmGkt1Q==/109951172720604664.jpg",
+          "subtitle": "灰蒙蒙"
+        },
+        {
+          "title": "当真爱降临",
+          "coverUrl": "https://p1.music.126.net/HUoZF_dqNGxx2WDvtg0sPg==/109951172742511432.jpg",
+          "subtitle": "Yn1Jasper"
+        }
+      ]
+    },
+    {
+      "title": "华语精选",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "华语摇滚精选",
+          "coverUrl": "https://p1.music.126.net/1wuQTXQmVBnV_7Bl4BfQKg==/109951168679666954.jpg"
+        },
+        {
+          "title": "华语R&B",
+          "coverUrl": "https://p1.music.126.net/MhwuJFqReY9w3p2qtPwgQg==/109951168842887844.jpg"
+        },
+        {
+          "title": "新年接良缘",
+          "coverUrl": "https://p1.music.126.net/Ymbr6H4xot1r8bbkatNi5g==/109951172511745041.jpg"
+        },
+        {
+          "title": "重温8090年代老歌旋律",
+          "coverUrl": "https://p1.music.126.net/gagBz6c2LqU3uAR_n64cSA==/109951171967920455.jpg"
+        },
+        {
+          "title": "自驾之旅",
+          "coverUrl": "https://p1.music.126.net/0RUKbpnCS1LGTZ5U9Rpzow==/109951172388078198.jpg"
+        },
+        {
+          "title": "重返2018",
+          "coverUrl": "https://p1.music.126.net/qwxXFlIVrAnMLaRoNahvdw==/109951170963103274.jpg"
+        },
+        {
+          "title": "听李健热门精选",
+          "coverUrl": "https://p1.music.126.net/lPLUaErhWcLHHuykUI2spw==/109951168608923826.jpg"
+        },
+        {
+          "title": "新年接考神",
+          "coverUrl": "https://p1.music.126.net/2RyLOFua6_deHldHl7AB1g==/109951172414799518.jpg"
+        }
+      ]
+    },
+    {
+      "title": "飙升榜单",
+      "type": "grid",
+      "items": [
+        {
+          "title": "飙升榜",
+          "coverUrl": "https://p2.music.126.net/rIi7Qzy2i2Y_1QD7cd0MYA==/109951170048506929.jpg",
+          "subtitle": "云音乐中每天热度上升最快的100首单曲，每日更新。"
+        },
+        {
+          "title": "新歌榜",
+          "coverUrl": "https://p2.music.126.net/5guhqPBTcIrrhLBotgaT6w==/109951170048511751.jpg",
+          "subtitle": "云音乐新歌榜：云音乐用户一周内收听所有新歌（一月内最新发行）"
+        },
+        {
+          "title": "原创榜",
+          "coverUrl": "https://p2.music.126.net/BaP9nrocNTL3gGThysv4eQ==/109951170091896587.jpg",
+          "subtitle": "云音乐独立原创音乐人作品官方榜单，以推荐优秀原创作品为目的。"
+        },
+        {
+          "title": "热歌榜",
+          "coverUrl": "https://p2.music.126.net/0SUEG8yDACfx0Bw2MYFv4Q==/109951170048519512.jpg",
+          "subtitle": "云音乐热歌榜：云音乐用户一周内收听所有线上歌曲官方TOP排行"
+        },
+        {
+          "title": "网易云中文说唱榜",
+          "coverUrl": "https://p2.music.126.net/GgHbgDfGXHpE2YTchU7IvA==/109951171510498108.jpg",
+          "subtitle": "网易云原创说唱音乐人作品官方榜单，每周五更新。以网易云用户一"
+        },
+        {
+          "title": "网易云古典榜",
+          "coverUrl": "https://p2.music.126.net/urByD_AmfBDBrs7fA9-O8A==/109951167976973225.jpg",
+          "subtitle": "网易云用户一周内收听所有古典音乐官方TOP排行榜，每周四更新"
+        },
+        {
+          "title": "网易云电音榜",
+          "coverUrl": "https://p2.music.126.net/hXGObvXfsGtFjFvRhOYAkA==/109951170091888741.jpg",
+          "subtitle": "网易云用户一周内收听电子音乐官方TOP排行榜，每周五更新，用"
+        },
+        {
+          "title": "网易云全球说唱榜",
+          "coverUrl": "https://p2.music.126.net/0hhFjP6WyIjHYDXKW5E7BA==/109951171535150782.jpg",
+          "subtitle": "想聆听世界的说唱节奏？全球说唱榜每周五更新，聚焦华语地区以外"
+        },
+        {
+          "title": "潮流风向榜",
+          "coverUrl": "https://p2.music.126.net/dIKA5e7jCncz2Br1Toxgaw==/109951170621574552.jpg",
+          "subtitle": "精心挑选云音乐极具声量的音乐作品，呈现歌曲真实热度趋势，榜单"
+        }
+      ]
+    },
+    {
+      "title": "电子专区",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "英国舞曲榜",
+          "coverUrl": "https://p1.music.126.net/EOFxQsyxpY2xLJYF-dRMhg==/109951172002224988.jpg"
+        },
+        {
+          "title": "Neurofunk",
+          "coverUrl": "https://p1.music.126.net/MvAz4s4WFIGFvPi69LWa-g==/109951168665497700.jpg"
+        },
+        {
+          "title": "听MEDUZA热门精选",
+          "coverUrl": "https://p1.music.126.net/vhoq2ucn8rE-VnIyW3NvBg==/109951170600344549.jpg"
+        },
+        {
+          "title": "电子舞曲中心",
+          "coverUrl": "https://p1.music.126.net/FWYV84QAkA2UxEWQIZUmWw==/109951172845829808.jpg"
+        },
+        {
+          "title": "2024格莱美最佳舞曲",
+          "coverUrl": "https://p1.music.126.net/Tc-9sm4XeCQ-znElj9R2eg==/109951169313033957.jpg"
+        },
+        {
+          "title": "Mainstage",
+          "coverUrl": "https://p1.music.126.net/VT-r2_h51eqOERSfam0XLQ==/109951168608894977.jpg"
+        },
+        {
+          "title": "健身巴西Funk",
+          "coverUrl": "https://p1.music.126.net/VKsfW9uCRbgs5uV07VLcyw==/109951172692208911.jpg"
+        },
+        {
+          "title": "Hospital游戏伴侣",
+          "coverUrl": "https://p1.music.126.net/mK3Cp7fCGsw8yYP5Q0Xb4A==/109951170955837522.jpg"
+        }
+      ]
+    },
+    {
+      "title": "摇滚地带",
+      "type": "grid",
+      "items": [
+        {
+          "title": "另类摇滚乐",
+          "coverUrl": "https://p1.music.126.net/Qqbq5zKTMQ2XF2dmIVH8lQ==/109951168814272337.jpg",
+          "subtitle": "云音乐官方歌单"
+        },
+        {
+          "title": "摇滚公路歌",
+          "coverUrl": "https://p1.music.126.net/1XkprhZfpfWWPr-CvTjDvw==/109951168975788848.jpg",
+          "subtitle": "云音乐高音质专区"
+        },
+        {
+          "title": "摇滚走路歌",
+          "coverUrl": "https://p1.music.126.net/HkabF-KVGhMLwc_TlC9YfA==/109951170092154316.jpg",
+          "subtitle": "云音乐官方歌单"
+        },
+        {
+          "title": "[Tu Estrella]带你解锁西语摇滚版图",
+          "coverUrl": "https://p1.music.126.net/z1IZtHj0miWfDTNH-_tWbw==/109951172490105873.jpg",
+          "subtitle": "云村专属推荐"
+        },
+        {
+          "title": "千禧年代摇滚",
+          "coverUrl": "https://p1.music.126.net/PONOpm9YtlSpydGAFXtbdw==/109951170032348627.jpg",
+          "subtitle": "云音乐官方歌单"
+        },
+        {
+          "title": "听·夏日入侵企画热门精选",
+          "coverUrl": "https://p1.music.126.net/rQAUe8R2en0lO0m_Qrnm1A==/109951169892195710.jpg",
+          "subtitle": "云音乐艺人精选"
+        },
+        {
+          "title": "春节听摇滚",
+          "coverUrl": "https://p1.music.126.net/HtcLRw-HxUKqOUxjDYB3fw==/109951170413115512.jpg",
+          "subtitle": "云音乐摇滚星球"
+        },
+        {
+          "title": "听万能青年旅店热门精选",
+          "coverUrl": "https://p1.music.126.net/2tb5XJuCDipzc_aAAZLmLg==/109951172322620429.jpg",
+          "subtitle": "云音乐艺人收藏"
+        },
+        {
+          "title": "听·落日飞车热门精选",
+          "coverUrl": "https://p1.music.126.net/zuGou0ufKYCh7eUFY4KosA==/109951169894331045.jpg",
+          "subtitle": "云音乐艺人精选"
+        }
+      ]
+    },
+    {
+      "title": "民谣小馆",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "经典华语民谣",
+          "coverUrl": "https://p1.music.126.net/piEEL9_iHqzKCCndCUGd-Q==/109951169024390049.jpg"
+        },
+        {
+          "title": "用音乐谱写诗和故事",
+          "coverUrl": "https://p1.music.126.net/CsoytrJ8dAjTaUBJ_1yIgQ==/109951171967736348.jpg"
+        },
+        {
+          "title": "伤怀民谣诗",
+          "coverUrl": "https://p1.music.126.net/33q5r8caafKrgR04XyJDsQ==/109951168603038156.jpg"
+        },
+        {
+          "title": "1990s Folk",
+          "coverUrl": "https://p1.music.126.net/KHL8uQJhE_aNmk7v4dPjGg==/109951169986595792.jpg"
+        },
+        {
+          "title": "Rainy Day",
+          "coverUrl": "https://p1.music.126.net/Us09I4GwwRLL31l_gXDXEg==/109951168706033492.jpg"
+        },
+        {
+          "title": "2020s Folk",
+          "coverUrl": "https://p1.music.126.net/RH05GtLJ0zW4GQkdjkpkuQ==/109951169986594871.jpg"
+        },
+        {
+          "title": "欧美民谣趋势",
+          "coverUrl": "https://p1.music.126.net/dtD76eglnFc2gYXUcruDRQ==/109951172845887845.jpg"
+        },
+        {
+          "title": "忧伤民谣",
+          "coverUrl": "https://p1.music.126.net/-qPDT3QbJ-LyTvYZgzzWbA==/109951168607120187.jpg"
+        }
+      ]
+    },
+    {
+      "title": "说唱天地",
+      "type": "grid",
+      "items": [
+        {
+          "title": "匪帮说唱专属",
+          "coverUrl": "https://p1.music.126.net/BGZJbpnMNFlMdXCloJXfrQ==/109951172019908668.jpg",
+          "subtitle": "云村专属推荐"
+        },
+        {
+          "title": "2000说唱热播",
+          "coverUrl": "https://p1.music.126.net/lGYtmfFF_15pYfudd-VspA==/109951171008333261.jpg",
+          "subtitle": "云音乐说唱星球"
+        },
+        {
+          "title": "说唱经典采样",
+          "coverUrl": "https://p1.music.126.net/Lj8NusZ7SEvc7Dw0ullXgA==/109951168834726524.jpg",
+          "subtitle": "云音乐官方歌单"
+        },
+        {
+          "title": "1987说唱热播",
+          "coverUrl": "https://p1.music.126.net/S27fJcvVRDb3iqbE830jRQ==/109951170121476476.jpg",
+          "subtitle": "云音乐说唱星球"
+        },
+        {
+          "title": "练球说唱必备",
+          "coverUrl": "https://p1.music.126.net/v0eFLtk5CfP8tLgIqGseKA==/109951168607138144.jpg",
+          "subtitle": "云音乐官方歌单"
+        },
+        {
+          "title": "法语说唱",
+          "coverUrl": "https://p1.music.126.net/FjP-6hqmxRBpr6XOkUWkbQ==/109951172698143006.jpg",
+          "subtitle": "云音乐全球热歌"
+        },
+        {
+          "title": "听Starling8热门精选",
+          "coverUrl": "https://p1.music.126.net/6oJdkBWnnyb8Hjm9N-auPg==/109951170826105275.jpg",
+          "subtitle": "云音乐艺人收藏"
+        },
+        {
+          "title": "1989说唱热播",
+          "coverUrl": "https://p1.music.126.net/Sr0if4z9goUFYfG8rxK32A==/109951171008431533.jpg",
+          "subtitle": "云音乐说唱星球"
+        },
+        {
+          "title": "中西部说唱新声",
+          "coverUrl": "https://p1.music.126.net/4fOIzIPFEURiGCQmF4f9ug==/109951168898888545.jpg",
+          "subtitle": "云音乐说唱星球"
+        }
+      ]
+    },
+    {
+      "title": "古风华章",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "宫斗剧原声",
+          "coverUrl": "https://p1.music.126.net/55hKP4W8kjViJXXvc8uaXg==/109951169946598388.jpg"
+        },
+        {
+          "title": "新潮国风馆",
+          "coverUrl": "https://p1.music.126.net/_TpfX5uw7K1skadmUSWqJw==/109951168634398285.jpg"
+        },
+        {
+          "title": "国风音乐大赏",
+          "coverUrl": "https://p1.music.126.net/TQolyVBsjXAe7JSlPit_RA==/109951168608918165.jpg"
+        },
+        {
+          "title": "伤感国风小调",
+          "coverUrl": "https://p1.music.126.net/5BHUtnXMWhZ5pkkLjhDjHg==/109951170604187627.jpg"
+        },
+        {
+          "title": "国风R&B大赏",
+          "coverUrl": "https://p1.music.126.net/bC3N7tIarDiNYsyVHFrpQA==/109951171380497293.jpg"
+        },
+        {
+          "title": "沉浸纯音 静享诗意雅韵",
+          "coverUrl": "https://p1.music.126.net/Syknorh47O91wxmkiwvk8w==/109951171928343181.jpg"
+        },
+        {
+          "title": "国风说唱大赏",
+          "coverUrl": "https://p1.music.126.net/j7qLo1nRpYI1Dx1NlTfSPw==/109951170100286125.jpg"
+        },
+        {
+          "title": "凄美古韵诉说心中哀愁",
+          "coverUrl": "https://p1.music.126.net/RMMqrutDHcwjus0lIrn_ww==/109951171928318453.jpg"
+        }
+      ]
+    },
+    {
+      "title": "轻音乐馆",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "钢琴轻音乐",
+          "coverUrl": "https://p1.music.126.net/zNJWrpB7NNpVYWC51Yr4gA==/109951169369953208.jpg"
+        },
+        {
+          "title": "助眠轻音",
+          "coverUrl": "https://p1.music.126.net/gAJ2RlFeSIz9h7H1slIKOQ==/109951169510257558.jpg"
+        },
+        {
+          "title": "华语经典轻音乐",
+          "coverUrl": "https://p1.music.126.net/xOXCdGNIYm68zLprhVfURw==/109951172803909667.jpg"
+        },
+        {
+          "title": "二胡轻音乐",
+          "coverUrl": "https://p1.music.126.net/kwYtvnqBoxb__2nd51cI7A==/109951169410547747.jpg"
+        },
+        {
+          "title": "咖啡馆轻音乐",
+          "coverUrl": "https://p1.music.126.net/HMLSJftsOWxqNvYuxHpYdQ==/109951172153633887.jpg"
+        },
+        {
+          "title": "久石让作曲轻音乐",
+          "coverUrl": "https://p1.music.126.net/xbgkNEQNSKs16u5ODNYIyA==/109951169284943217.jpg"
+        },
+        {
+          "title": "石进精选",
+          "coverUrl": "https://p1.music.126.net/4GPrhETrt_-tXN3FTlxXoA==/109951169917479765.jpg"
+        },
+        {
+          "title": "助眠雨声钢琴",
+          "coverUrl": "https://p1.music.126.net/pa4tLAvJaFE1QXFShoS1pw==/109951172742877383.jpg"
+        }
+      ]
+    },
+    {
+      "title": "日语专区",
+      "type": "grid",
+      "items": [
+        {
+          "title": "可爱日语歌",
+          "coverUrl": "https://p1.music.126.net/Z-l2dyzStAftDukNV7FuFw==/109951172730578127.jpg",
+          "subtitle": "云音乐Jpop星球"
+        },
+        {
+          "title": "昭和热歌大赏",
+          "coverUrl": "https://p1.music.126.net/fiwHlxiIxgcRzPGaEpm_lw==/109951169531374927.jpg",
+          "subtitle": "云音乐官方歌单"
+        },
+        {
+          "title": "1970s日本流行",
+          "coverUrl": "https://p1.music.126.net/VrHsVKAlk6PYDZTwaYM3_A==/109951171865910857.jpg",
+          "subtitle": "云音乐官方歌单"
+        },
+        {
+          "title": "都市夜行",
+          "coverUrl": "https://p1.music.126.net/YRT6-vFtiBvv3EWwWLtZzw==/109951168607112381.jpg",
+          "subtitle": "云音乐官方歌单"
+        },
+        {
+          "title": "听·LiSA热门精选",
+          "coverUrl": "https://p1.music.126.net/6odSAJpRjHBJkQda3qhc7g==/109951169932434117.jpg",
+          "subtitle": "云音乐艺人精选"
+        },
+        {
+          "title": "听·結束バンド热门精选",
+          "coverUrl": "https://p1.music.126.net/PMfN5wVNc897RZRZldVVFg==/109951170268049808.jpg",
+          "subtitle": "云音乐艺人精选"
+        },
+        {
+          "title": "以词绘事",
+          "coverUrl": "https://p1.music.126.net/9fkHyU9I3HV1lsDCeFeOxQ==/109951170360394916.jpg",
+          "subtitle": "云音乐Jpop星球"
+        },
+        {
+          "title": "日本歌谣曲",
+          "coverUrl": "https://p1.music.126.net/ARrLBTasWs28HiO_aRy9nw==/109951170201185889.jpg",
+          "subtitle": "云音乐Jpop星球"
+        },
+        {
+          "title": "听·中島美嘉热门精选",
+          "coverUrl": "https://p1.music.126.net/Wk2m-3x-_SH07x_OaXKQzA==/109951169067767027.jpg",
+          "subtitle": "云音乐艺人精选"
+        }
+      ]
+    },
+    {
+      "title": "热门榜单",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "音乐合伙人推荐榜",
+          "coverUrl": "https://p2.music.126.net/s6ITpmGjKbyDpi7DPkqd2w==/109951170187827373.jpg"
+        },
+        {
+          "title": "音乐合伙人热歌榜",
+          "coverUrl": "https://p2.music.126.net/RgYxQmB-ZUjkMRo2N1jWnQ==/109951170187823494.jpg"
+        },
+        {
+          "title": "音乐合伙人留名榜",
+          "coverUrl": "https://p2.music.126.net/aJJzGIxhkVaD7dX0XBNUnw==/109951170187831145.jpg"
+        },
+        {
+          "title": "音乐合伙人高分新歌榜",
+          "coverUrl": "https://p2.music.126.net/bfk15bvanhdPFU7yjPFgWA==/109951170187832038.jpg"
+        },
+        {
+          "title": "音乐合伙人高分榜",
+          "coverUrl": "https://p2.music.126.net/fPP5T0Z8Ac15qNvRTcHa6g==/109951170074028970.jpg"
+        },
+        {
+          "title": "黑胶VIP爱听榜",
+          "coverUrl": "https://p2.music.126.net/qo6-o9n5AhMjNyejev38-A==/109951169743111905.jpg"
+        },
+        {
+          "title": "网易云ACG榜",
+          "coverUrl": "https://p2.music.126.net/na1kEeCS1iZEkzOrs9r_9g==/109951167976973667.jpg"
+        },
+        {
+          "title": "网易云韩语榜",
+          "coverUrl": "https://p2.music.126.net/5oN9YaFznwNGXkmi8i2Ytw==/109951167430864741.jpg"
+        }
+      ]
+    },
+    {
+      "title": "华语经典",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "摇滚经典碰撞",
+          "coverUrl": "https://p1.music.126.net/7x45e5y3-I5yPNIEzivZJg==/109951168688993340.jpg"
+        },
+        {
+          "title": "KPop中文版",
+          "coverUrl": "https://p1.music.126.net/4hEiuOeMuKrsgeTdfM4npg==/109951170562186022.jpg"
+        },
+        {
+          "title": "午夜梦碎台北",
+          "coverUrl": "https://p1.music.126.net/JdjZnZpp_wq_OrGLaGpuEg==/109951172797348764.jpg"
+        },
+        {
+          "title": "华语RNB趋势",
+          "coverUrl": "https://p1.music.126.net/A-mYgUy-AefaV-flh2sEbw==/109951172845317883.jpg"
+        },
+        {
+          "title": "宝丽金怀旧老歌",
+          "coverUrl": "https://p1.music.126.net/SOQ4zdOh9kLkzTlgK0YOow==/109951168717845012.jpg"
+        },
+        {
+          "title": "2013伤感热播",
+          "coverUrl": "https://p1.music.126.net/Z0l2ufP-lWU4Ffa87WXIfw==/109951172025085664.jpg"
+        },
+        {
+          "title": "听王赫野热门精选",
+          "coverUrl": "https://p1.music.126.net/ZxjIotMqud-CJAK0UpMwmg==/109951171937663982.jpg"
+        },
+        {
+          "title": "2025年已经结束，欧美乐坛再度洗牌",
+          "coverUrl": "https://p1.music.126.net/ern1HfH-pdeyi4kdq-1uVw==/109951172548329956.jpg"
+        }
+      ]
+    },
+    {
+      "title": "国风新韵",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "国风对唱曲",
+          "coverUrl": "https://p1.music.126.net/Bv3_arV2DZDtDbEZSkvs9Q==/109951169054017711.jpg"
+        },
+        {
+          "title": "2023国风热歌",
+          "coverUrl": "https://p1.music.126.net/BIJkY8Zjpctp5jcte_77lA==/109951169897933813.jpg"
+        },
+        {
+          "title": "古风少年豪情",
+          "coverUrl": "https://p1.music.126.net/w8z90WCRdCu95Ueadtx4ow==/109951171960527197.jpg"
+        },
+        {
+          "title": "婉转吟唱述尽悲欢离合",
+          "coverUrl": "https://p1.music.126.net/HRZajl7bjd--FVcrW7gVWg==/109951171928351439.jpg"
+        },
+        {
+          "title": "摇滚民族风",
+          "coverUrl": "https://p1.music.126.net/YppOTDghDVUC-bPi7Qlm8Q==/109951170217752550.jpg"
+        },
+        {
+          "title": "学习听国风",
+          "coverUrl": "https://p1.music.126.net/j23rjySyyuVQusTbYthd5A==/109951170100622857.jpg"
+        },
+        {
+          "title": "2013国风热歌",
+          "coverUrl": "https://p1.music.126.net/rz44ORH-_lS4c9pNysBmEQ==/109951169897922800.jpg"
+        },
+        {
+          "title": "UK排行榜周榜",
+          "coverUrl": "https://p2.music.126.net/fhAqiflLy3eU-ldmBQByrg==/109951165613082765.jpg"
+        }
+      ]
+    },
+    {
+      "title": "轻音续篇",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "傍晚轻音乐",
+          "coverUrl": "https://p1.music.126.net/aA1ELmi3BAPUgt3HkFRlJg==/109951169660226957.jpg"
+        },
+        {
+          "title": "熬夜轻音乐",
+          "coverUrl": "https://p1.music.126.net/Sff3IUB-pPUdJXr2euPviw==/109951168980789846.jpg"
+        },
+        {
+          "title": "日漫电影轻音乐",
+          "coverUrl": "https://p1.music.126.net/fUMTPg_2LuaRstVvT-iv9A==/109951169265745737.jpg"
+        },
+        {
+          "title": "吉卜力动漫轻音乐",
+          "coverUrl": "https://p1.music.126.net/d3QF8yX7MYf4MociM4t0OA==/109951169284931834.jpg"
+        },
+        {
+          "title": "冬日轻音乐",
+          "coverUrl": "https://p1.music.126.net/2TMeYomgVVZPgx_pUGZtMQ==/109951169660249007.jpg"
+        },
+        {
+          "title": "春日轻音乐",
+          "coverUrl": "https://p1.music.126.net/N1f6Cb5od8a6iDz1xO0dgw==/109951170501198276.jpg"
+        },
+        {
+          "title": "华语流行轻音乐",
+          "coverUrl": "https://p1.music.126.net/lH4MAfT9Rm2bTswyT5hN0g==/109951169443307092.jpg"
+        },
+        {
+          "title": "美国Billboard榜",
+          "coverUrl": "https://p2.music.126.net/rwRsVIJHQ68gglhA6TNEYA==/109951165611413732.jpg"
+        }
+      ]
+    },
+    {
+      "title": "民谣续听",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "日本民谣",
+          "coverUrl": "https://p1.music.126.net/RWATf6v0bMZ-BVNnNCVLcQ==/109951168605329896.jpg"
+        },
+        {
+          "title": "似轻柔海风拂过脸颊",
+          "coverUrl": "https://p1.music.126.net/_d3R6giOLJW9T0VNvGGwDw==/109951172649946690.jpg"
+        },
+        {
+          "title": "夏日民谣",
+          "coverUrl": "https://p1.music.126.net/TmNXgraxUGDxekiVEJkfJg==/109951168850167978.jpg"
+        },
+        {
+          "title": "2020s华语民谣",
+          "coverUrl": "https://p1.music.126.net/1XNcy64pW5fQKZ9xkRxS5A==/109951169986595157.jpg"
+        },
+        {
+          "title": "国风民谣大赏",
+          "coverUrl": "https://p1.music.126.net/kI2icVVehDBmZy1CmHxfMw==/109951170099949405.jpg"
+        },
+        {
+          "title": "探索诗意的声音世界",
+          "coverUrl": "https://p1.music.126.net/EZ956ArV1Ji-8RrUlFxFsQ==/109951171967731173.jpg"
+        },
+        {
+          "title": "复古民谣",
+          "coverUrl": "https://p1.music.126.net/ps9qeltBjqB9qqA4Tn-oqQ==/109951168706039058.jpg"
+        },
+        {
+          "title": "Beatport全球电子舞曲榜",
+          "coverUrl": "https://p2.music.126.net/oT-RHuPBJiD7WMoU7WG5Rw==/109951166093489621.jpg"
+        }
+      ]
+    },
+    {
+      "title": "全球榜单",
+      "type": "grid",
+      "items": [
+        {
+          "title": "KTV唛榜",
+          "coverUrl": "https://p2.music.126.net/5wDP78s43ydVTKt62C8OjQ==/109951165613100063.jpg",
+          "subtitle": "KTV唛榜是目前国内首个以全国超过200家KTV点歌平台真实"
+        },
+        {
+          "title": "日本Oricon榜",
+          "coverUrl": "https://p2.music.126.net/aXUPgImt8hhf4cMUZEjP4g==/109951165611417794.jpg",
+          "subtitle": "日本Oricon数字单曲周榜，每周三更新，欢迎关注。"
+        },
+        {
+          "title": "网易云欧美热歌榜",
+          "coverUrl": "https://p2.music.126.net/70_EO_Dc7NT_hhfvsapzcQ==/109951167430862162.jpg",
+          "subtitle": "网易云用户一周内收听所有欧美歌曲官方TOP排行榜，每周四更新"
+        },
+        {
+          "title": "网易云欧美新歌榜",
+          "coverUrl": "https://p2.music.126.net/0lPWpI9Ejn1OiW2LSbg-qw==/109951167430863224.jpg",
+          "subtitle": "网易云用户一周内收听所有欧美新歌（一月内最新发行）官方TOP"
+        },
+        {
+          "title": "法国 NRJ Vos Hits 周榜",
+          "coverUrl": "https://p2.music.126.net/-fyzrPWd06FfWl_0JDAxMQ==/109951165613108584.jpg",
+          "subtitle": "法国NRJ电台（national Radio de Jeun"
+        },
+        {
+          "title": "网易云ACG动画榜",
+          "coverUrl": "https://p2.music.126.net/SkGlKQ6acixthb77VlD9eQ==/109951164432300406.jpg",
+          "subtitle": "网易云中每天热度上升最快的100首ACG动画单曲，每日更新。"
+        },
+        {
+          "title": "网易云ACG游戏榜",
+          "coverUrl": "https://p2.music.126.net/hivOOHMwEmnn9s_6rgZwEQ==/109951164432303700.jpg",
+          "subtitle": "网易云中每天热度上升最快的100首ACG游戏单曲，每日更新。"
+        },
+        {
+          "title": "网易云ACG VOCALOID榜",
+          "coverUrl": "https://p2.music.126.net/Ag7RyRCYiINcd9EtRXf6xA==/109951164432303690.jpg",
+          "subtitle": ""
+        },
+        {
+          "title": "网易云日语榜",
+          "coverUrl": "https://p2.music.126.net/YFBFNI2F-4BveUpv6FKFuw==/109951167430864069.jpg",
+          "subtitle": "网易云用户一周内收听所有日语歌曲官方TOP排行榜，每周二更新"
+        }
+      ]
+    },
+    {
+      "title": "电子续篇",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "Techno宝藏推荐",
+          "coverUrl": "https://p1.music.126.net/pS1TN-p34cV3X3YFKf6IFQ==/109951172478145239.jpg"
+        },
+        {
+          "title": "Techno Chill",
+          "coverUrl": "https://p1.music.126.net/UF9g6XesdqzoEv7E0Qkx7g==/109951168728102752.jpg"
+        },
+        {
+          "title": "车载巴西Funk",
+          "coverUrl": "https://p1.music.126.net/4TH-3T0G3v6OxOewY3Jfsg==/109951172736979832.jpg"
+        },
+        {
+          "title": "Ultra电音节",
+          "coverUrl": "https://p1.music.126.net/EDsQhZ2bxD7yNY6Tbqo2uw==/109951168622646140.jpg"
+        },
+        {
+          "title": "Jazz Rap电竞伴侣",
+          "coverUrl": "https://p1.music.126.net/L-tMBFSFqrzsI9_4ecm3Tw==/109951170708415726.jpg"
+        },
+        {
+          "title": "热带冰爽浩室",
+          "coverUrl": "https://p1.music.126.net/iDWQ0yq2c1WntuQqYO9KmA==/109951172692583344.jpg"
+        },
+        {
+          "title": "Lofi驾车",
+          "coverUrl": "https://p1.music.126.net/K40E9fclkCRp5nu4yBdR3A==/109951168607123084.jpg"
+        },
+        {
+          "title": "网易云摇滚榜",
+          "coverUrl": "https://p2.music.126.net/LjkX2hktgFD1NXc3W6w0sA==/109951170048522513.jpg"
+        }
+      ]
+    },
+    {
+      "title": "摇滚续听",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "旅行必听摇滚",
+          "coverUrl": "https://p1.music.126.net/XzznT_GzDUyo1vtI6OrcQw==/109951168896926280.jpg"
+        },
+        {
+          "title": "东南亚摇滚",
+          "coverUrl": "https://p1.music.126.net/geVAsX3ohkjjsv-UYgaYew==/109951166626478872.jpg"
+        },
+        {
+          "title": "Pitchfork年度最佳摇滚",
+          "coverUrl": "https://p1.music.126.net/NLNPFUBbHeXAdtetElgiog==/109951172406280943.jpg"
+        },
+        {
+          "title": "方言摇滚",
+          "coverUrl": "https://p1.music.126.net/rhUppMuFFv5RgmbGgkJDkw==/109951168914369965.jpg"
+        },
+        {
+          "title": "听·回春丹热门精选",
+          "coverUrl": "https://p1.music.126.net/X8x0_7oSDk8OcaMfGOabjw==/109951169194617206.jpg"
+        },
+        {
+          "title": "Rock Live",
+          "coverUrl": "https://p1.music.126.net/VeJSqFpqem-w9WlhTDywVg==/109951169284962541.jpg"
+        },
+        {
+          "title": "网易云国风榜",
+          "coverUrl": "https://p2.music.126.net/kTJC5OBhg8I477X_ZmXyDQ==/109951168539740982.jpg"
+        },
+        {
+          "title": "潜力爆款榜",
+          "coverUrl": "https://p2.music.126.net/Mi4QPklg1mtbWAfq74tEqQ==/109951165498334721.jpg"
+        }
+      ]
+    },
+    {
+      "title": "说唱续篇",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "民族风说唱范儿",
+          "coverUrl": "https://p1.music.126.net/Xhl1_jIO0thdiXqgf7361g==/109951171967709778.jpg"
+        },
+        {
+          "title": "听Ty.热门精选",
+          "coverUrl": "https://p1.music.126.net/IE6aoUby6kkydYx2_XwN0Q==/109951170974457712.jpg"
+        },
+        {
+          "title": "宝岛说唱",
+          "coverUrl": "https://p1.music.126.net/96KluXqyoXP0trHZqlaOPg==/109951168807930165.jpg"
+        },
+        {
+          "title": "华语Jersey Club",
+          "coverUrl": "https://p1.music.126.net/vZIty0n4Eo0G6xlW_C3VrA==/109951169220069388.jpg"
+        },
+        {
+          "title": "巴吞鲁日说唱",
+          "coverUrl": "https://p1.music.126.net/6dp2Y9owLPN58GJ752g8_A==/109951171867542010.jpg"
+        },
+        {
+          "title": "音综有模糊说唱",
+          "coverUrl": "https://p1.music.126.net/oNL83i5lepAsq081Ui1kvg==/109951169930129250.jpg"
+        },
+        {
+          "title": "网易云民谣榜",
+          "coverUrl": "https://p2.music.126.net/Xe9qLTAqtBAWX_hPgFHMyw==/109951170048510929.jpg"
+        },
+        {
+          "title": "听歌识曲榜",
+          "coverUrl": "https://p2.music.126.net/wJVUAiUuykKk7yGbQxDBug==/109951167430857712.jpg"
+        }
+      ]
+    },
+    {
+      "title": "日语续听",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "城市漫步",
+          "coverUrl": "https://p1.music.126.net/RzTh585liobKNxc4lSvb-w==/109951170857858068.jpg"
+        },
+        {
+          "title": "日本朋克乐",
+          "coverUrl": "https://p1.music.126.net/1tMQg1t1BTvxzHdKAK2cOg==/109951168707689738.jpg"
+        },
+        {
+          "title": "醇厚女声",
+          "coverUrl": "https://p1.music.126.net/FxhXeArfURzAaGD-WNR0hw==/109951170498641566.jpg"
+        },
+        {
+          "title": "日本经典摇滚",
+          "coverUrl": "https://p1.music.126.net/Tx8ReGI8D3fdD1feGMMYvg==/109951170255085299.jpg"
+        },
+        {
+          "title": "夏日热恋",
+          "coverUrl": "https://p1.music.126.net/H46DdjFnQfE-q5q_sG7U-w==/109951171269191435.jpg"
+        },
+        {
+          "title": "10sACG热播",
+          "coverUrl": "https://p1.music.126.net/9cu9nfSKRduu17xvG0sB2w==/109951169914241554.jpg"
+        },
+        {
+          "title": "网络热歌榜",
+          "coverUrl": "https://p2.music.126.net/_kSxOPqQ5J5etC5DKTFwNA==/109951170048519530.jpg"
+        },
+        {
+          "title": "俄语榜",
+          "coverUrl": "https://p2.music.126.net/HbJ0BK5doY4I4pEMY6-FQw==/109951167430852698.jpg"
+        }
+      ]
+    },
+    {
+      "title": "宝藏榜单",
+      "type": "grid",
+      "items": [
+        {
+          "title": "越南语榜",
+          "coverUrl": "https://p2.music.126.net/N-Y5maLGWgrowt3TE6RtSg==/109951167430857045.jpg",
+          "subtitle": "网易云音乐用户一周内收听所有越南语歌曲官方TOP排行榜，每周"
+        },
+        {
+          "title": "中文慢摇DJ榜",
+          "coverUrl": "https://p2.music.126.net/w_01BfDU012ojxnzLO6tYw==/109951167977358686.jpg",
+          "subtitle": "搜索“DJ”，进入慢摇DJ专区，探索更多网络热歌！"
+        },
+        {
+          "title": "俄罗斯top hit流行音乐榜",
+          "coverUrl": "https://p2.music.126.net/KLVO8PxVZzOoLdWQQNyprA==/109951166327316568.jpg",
+          "subtitle": "top hit榜根据俄罗斯及全球400多个无线广播的音乐播放"
+        },
+        {
+          "title": "泰语榜",
+          "coverUrl": "https://p2.music.126.net/4W0WBHBgwYlYfRniuyL47A==/109951167430843284.jpg",
+          "subtitle": "网易云音乐用户一周内收听所有泰语歌曲官方TOP排行榜，每周四"
+        },
+        {
+          "title": "BEAT排行榜",
+          "coverUrl": "https://p2.music.126.net/yhzlQJCJ9NcT4MvJBG_HgQ==/109951167977014958.jpg",
+          "subtitle": "嘿~朋友，欢迎来到本周的Beat排行榜\n我们挑选了近一周内热"
+        },
+        {
+          "title": "星云榜VOL.30 Wolf Alice新专来袭，人生应该拥有不一样的颜色",
+          "coverUrl": "https://p2.music.126.net/8GBpHVmycVwe2Xsv3dqx1w==/109951172069064297.jpg",
+          "subtitle": "精心评审，专业推荐。每周五更新，为你呈现宝藏新歌。\n1、《T"
+        },
+        {
+          "title": "LOOK直播歌曲榜",
+          "coverUrl": "https://p2.music.126.net/u-RQC-LyY0aoeseRumJ14A==/109951167977730469.jpg",
+          "subtitle": "LOOK直播好歌共赏，专属你的声音聊愈场。榜单选取符合条件且"
+        },
+        {
+          "title": "赏音榜",
+          "coverUrl": "https://p2.music.126.net/m9hQzC-d5wefBipedNPaHg==/109951168178601971.jpg",
+          "subtitle": "云音乐歌曲赏音榜，以让用户鉴赏到更多潜力好歌为目的，以用户对"
+        },
+        {
+          "title": "黑胶VIP新歌榜",
+          "coverUrl": "https://p2.music.126.net/vjitpkT9nXBCth6tvdDMWg==/109951169743115266.jpg",
+          "subtitle": "云音乐站内播放热度TOP50的7日内新晋会员歌曲，每日更新。"
+        }
+      ]
+    },
+    {
+      "title": "潮流风向",
+      "type": "grid",
+      "items": [
+        {
+          "title": "黑胶VIP热歌榜",
+          "coverUrl": "https://p2.music.126.net/Ay3mLgQ9weG_c8JjYrD-Bw==/109951169743106495.jpg",
+          "subtitle": "云音乐站内播放和付费热度TOP50的会员歌曲，每日更新。\n更"
+        },
+        {
+          "title": "黑胶VIP爱搜榜",
+          "coverUrl": "https://p2.music.126.net/R7DtZqNraesnsiaIKvzTHA==/109951169743112799.jpg",
+          "subtitle": "云音乐站内会员搜索播放热度TOP50的歌曲，每日更新。\n更适"
+        },
+        {
+          "title": "实时热度榜",
+          "coverUrl": "https://p2.music.126.net/U7ZbdpWzRdmZVr6Khn_4ag==/109951168673982478.jpg",
+          "subtitle": "云音乐中实时热度上升最快的100首单曲，每小时更新。"
+        },
+        {
+          "title": "喜力®星电音派对潮音榜",
+          "coverUrl": "https://p2.music.126.net/HVu2hGYvzN5XBuvFc_4Bgg==/109951168730309120.jpg",
+          "subtitle": "乐无界，越未来！《星电音联盟》歌曲官方榜单，每周一更新，让云"
+        },
+        {
+          "title": "乐夏榜",
+          "coverUrl": "https://p2.music.126.net/RlStCmE97y0xYFk7rS3Zww==/109951168864907822.jpg",
+          "subtitle": "听乐夏，上网易云，一头扎进爱音乐的人群！ 综艺《乐队的夏天3"
+        },
+        {
+          "title": "特斯拉车友爱听榜",
+          "coverUrl": "https://p2.music.126.net/UL8dhobSa3TR6Wd1JmWe_g==/109951168924385363.jpg",
+          "subtitle": ""
+        },
+        {
+          "title": "理想车友爱听榜",
+          "coverUrl": "https://p2.music.126.net/U--PWdWupY1ER5cVSjr1jQ==/109951168928365496.jpg",
+          "subtitle": ""
+        },
+        {
+          "title": "比亚迪车友爱听榜",
+          "coverUrl": "https://p2.music.126.net/S1OG-OLTaofa3HfrHW48kA==/109951168924393585.jpg",
+          "subtitle": ""
+        },
+        {
+          "title": "蔚来车友爱听榜",
+          "coverUrl": "https://p2.music.126.net/r9kBQNsOro1EAB82Ol51WQ==/109951168924380971.jpg",
+          "subtitle": ""
+        }
+      ]
+    },
+    {
+      "title": "更多推荐",
+      "type": "horizontal",
+      "items": [
+        {
+          "title": "极氪车友爱听榜",
+          "coverUrl": "https://p2.music.126.net/Cu0RXoKewSPM9Gyc7Cp8jw==/109951168924391596.jpg"
+        },
+        {
+          "title": "蛋仔派对听歌榜",
+          "coverUrl": "https://p2.music.126.net/TMb0be5QLMZKOFeuOKT4tg==/109951168717283910.jpg"
+        },
+        {
+          "title": "AI歌曲榜",
+          "coverUrl": "https://p2.music.126.net/M0m6GeZ1Y8Osz9jqxaW8Wg==/109951169462048035.jpg"
+        },
+        {
+          "title": "昊铂车友爱听榜",
+          "coverUrl": "https://p2.music.126.net/EL7H4rkKejZY7Uv54EFNXg==/109951169655010112.jpg"
+        },
+        {
+          "title": "埃安车友爱听榜",
+          "coverUrl": "https://p2.music.126.net/FcP1U6Bck0wPKqd0XgBwSQ==/109951169679731241.jpg"
+        },
+        {
+          "title": "欧美R&B榜",
+          "coverUrl": "https://p2.music.126.net/0E6MzYzyA5uvQ4CSoIG2mw==/109951169739660034.jpg"
+        },
+        {
+          "title": "黑胶VIP限免榜",
+          "coverUrl": "https://p2.music.126.net/WXCSf4ZNcDCdOTY5ixm3Bg==/109951169809318325.jpg"
+        },
+        {
+          "title": "吉利车友爱听榜",
+          "coverUrl": "https://p2.music.126.net/XVmZb3JSyrwMgqu9WVz61A==/109951170037568570.jpg"
+        }
+      ]
+    }
+  ]
+}

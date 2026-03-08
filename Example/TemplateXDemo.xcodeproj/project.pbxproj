@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		43B1B26F2F5DF87800A458A8 /* music_home_data.json in Resources */ = {isa = PBXBuildFile; fileRef = 43B1B26E2F5DF87800A458A8 /* music_home_data.json */; };
 		6A77E7ED977B2EFA3C7F81F9 /* Pods_TemplateXDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 621A07E0E75756D7C5C83B9B /* Pods_TemplateXDemo.framework */; };
 		A1000001203D5D1100000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000002203D5D1100000001 /* AppDelegate.swift */; };
 		A1000003203D5D1100000001 /* DemoListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000004203D5D1100000001 /* DemoListViewController.swift */; };
@@ -46,6 +47,7 @@
 
 /* Begin PBXFileReference section */
 		1874CF81A3C77A4C8200F5D4 /* Pods-TemplateXDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TemplateXDemo.release.xcconfig"; path = "Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo.release.xcconfig"; sourceTree = "<group>"; };
+		43B1B26E2F5DF87800A458A8 /* music_home_data.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = music_home_data.json; sourceTree = "<group>"; };
 		5B4FD693C7C1B2B4FC4F32AF /* Pods-TemplateXDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TemplateXDemo.debug.xcconfig"; path = "Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		621A07E0E75756D7C5C83B9B /* Pods_TemplateXDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TemplateXDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1000000203D5D1100000001 /* TemplateXDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TemplateXDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -253,6 +255,7 @@
 		C1MUSIC0A203D5D1100000001 /* MusicHome */ = {
 			isa = PBXGroup;
 			children = (
+				43B1B26E2F5DF87800A458A8 /* music_home_data.json */,
 				C1MUSIC06203D5D1100000001 /* horizontal_section.json */,
 				C1MUSIC08203D5D1100000001 /* grid_section.json */,
 			);
@@ -328,6 +331,7 @@
 				B3B48AC92F47A71B0057C9BF /* margin_padding.json in Resources */,
 				B3B48ACA2F47A71B0057C9BF /* scroll_demo.json in Resources */,
 				B3B48ACB2F47A71B0057C9BF /* flexbox_column.json in Resources */,
+				43B1B26F2F5DF87800A458A8 /* music_home_data.json in Resources */,
 				B3B48ACC2F47A71B0057C9BF /* user_card.json in Resources */,
 				B3B48ACD2F47A71B0057C9BF /* multiline_input_demo.json in Resources */,
 				B3B48ACE2F47A71B0057C9BF /* image_demo.json in Resources */,
@@ -377,9 +381,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-TemplateXDemo/Pods-TemplateXDemo-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -540,7 +548,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = L6XGXKP989;
+				DEVELOPMENT_TEAM = 8XQVFGU7LS;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TemplateXDemo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -574,7 +582,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = L6XGXKP989;
+				DEVELOPMENT_TEAM = 8XQVFGU7LS;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TemplateXDemo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

@@ -414,6 +414,16 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         collectionView?.scrollToItem(at: indexPath, at: position, animated: animated)
     }
     
+    // MARK: - copyProps
+    
+    override func copyProps(from other: Component) {
+        super.copyProps(from: other)
+        guard let other = other as? ListComponent else { return }
+        // dataSource 是运行时数据绑定结果，不在 props 里，需要手动同步
+        self.dataSource = other.dataSource
+        self.resolvedEstimatedItemHeight = other.resolvedEstimatedItemHeight
+    }
+    
     // MARK: - Clone
     
     override func clone() -> Component {

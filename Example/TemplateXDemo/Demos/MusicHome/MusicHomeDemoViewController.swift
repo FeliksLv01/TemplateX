@@ -6,6 +6,7 @@ import TemplateX
 /// - 外层 UICollectionView 垂直滚动
 /// - 内层通过 DSL 定义横向滚动列表
 /// - 支持分页滚动的网格布局
+/// - 数据从 JSON 文件异步加载，模拟网络请求
 class MusicHomeDemoViewController: UIViewController {
     
     // MARK: - Types
@@ -13,6 +14,14 @@ class MusicHomeDemoViewController: UIViewController {
     enum SectionType: String {
         case horizontal = "horizontal_section"
         case grid = "grid_section"
+        
+        init?(jsonValue: String) {
+            switch jsonValue {
+            case "horizontal", "horizontal_section": self = .horizontal
+            case "grid", "grid_section":             self = .grid
+            default: return nil
+            }
+        }
     }
     
     struct SectionData {
@@ -26,6 +35,7 @@ class MusicHomeDemoViewController: UIViewController {
     
     private var collectionView: UICollectionView!
     private var dataSource: [SectionData] = []
+    private var loadingIndicator: UIActivityIndicatorView!
     
     /// 模板缓存
     private var horizontalTemplate: [String: Any]?
@@ -41,11 +51,12 @@ class MusicHomeDemoViewController: UIViewController {
         // 加载模板
         loadTemplates()
         
-        // 生成 Mock 数据
-        generateMockData()
-        
         // 设置 UI
         setupCollectionView()
+        setupLoadingIndicator()
+        
+        // 异步加载数据（模拟网络请求）
+        loadDataAsync()
     }
     
     // MARK: - Setup
@@ -100,6 +111,8 @@ class MusicHomeDemoViewController: UIViewController {
         collectionView.dataSource = self
         collectionView.register(MusicHomeCell.self, forCellWithReuseIdentifier: MusicHomeCell.reuseIdentifier)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
+        // 数据加载前隐藏
+        collectionView.isHidden = true
         
         view.addSubview(collectionView)
         
@@ -111,68 +124,62 @@ class MusicHomeDemoViewController: UIViewController {
         ])
     }
     
-    // MARK: - Mock Data
+    private func setupLoadingIndicator() {
+        loadingIndicator = UIActivityIndicatorView(style: .large)
+        loadingIndicator.color = .systemGray
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        loadingIndicator.hidesWhenStopped = true
+        
+        view.addSubview(loadingIndicator)
+        
+        NSLayoutConstraint.activate([
+            loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+        
+        loadingIndicator.startAnimating()
+    }
     
-    private func generateMockData() {
-        let horizontalTitles = [
-            "推荐歌单", "新歌推荐", "热门歌手", "精选专辑",
-            "私人FM", "每日推荐", "排行榜", "最新MV"
-        ]
-        
-        let gridTitles = [
-            "热门歌曲", "飙升榜", "新歌榜", "原创榜"
-        ]
-        
-        let songTitles = [
-            "晴天", "七里香", "稻香", "反方向的钟", "夜曲",
-            "青花瓷", "告白气球", "等你下课", "说好不哭", "Mojito",
-            "给我一首歌的时间-魔杰座", "以父之名", "夜的第七章", "最伟大的作品",
-            "漂移", "本草纲目", "双截棍", "龙卷风", "黑色幽默", "安静",
-            "回到过去", "轨迹", "东风破", "发如雪", "菊花台",
-            "千里之外", "霍元甲", "红尘客栈", "明明就", "手写的从前"
-        ]
-        
-        var sections: [SectionData] = []
-        
-        for i in 0..<24 {
-            // 每 3 个 section 中有 1 个是网格类型
-            let isGrid = i % 3 == 0
-            let type: SectionType = isGrid ? .grid : .horizontal
+    // MARK: - Data Loading
+    
+    /// 异步加载 music_home_data.json，模拟网络请求延迟
+    private func loadDataAsync() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            // 模拟网络延迟 0.5s
+            Thread.sleep(forTimeInterval: 0.5)
             
-            let title = isGrid 
-                ? gridTitles[i / 3 % gridTitles.count]
-                : horizontalTitles[i % horizontalTitles.count]
+            guard let self = self else { return }
             
-            // 生成 items
-            let itemCount = isGrid ? 9 : 8  // 网格 3x3，横向 8 个
-            var items: [[String: Any]] = []
+            // 加载并解析 JSON 数据文件
+            let sections = self.loadSectionsFromJSON()
             
-            for j in 0..<itemCount {
-                let songIndex = (i * 10 + j) % songTitles.count
-                
-                var item: [String: Any] = [
-                    "id": "item_\(i)_\(j)",
-                    "title": songTitles[songIndex],
-                    "coverUrl": "https://picsum.photos/200/200?random=\(i * 100 + j)"
-                ]
-                
-                // 网格类型需要 subtitle
-                if isGrid {
-                    item["subtitle"] = "周杰伦"
-                }
-                
-                items.append(item)
+            DispatchQueue.main.async {
+                self.dataSource = sections
+                self.loadingIndicator.stopAnimating()
+                self.collectionView.isHidden = false
+                self.collectionView.reloadData()
             }
-            
-            sections.append(SectionData(
-                id: "section_\(i)",
-                type: type,
-                title: title,
-                items: items
-            ))
+        }
+    }
+    
+    /// 从 music_home_data.json 解析 section 数据
+    private func loadSectionsFromJSON() -> [SectionData] {
+        guard let jsonDict = loadJSON(named: "music_home_data", inDirectory: "MusicHome"),
+              let sectionsArray = jsonDict["sections"] as? [[String: Any]] else {
+            print("[MusicHomeDemo] Failed to load music_home_data.json")
+            return []
         }
         
-        dataSource = sections
+        return sectionsArray.enumerated().compactMap { index, sectionDict -> SectionData? in
+            guard let typeStr = sectionDict["type"] as? String,
+                  let type = SectionType(jsonValue: typeStr),
+                  let title = sectionDict["title"] as? String,
+                  let items = sectionDict["items"] as? [[String: Any]] else {
+                return nil
+            }
+            let id = sectionDict["id"] as? String ?? "section_\(index)"
+            return SectionData(id: id, type: type, title: title, items: items)
+        }
     }
 }
 

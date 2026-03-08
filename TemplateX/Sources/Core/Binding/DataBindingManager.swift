@@ -114,9 +114,14 @@ public final class DataBindingManager {
             for (key, value) in props.rawDictionary {
                 if let strValue = value as? String, expressionEngine.containsBinding(strValue) {
                     if let resolved = expressionEngine.resolveBinding(strValue, context: data) {
-                        // 原始值是字符串（含 ${} 表达式），确保解析结果也是字符串
-                        // 避免 Int/Double/Bool 传入 JSONDecoder 时类型不匹配导致解码失败
-                        resolvedProps[key] = resolved is String ? resolved : "\(resolved)"
+                        if resolved is [Any] || resolved is [String: Any] {
+                            // 数组/字典保持原样，JSONSerialization 可正确序列化
+                            resolvedProps[key] = resolved
+                        } else {
+                            // 基本类型（Int/Double/Bool）转 String，
+                            // 确保与 String 类型的 Props 字段兼容
+                            resolvedProps[key] = resolved is String ? resolved : "\(resolved)"
+                        }
                     }
                 }
             }
