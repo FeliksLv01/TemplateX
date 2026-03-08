@@ -488,8 +488,8 @@ final class ComponentTests: XCTestCase {
     // MARK: - Component Tree Tests
     
     func testAddChild() {
-        let parent = BaseComponent(id: "parent", type: "view")
-        let child = BaseComponent(id: "child", type: "view")
+        let parent = ContainerComponent(id: "parent", type: "view")
+        let child = ContainerComponent(id: "child", type: "view")
         
         parent.addChild(child)
         
@@ -498,8 +498,8 @@ final class ComponentTests: XCTestCase {
     }
     
     func testRemoveChild() {
-        let parent = BaseComponent(id: "parent", type: "view")
-        let child = BaseComponent(id: "child", type: "view")
+        let parent = ContainerComponent(id: "parent", type: "view")
+        let child = ContainerComponent(id: "child", type: "view")
         
         parent.addChild(child)
         parent.removeChild(child)
@@ -509,10 +509,10 @@ final class ComponentTests: XCTestCase {
     }
     
     func testRemoveAllChildren() {
-        let parent = BaseComponent(id: "parent", type: "view")
+        let parent = ContainerComponent(id: "parent", type: "view")
         
         for i in 0..<5 {
-            parent.addChild(BaseComponent(id: "child_\(i)", type: "view"))
+            parent.addChild(ContainerComponent(id: "child_\(i)", type: "view"))
         }
         
         XCTAssertEqual(parent.children.count, 5)
@@ -525,24 +525,24 @@ final class ComponentTests: XCTestCase {
     // MARK: - Needs Update Tests
     
     func testNeedsUpdateSameComponent() {
-        let component1 = BaseComponent(id: "test", type: "view")
-        let component2 = BaseComponent(id: "test", type: "view")
+        let component1 = ContainerComponent(id: "test", type: "view")
+        let component2 = ContainerComponent(id: "test", type: "view")
         
         // 相同属性不需要更新
         XCTAssertFalse(component1.needsUpdate(with: component2))
     }
     
     func testNeedsUpdateDifferentType() {
-        let component1 = BaseComponent(id: "test", type: "view")
-        let component2 = BaseComponent(id: "test", type: "text")
+        let component1 = ContainerComponent(id: "test", type: "view")
+        let component2 = ContainerComponent(id: "test", type: "text")
         
         // 不同类型需要更新
         XCTAssertTrue(component1.needsUpdate(with: component2))
     }
     
     func testNeedsUpdateDifferentStyle() {
-        let component1 = BaseComponent(id: "test", type: "view")
-        let component2 = BaseComponent(id: "test", type: "view")
+        let component1 = ContainerComponent(id: "test", type: "view")
+        let component2 = ContainerComponent(id: "test", type: "view")
         
         component1.style.width = .fixed(100)
         component2.style.width = .fixed(200)
@@ -552,8 +552,8 @@ final class ComponentTests: XCTestCase {
     }
     
     func testNeedsUpdateDifferentCornerRadius() {
-        let component1 = BaseComponent(id: "test", type: "view")
-        let component2 = BaseComponent(id: "test", type: "view")
+        let component1 = ContainerComponent(id: "test", type: "view")
+        let component2 = ContainerComponent(id: "test", type: "view")
         
         component1.style.cornerRadius = 8
         component2.style.cornerRadius = 16
@@ -565,7 +565,7 @@ final class ComponentTests: XCTestCase {
     // MARK: - Clone Tests
     
     func testComponentClone() {
-        let original = BaseComponent(id: "test", type: "view")
+        let original = ContainerComponent(id: "test", type: "view")
         original.style.width = .fixed(100)
         original.style.height = .fixed(50)
         original.style.backgroundColor = .red
@@ -625,18 +625,18 @@ final class ComponentTests: XCTestCase {
     
     func testCloneTree() {
         // 构建组件树：parent -> [child1, child2 -> [grandchild]]
-        let parent = BaseComponent(id: "parent", type: "view")
+        let parent = ContainerComponent(id: "parent", type: "view")
         parent.style.width = .fixed(375)
         parent.layoutResult = LayoutResult(x: 0, y: 0, width: 375, height: 600)
         
-        let child1 = BaseComponent(id: "child1", type: "text")
+        let child1 = ContainerComponent(id: "child1", type: "text")
         child1.style.height = .fixed(40)
         child1.layoutResult = LayoutResult(x: 0, y: 0, width: 375, height: 40)
         
-        let child2 = BaseComponent(id: "child2", type: "view")
+        let child2 = ContainerComponent(id: "child2", type: "view")
         child2.style.height = .fixed(100)
         
-        let grandchild = BaseComponent(id: "grandchild", type: "text")
+        let grandchild = ContainerComponent(id: "grandchild", type: "text")
         grandchild.bindings["text"] = "${data.title}"
         
         parent.addChild(child1)

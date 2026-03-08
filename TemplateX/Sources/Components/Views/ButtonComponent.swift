@@ -45,7 +45,7 @@ final class ButtonComponent: TemplateXComponent<TemplateXButton, ButtonComponent
         var leftIcon: String? { iconLeft ?? icon }
     }
     
-    // MARK: - ComponentFactory
+    // MARK: - Type Identifier
     
     override class var typeIdentifier: String { "button" }
     

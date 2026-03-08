@@ -66,7 +66,7 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         case vertical
     }
     
-    // MARK: - ComponentFactory
+    // MARK: - Type Identifier
     
     override class var typeIdentifier: String { "list" }
     
@@ -169,7 +169,7 @@ final class ListComponent: TemplateXComponent<SelfSizingCollectionView, ListComp
         style.clipsToBounds = true
         
         // 解析 Cell 模板
-        if let propsJson = jsonWrapper?.props {
+        if let propsJson = templateJSON?.props {
             // 解析内容边距（优先使用单独属性，其次使用 contentInset 对象）
             if props.contentInsetLeft != nil || props.contentInsetRight != nil ||
                props.contentInsetTop != nil || props.contentInsetBottom != nil {

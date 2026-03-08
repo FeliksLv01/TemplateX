@@ -32,7 +32,7 @@ final class ImageComponent: TemplateXComponent<UIImageView, ImageComponent.Props
         }
     }
     
-    // MARK: - ComponentFactory
+    // MARK: - Type Identifier
     
     override class var typeIdentifier: String { "image" }
     

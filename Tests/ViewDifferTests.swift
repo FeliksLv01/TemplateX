@@ -289,8 +289,8 @@ final class ViewDifferTests: XCTestCase {
     
     // MARK: - Helper
     
-    private func createComponent(id: String, type: String) -> BaseComponent {
-        return BaseComponent(id: id, type: type)
+    private func createComponent(id: String, type: String) -> ContainerComponent {
+        return ContainerComponent(id: id, type: type)
     }
 }
 
@@ -299,7 +299,7 @@ final class ViewDifferTests: XCTestCase {
 final class ComponentSnapshotTests: XCTestCase {
     
     func testSnapshotCreation() {
-        let component = BaseComponent(id: "test", type: "view")
+        let component = ContainerComponent(id: "test", type: "view")
         component.style.width = .fixed(100)
         component.bindings["key"] = "myKey"
         
@@ -311,10 +311,10 @@ final class ComponentSnapshotTests: XCTestCase {
     }
     
     func testSnapshotMatching() {
-        let component1 = BaseComponent(id: "test", type: "view")
+        let component1 = ContainerComponent(id: "test", type: "view")
         component1.bindings["key"] = "key1"
         
-        let component2 = BaseComponent(id: "test", type: "view")
+        let component2 = ContainerComponent(id: "test", type: "view")
         component2.bindings["key"] = "key1"
         
         let snapshot1 = ComponentSnapshot(from: component1)
@@ -324,10 +324,10 @@ final class ComponentSnapshotTests: XCTestCase {
     }
     
     func testSnapshotContentEquals() {
-        let component1 = BaseComponent(id: "test", type: "view")
+        let component1 = ContainerComponent(id: "test", type: "view")
         component1.style.width = .fixed(100)
         
-        let component2 = BaseComponent(id: "test", type: "view")
+        let component2 = ContainerComponent(id: "test", type: "view")
         component2.style.width = .fixed(100)
         
         let snapshot1 = ComponentSnapshot(from: component1)
@@ -337,10 +337,10 @@ final class ComponentSnapshotTests: XCTestCase {
     }
     
     func testSnapshotContentNotEquals() {
-        let component1 = BaseComponent(id: "test", type: "view")
+        let component1 = ContainerComponent(id: "test", type: "view")
         component1.style.width = .fixed(100)
         
-        let component2 = BaseComponent(id: "test", type: "view")
+        let component2 = ContainerComponent(id: "test", type: "view")
         component2.style.width = .fixed(200)
         
         let snapshot1 = ComponentSnapshot(from: component1)
@@ -363,7 +363,7 @@ final class DiffResultTests: XCTestCase {
     
     func testAddOperations() {
         var result = DiffResult()
-        let component = BaseComponent(id: "test", type: "view")
+        let component = ContainerComponent(id: "test", type: "view")
         
         result.addInsert(component, at: 0, parentId: "root")
         result.addDelete("old", parentId: "root")
@@ -375,7 +375,7 @@ final class DiffResultTests: XCTestCase {
     
     func testStatistics() {
         var result = DiffResult()
-        let component = BaseComponent(id: "test", type: "view")
+        let component = ContainerComponent(id: "test", type: "view")
         
         result.addInsert(component, at: 0, parentId: "root")
         result.addInsert(component, at: 1, parentId: "root")
@@ -394,7 +394,7 @@ final class DiffResultTests: XCTestCase {
     
     func testMerge() {
         var result1 = DiffResult()
-        result1.addInsert(BaseComponent(id: "a", type: "view"), at: 0, parentId: "root")
+        result1.addInsert(ContainerComponent(id: "a", type: "view"), at: 0, parentId: "root")
         
         var result2 = DiffResult()
         result2.addDelete("b", parentId: "root")

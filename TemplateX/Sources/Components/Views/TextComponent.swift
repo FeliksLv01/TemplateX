@@ -16,7 +16,7 @@ final class TextComponent: TemplateXComponent<UILabel, TextComponent.Props> {
         var text: String = ""
     }
     
-    // MARK: - ComponentFactory
+    // MARK: - Type Identifier
     
     override class var typeIdentifier: String { "text" }
     

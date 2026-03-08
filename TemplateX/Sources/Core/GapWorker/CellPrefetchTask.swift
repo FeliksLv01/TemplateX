@@ -110,9 +110,7 @@ final class CellPrefetchTask: GapTask {
         )
         
         // 6. 标记 prefetch 并缓存
-        if let baseComponent = component as? BaseComponent {
-            baseComponent.componentFlags.insert(.prefetch)
-        }
+        component.componentFlags.insert(.prefetch)
         
         let item = PrefetchedItem(
             component: component,

@@ -89,7 +89,7 @@ public struct TemplateXConfig {
     // MARK: - 组件配置
     
     /// 自定义组件工厂（可以覆盖内置组件）
-    public var componentFactories: [String: ComponentFactory.Type] = [:]
+    public var componentFactories: [String: (JSONWrapper) -> Component] = [:]
     
     // MARK: - Init
     

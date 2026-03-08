@@ -221,7 +221,7 @@ public final class DiffPatcher {
     /// 递归创建视图树（只创建视图，不计算布局）
     private func createViewTreeOnly(_ component: Component) -> UIView {
         // 检查解析错误
-        if let baseComponent = component as? BaseComponent, let error = baseComponent.parseError {
+        if let error = component.parseError {
             let errorView = Self.createErrorView(for: error, componentType: component.type)
             component.view = errorView
             return errorView

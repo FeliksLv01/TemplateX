@@ -33,7 +33,7 @@ final class InputComponent: TemplateXComponent<UIView, InputComponent.Props> {
         }
     }
     
-    // MARK: - ComponentFactory
+    // MARK: - Type Identifier
     
     override class var typeIdentifier: String { "input" }
     

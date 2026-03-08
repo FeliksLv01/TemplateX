@@ -43,7 +43,7 @@ final class ScrollComponent: TemplateXComponent<TemplateXScrollView, ScrollCompo
         case both
     }
     
-    // MARK: - ComponentFactory
+    // MARK: - Type Identifier
     
     override class var typeIdentifier: String { "scroll" }
     

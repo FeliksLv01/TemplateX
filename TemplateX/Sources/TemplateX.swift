@@ -116,8 +116,8 @@ public enum TemplateX {
     // MARK: - 组件注册
     
     /// 注册自定义组件
-    public static func register(_ factory: ComponentFactory.Type) {
-        ComponentRegistry.shared.register(factory)
+    public static func register<V: UIView, P: ComponentProps>(_ componentType: TemplateXComponent<V, P>.Type) {
+        ComponentRegistry.shared.register(componentType)
     }
     
     // MARK: - 缓存管理

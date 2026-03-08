@@ -508,7 +508,7 @@ public final class TemplateXRenderEngine {
     /// - Returns: 创建的视图
     private func createViewTree(_ component: Component) -> UIView {
         // 检查解析错误
-        if let baseComponent = component as? BaseComponent, let error = baseComponent.parseError {
+        if let error = component.parseError {
             let errorView = Self.createErrorView(for: error, componentType: component.type)
             component.view = errorView
             return errorView

@@ -57,36 +57,34 @@ public final class DataBindingManager {
     /// 递归绑定数据到组件及其子组件
     private func bindRecursive(data: [String: Any], to component: Component) {
         // 保存绑定数据
-        if let baseComponent = component as? BaseComponent {
-            baseComponent.bindings = data
-            
-            // 如果有原始 JSON，解析表达式
-            if let json = baseComponent.jsonWrapper {
-                resolveExpressions(json: json, data: data, component: baseComponent)
-            }
-            
-            // 特殊处理 ListComponent：绑定 dataSource 和 estimatedItemHeight
-            if let listComponent = baseComponent as? ListComponent {
-                // 方式 1：通过 props.items 表达式绑定
-                if let itemsExpr = listComponent.props.items,
-                   expressionEngine.containsBinding(itemsExpr) {
-                    if let items = expressionEngine.resolveBinding(itemsExpr, context: data) as? [Any] {
-                        listComponent.dataSource = items
-                    }
-                }
-                // 方式 2：回退到 data["items"] 直接绑定（兼容旧方式）
-                else if let items = data["items"] as? [Any] {
+        component.bindings = data
+        
+        // 如果有原始 JSON，解析表达式
+        if let json = component.templateJSON {
+            resolveExpressions(json: json, data: data, component: component)
+        }
+        
+        // 特殊处理 ListComponent：绑定 dataSource 和 estimatedItemHeight
+        if let listComponent = component as? ListComponent {
+            // 方式 1：通过 props.items 表达式绑定
+            if let itemsExpr = listComponent.props.items,
+               expressionEngine.containsBinding(itemsExpr) {
+                if let items = expressionEngine.resolveBinding(itemsExpr, context: data) as? [Any] {
                     listComponent.dataSource = items
                 }
-                
-                // 解析 estimatedItemHeightExpr 表达式
-                if let heightExpr = listComponent.props.estimatedItemHeightExpr,
-                   expressionEngine.containsBinding(heightExpr) {
-                    if let height = expressionEngine.resolveBinding(heightExpr, context: data) as? CGFloat {
-                        listComponent.resolvedEstimatedItemHeight = height
-                    } else if let heightNum = expressionEngine.resolveBinding(heightExpr, context: data) as? NSNumber {
-                        listComponent.resolvedEstimatedItemHeight = CGFloat(heightNum.doubleValue)
-                    }
+            }
+            // 方式 2：回退到 data["items"] 直接绑定（兼容旧方式）
+            else if let items = data["items"] as? [Any] {
+                listComponent.dataSource = items
+            }
+            
+            // 解析 estimatedItemHeightExpr 表达式
+            if let heightExpr = listComponent.props.estimatedItemHeightExpr,
+               expressionEngine.containsBinding(heightExpr) {
+                if let height = expressionEngine.resolveBinding(heightExpr, context: data) as? CGFloat {
+                    listComponent.resolvedEstimatedItemHeight = height
+                } else if let heightNum = expressionEngine.resolveBinding(heightExpr, context: data) as? NSNumber {
+                    listComponent.resolvedEstimatedItemHeight = CGFloat(heightNum.doubleValue)
                 }
             }
         }
@@ -108,7 +106,7 @@ public final class DataBindingManager {
     private func resolveExpressions(
         json: JSONWrapper,
         data: [String: Any],
-        component: BaseComponent
+        component: any Component
     ) {
         // 处理 props 中的表达式
         if let props = json.props {
@@ -132,7 +130,7 @@ public final class DataBindingManager {
     }
     
     /// 将解析后的值应用到组件
-    private func applyResolvedValue(key: String, value: Any?, to component: BaseComponent) {
+    private func applyResolvedValue(key: String, value: Any?, to component: any Component) {
         guard let value = value else { return }
         
         // 根据组件类型和属性名应用值
@@ -238,9 +236,7 @@ public final class DataBindingManager {
             }
             
             // 绑定数据
-            if let baseComponent = childComponent as? BaseComponent {
-                baseComponent.bindings = itemContext
-            }
+            childComponent.bindings = itemContext
             
             return childComponent
         }
