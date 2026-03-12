@@ -81,6 +81,12 @@ public protocol Component: AnyObject {
     /// 是否需要强制应用样式（视图复用时设置为 true）
     var forceApplyStyle: Bool { get set }
     
+    /// 是否被视图拍平剪枝（纯布局容器不创建 UIView）
+    var isPruned: Bool { get set }
+    
+    /// 是否需要更新视图（脏标记，由数据绑定/Diff 设置，updateView 后重置）
+    var needsViewUpdate: Bool { get set }
+    
     // MARK: - 生命周期
     
     /// 创建视图

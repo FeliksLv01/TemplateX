@@ -315,16 +315,12 @@ public class TemplateXView: UIView {
         self.templateData = data
         
         guard let rootComponent = rootComponent, let contentView = contentView else {
-            // 还没有渲染过，重新加载
             if let json = templateJSON {
                 loadTemplate(json: json, data: data, templateId: templateId)
             }
             return
         }
         
-        // 使用简化的增量更新流程（不使用扁平化）
-        // 注意：TemplateXView 首次渲染时为每个组件都创建了 UIView，不使用扁平化，
-        // 所以增量更新时也不能使用 DiffPatcher.apply()（它会应用扁平化偏移逻辑）
         let containerSize = effectiveContainerSize
         
         // 1. 克隆组件树并绑定新数据
@@ -340,29 +336,39 @@ public class TemplateXView: UIView {
         }
     }
     
+    /// 快速更新数据（跳过 clone + Diff，直接 rebind + relayout）
+    /// 适用于模板结构不变、只有数据变化的场景（如 Cell 复用）
+    public func updateDataFast(_ data: [String: Any]) {
+        self.templateData = data
+        
+        guard let rootComponent = rootComponent, contentView != nil else {
+            if let json = templateJSON {
+                loadTemplate(json: json, data: data, templateId: templateId)
+            }
+            return
+        }
+        
+        let containerSize = effectiveContainerSize
+        DiffPatcher.shared.quickUpdate(data: data, to: rootComponent, containerSize: containerSize)
+    }
+    
     /// 应用 Diff 结果
     private func applyDiff(
         _ diffResult: DiffResult,
         to rootComponent: Component,
         containerSize: CGSize
     ) {
-        // 1. 应用属性变化（从新组件复制到旧组件）
         for operation in diffResult.operations {
             if case .update(let componentId, let newComponent, let changes) = operation {
                 applyUpdateOperation(componentId: componentId, newComponent: newComponent, changes: changes, in: rootComponent)
             }
-            // 注意：insert/delete/move/replace 操作涉及视图层级变化，
-            // 目前 TemplateXView 的场景主要是数据绑定更新，暂不处理这些操作
         }
         
-        // 2. 重新计算布局
         let layoutResults = YogaLayoutEngine.shared.calculateLayout(for: rootComponent, containerSize: containerSize)
-        
-        // 3. 应用布局结果（不使用扁平化偏移）
         applyLayoutResults(layoutResults, to: rootComponent)
         
-        // 4. 更新视图 frame 和属性
-        updateViewFrames(rootComponent)
+        updateViewFramesFlattened(rootComponent)
+        
         updateViewProperties(rootComponent)
     }
     
@@ -509,8 +515,8 @@ public class TemplateXView: UIView {
         // 应用布局
         applyLayoutResults(layoutResults, to: component)
         
-        // 更新视图 frame
-        updateViewFrames(component)
+        // 更新 frame（已由 collectLayoutResults 预计算）
+        updateViewFramesFlattened(component)
         
         // 检查内容尺寸变化
         let newContentSize = component.layoutResult.frame.size
@@ -578,18 +584,26 @@ public class TemplateXView: UIView {
         }
     }
     
-    /// 生成 UI 操作
-    private func generateUIOperations(for component: Component, isRoot: Bool) {
-        // 创建视图操作
+    /// 生成 UI 操作并入队
+    ///
+    /// frame 已由 YogaLayoutEngine.collectLayoutResults() 预计算（含拍平偏移），
+    /// 此方法只负责：创建视图、设置 frame、构建父子关系、调用 updateView()。
+    /// 被剪枝的组件跳过创建视图，子节点提升到最近非剪枝祖先。
+    private func generateUIOperations(for component: Component, isRoot: Bool, parentComponent: Component? = nil) {
+        // 被剪枝的组件：不创建 UIView，子节点提升到最近非剪枝祖先
+        if component.isPruned && !isRoot {
+            for child in component.children {
+                generateUIOperations(for: child, isRoot: false, parentComponent: parentComponent)
+            }
+            return
+        }
+        
         operationQueue.enqueue { [weak self] in
             guard let self = self else { return }
             
-            // 创建视图
             let view = component.createView()
             component.view = view
             
-            // 设置 frame
-            // 对于根组件，需要考虑 margin 偏移
             if isRoot {
                 let marginTop = component.style.margin.top
                 let marginLeft = component.style.margin.left
@@ -601,16 +615,11 @@ public class TemplateXView: UIView {
                 view.frame = component.layoutResult.frame
             }
             
-            // 如果是根组件，添加到容器
             if isRoot {
-                // 移除旧的内容视图
                 self.contentView?.removeFromSuperview()
-                
-                // 添加新视图
                 self.addSubview(view)
                 self.contentView = view
                 
-                // 自动调整高度（包含 margin）
                 if self.autoResizeHeight {
                     let marginTop = component.style.margin.top
                     let marginBottom = component.style.margin.bottom
@@ -622,12 +631,10 @@ public class TemplateXView: UIView {
                     }
                 }
                 
-                // 更新状态
                 self.loadState = .loaded
                 self.isLayoutFinished = true
                 self.onLoadComplete?(view)
                 
-                // 通知内容尺寸（包含 margin）
                 let marginTop = component.style.margin.top
                 let marginBottom = component.style.margin.bottom
                 let marginLeft = component.style.margin.left
@@ -637,31 +644,28 @@ public class TemplateXView: UIView {
                     height: component.layoutResult.frame.height + marginTop + marginBottom
                 )
                 self.onContentSizeChanged?(contentSize)
-                
-                // 更新 intrinsicContentSize
                 self.invalidateIntrinsicContentSize()
             }
             
-            // 更新视图属性
             component.updateView()
+        }
+        
+        // 非根且有 parentComponent 时，把自己添加到父视图上
+        if !isRoot, let parent = parentComponent {
+            operationQueue.enqueue {
+                guard let parentView = parent.view, let childView = component.view else { return }
+                if childView.superview !== parentView {
+                    parentView.addSubview(childView)
+                }
+            }
         }
         
         // 递归处理子组件
         for child in component.children {
-            generateUIOperations(for: child, isRoot: false)
-            
-            // 添加子视图操作
-            operationQueue.enqueue {
-                guard let parentView = component.view, let childView = child.view else { return }
-                parentView.addSubview(childView)
-            }
+            generateUIOperations(for: child, isRoot: false, parentComponent: component)
         }
     }
     
-    /// 应用布局结果（简单版本，不处理扁平化）
-    /// 
-    /// 因为 TemplateXView 使用 generateUIOperations 创建视图，每个组件都有独立的 UIView，
-    /// 不使用扁平化优化，所以 frame 保持 Yoga 返回的相对坐标即可。
     private func applyLayoutResults(_ results: [String: LayoutResult], to component: Component) {
         if let result = results[component.id] {
             component.layoutResult = result
@@ -672,11 +676,17 @@ public class TemplateXView: UIView {
         }
     }
     
-    /// 更新视图 frame
-    private func updateViewFrames(_ component: Component) {
-        component.view?.frame = component.layoutResult.frame
-        for child in component.children {
-            updateViewFrames(child)
+    /// 更新视图 frame（frame 已由 collectLayoutResults 预计算，无需偏移累加）
+    private func updateViewFramesFlattened(_ component: Component) {
+        if component.isPruned {
+            for child in component.children {
+                updateViewFramesFlattened(child)
+            }
+        } else {
+            component.view?.frame = component.layoutResult.frame
+            for child in component.children {
+                updateViewFramesFlattened(child)
+            }
         }
     }
     

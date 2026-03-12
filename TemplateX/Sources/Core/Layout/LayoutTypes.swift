@@ -247,6 +247,108 @@ public struct CornerRadii: Equatable {
 /// 合并了布局（Flexbox）、视觉和文本样式，符合 CSS 心智模型
 public struct ComponentStyle: Equatable {
     
+    // MARK: - 快速不等判断
+    /// 样式内容的哈希摘要，用于 O(1) 快速判断两个样式是否不同
+    /// 不同 → 一定不等；相同 → 需全量比较（哈希碰撞）
+    public var _contentHash: UInt = 0
+    
+    /// 根据当前所有值类型字段计算哈希摘要
+    /// Dimension → UInt 哈希（手动实现，避免 Hashable 要求）
+    @inline(__always)
+    private static func dimensionHash(_ d: Dimension) -> UInt {
+        switch d {
+        case .auto:
+            return 0
+        case .point(let v):
+            return 1 &+ UInt(bitPattern: v.bitPattern.hashValue)
+        case .percent(let v):
+            return 2 &+ UInt(bitPattern: v.bitPattern.hashValue)
+        }
+    }
+    
+    public mutating func updateContentHash() {
+        var h: UInt = 0
+        h = h &* 31 &+ Self.dimensionHash(width)
+        h = h &* 31 &+ Self.dimensionHash(height)
+        h = h &* 31 &+ UInt(bitPattern: minWidth.bitPattern.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: minHeight.bitPattern.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: flexGrow.bitPattern.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: flexShrink.bitPattern.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: flexDirection.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: justifyContent.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: alignItems.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: cornerRadius.bitPattern.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: borderWidth.bitPattern.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: opacity.bitPattern.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: display.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: visibility.hashValue)
+        h = h &* 31 &+ (clipsToBounds ? 1 : 0)
+        h = h &* 31 &+ UInt(bitPattern: shadowOpacity.bitPattern.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: (fontSize ?? 0).bitPattern.hashValue)
+        h = h &* 31 &+ UInt(bitPattern: (numberOfLines ?? 0).hashValue)
+        _contentHash = h
+    }
+    
+    /// 手动实现 ==：先比较 hash 摘要（O(1) 快速路径），不等则直接返回 false
+    /// hash 相同时全量比较，便宜的值类型在前，昂贵的 UIColor 在后
+    public static func == (lhs: ComponentStyle, rhs: ComponentStyle) -> Bool {
+        if lhs._contentHash != rhs._contentHash && lhs._contentHash != 0 && rhs._contentHash != 0 {
+            return false
+        }
+        
+        guard lhs.display == rhs.display,
+              lhs.visibility == rhs.visibility,
+              lhs.opacity == rhs.opacity,
+              lhs.clipsToBounds == rhs.clipsToBounds,
+              lhs.width == rhs.width,
+              lhs.height == rhs.height,
+              lhs.minWidth == rhs.minWidth,
+              lhs.minHeight == rhs.minHeight,
+              lhs.maxWidth == rhs.maxWidth,
+              lhs.maxHeight == rhs.maxHeight,
+              lhs.margin == rhs.margin,
+              lhs.padding == rhs.padding,
+              lhs.flexGrow == rhs.flexGrow,
+              lhs.flexShrink == rhs.flexShrink,
+              lhs.flexDirection == rhs.flexDirection,
+              lhs.flexWrap == rhs.flexWrap,
+              lhs.justifyContent == rhs.justifyContent,
+              lhs.alignItems == rhs.alignItems,
+              lhs.alignSelf == rhs.alignSelf,
+              lhs.alignContent == rhs.alignContent,
+              lhs.positionType == rhs.positionType,
+              lhs.position == rhs.position,
+              lhs.overflow == rhs.overflow,
+              lhs.cornerRadius == rhs.cornerRadius,
+              lhs.cornerRadii == rhs.cornerRadii,
+              lhs.borderWidth == rhs.borderWidth,
+              lhs.shadowOffset == rhs.shadowOffset,
+              lhs.shadowRadius == rhs.shadowRadius,
+              lhs.shadowOpacity == rhs.shadowOpacity,
+              lhs.fontSize == rhs.fontSize,
+              lhs.fontWeight == rhs.fontWeight,
+              lhs.textAlign == rhs.textAlign,
+              lhs.lineHeight == rhs.lineHeight,
+              lhs.letterSpacing == rhs.letterSpacing,
+              lhs.numberOfLines == rhs.numberOfLines,
+              lhs.lineBreakMode == rhs.lineBreakMode
+        else { return false }
+        
+        // NaN-safe 比较
+        if !lhs.flexBasis.isEqual(to: rhs.flexBasis) && !(lhs.flexBasis.isNaN && rhs.flexBasis.isNaN) { return false }
+        if !lhs.aspectRatio.isEqual(to: rhs.aspectRatio) && !(lhs.aspectRatio.isNaN && rhs.aspectRatio.isNaN) { return false }
+        
+        // UIColor 比较放最后（涉及 objc isEqual: 消息发送）
+        guard lhs.backgroundColor == rhs.backgroundColor,
+              lhs.borderColor == rhs.borderColor,
+              lhs.shadowColor == rhs.shadowColor,
+              lhs.textColor == rhs.textColor,
+              lhs.backgroundGradient == rhs.backgroundGradient
+        else { return false }
+        
+        return true
+    }
+    
     // MARK: - 布局属性（Flexbox）
     
     /// 宽度（支持 auto、固定值、百分比）
@@ -608,6 +710,7 @@ public struct ComponentStyle: Equatable {
             }
         }
         
+        result.updateContentHash()
         return result
     }
     

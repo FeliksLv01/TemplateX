@@ -9,37 +9,93 @@
         "backgroundColor": "#FFFFFF",
         "cornerRadius": 12
     },
-    "events": {
-        "onTap": "app://card_tap?id=${card.id}"
-    },
     "children": [
         {
-            "type": "text",
-            "id": "title",
+            "type": "container",
+            "id": "header_wrapper",
             "style": {
-                "width": "100%",
-                "height": "auto",
-                "fontSize": 24,
-                "fontWeight": "bold",
-                "textColor": "#333333"
+                "flexDirection": "column"
             },
-            "props": {
-                "text": "${card.title}"
-            }
-        },
-        {
-            "type": "text",
-            "id": "subtitle",
-            "style": {
-                "width": "100%",
-                "height": "auto",
-                "marginTop": 8,
-                "fontSize": 14,
-                "textColor": "#666666"
-            },
-            "props": {
-                "text": "${card.subtitle}"
-            }
+            "children": [
+                {
+                    "type": "container",
+                    "id": "title_wrapper",
+                    "style": {
+                        "flexDirection": "row",
+                        "alignItems": "center"
+                    },
+                    "children": [
+                        {
+                            "type": "container",
+                            "id": "title_inner",
+                            "style": {
+                                "flexShrink": 1
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "title",
+                                    "style": {
+                                        "fontSize": 24,
+                                        "fontWeight": "bold",
+                                        "textColor": "#333333"
+                                    },
+                                    "props": {
+                                        "text": "${card.title}"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "container",
+                            "id": "badge_container",
+                            "style": {
+                                "marginLeft": 8,
+                                "backgroundColor": "#FF3B30",
+                                "cornerRadius": 4,
+                                "paddingLeft": 6,
+                                "paddingRight": 6,
+                                "paddingTop": 2,
+                                "paddingBottom": 2
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "badge",
+                                    "style": {
+                                        "fontSize": 10,
+                                        "fontWeight": "600",
+                                        "textColor": "#FFFFFF"
+                                    },
+                                    "props": {
+                                        "text": "NEW"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "container",
+                    "id": "subtitle_wrapper",
+                    "style": {
+                        "marginTop": 8
+                    },
+                    "children": [
+                        {
+                            "type": "text",
+                            "id": "subtitle",
+                            "style": {
+                                "fontSize": 14,
+                                "textColor": "#666666"
+                            },
+                            "props": {
+                                "text": "${card.subtitle}"
+                            }
+                        }
+                    ]
+                }
+            ]
         },
         {
             "type": "container",
@@ -49,29 +105,161 @@
             }
         },
         {
-            "type": "button",
-            "id": "action_btn",
+            "type": "container",
+            "id": "stats_outer",
             "style": {
-                "width": "100%",
-                "height": 44,
-                "backgroundColor": "#007AFF",
-                "cornerRadius": 8,
-                "textColor": "#FFFFFF",
-                "fontWeight": "500"
+                "flexDirection": "column"
             },
-            "props": {
-                "title": "${card.buttonText}"
+            "children": [
+                {
+                    "type": "container",
+                    "id": "stats_row",
+                    "style": {
+                        "flexDirection": "row",
+                        "justifyContent": "space-between",
+                        "marginBottom": 12
+                    },
+                    "children": [
+                        {
+                            "type": "container",
+                            "id": "stat1_col",
+                            "style": {
+                                "flexDirection": "column",
+                                "alignItems": "center",
+                                "flexGrow": 1
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "stat1_value",
+                                    "style": {
+                                        "fontSize": 20,
+                                        "fontWeight": "bold",
+                                        "textColor": "#007AFF"
+                                    },
+                                    "props": {
+                                        "text": "${card.stat1}"
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "id": "stat1_label",
+                                    "style": {
+                                        "fontSize": 11,
+                                        "textColor": "#999999",
+                                        "marginTop": 2
+                                    },
+                                    "props": {
+                                        "text": "Components"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "container",
+                            "id": "stat2_col",
+                            "style": {
+                                "flexDirection": "column",
+                                "alignItems": "center",
+                                "flexGrow": 1
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "stat2_value",
+                                    "style": {
+                                        "fontSize": 20,
+                                        "fontWeight": "bold",
+                                        "textColor": "#34C759"
+                                    },
+                                    "props": {
+                                        "text": "${card.stat2}"
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "id": "stat2_label",
+                                    "style": {
+                                        "fontSize": 11,
+                                        "textColor": "#999999",
+                                        "marginTop": 2
+                                    },
+                                    "props": {
+                                        "text": "Layouts"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "container",
+                            "id": "stat3_col",
+                            "style": {
+                                "flexDirection": "column",
+                                "alignItems": "center",
+                                "flexGrow": 1
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "id": "stat3_value",
+                                    "style": {
+                                        "fontSize": 20,
+                                        "fontWeight": "bold",
+                                        "textColor": "#FF9500"
+                                    },
+                                    "props": {
+                                        "text": "${card.stat3}"
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "id": "stat3_label",
+                                    "style": {
+                                        "fontSize": 11,
+                                        "textColor": "#999999",
+                                        "marginTop": 2
+                                    },
+                                    "props": {
+                                        "text": "Bindings"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "container",
+            "id": "button_wrapper",
+            "style": {
+                "flexDirection": "row"
             },
-            "events": {
-                "onTap": {
-                    "url": "app://detail",
-                    "params": {
-                        "cardId": "${card.id}",
-                        "cardTitle": "${card.title}",
-                        "source": "basic_card"
+            "children": [
+                {
+                    "type": "button",
+                    "id": "action_btn",
+                    "style": {
+                        "flexGrow": 1,
+                        "height": 44,
+                        "backgroundColor": "#007AFF",
+                        "cornerRadius": 8,
+                        "textColor": "#FFFFFF",
+                        "fontWeight": "500"
+                    },
+                    "props": {
+                        "title": "${card.buttonText}"
+                    },
+                    "events": {
+                        "onTap": {
+                            "url": "app://detail",
+                            "params": {
+                                "cardId": "${card.id}"
+                            }
+                        }
                     }
                 }
-            }
+            ]
         }
     ]
 }

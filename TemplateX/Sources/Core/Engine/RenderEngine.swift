@@ -86,16 +86,16 @@ public final class TemplateXRenderEngine {
     
     /// 高度缓存 (cacheKey → height)
     /// cacheKey = "\(templateId)_\(containerWidth)_\(dataId)"
-    /// 使用 LRU 策略，默认容量 500
+    /// LRU 策略：tombstone 数组 + index 字典，O(1) 查找/更新
     private var heightCache: [String: CGFloat] = [:]
-    private var heightCacheOrder: [String] = []
+    private var heightCacheOrder: [String?] = []  // tombstone = nil
+    private var heightCacheIndex: [String: Int] = [:]  // key → index in order
+    private var heightCacheHead: Int = 0  // 逻辑头指针，淘汰时前进
     private let heightCacheCapacity: Int = 500
     
     // MARK: - Init
     
     private init() {
-        // 预热布局引擎
-        layoutEngine.warmUp(nodeCount: 64)
     }
     
     // MARK: - 渲染 API
@@ -187,7 +187,7 @@ public final class TemplateXRenderEngine {
         }
         
         // 快速路径：无监控开销
-        // 1. 计算布局
+        // 1. 计算布局（含剪枝标记 + 坐标偏移烘焙）
         let layoutResults = layoutEngine.calculateLayout(for: component, containerSize: containerSize)
         
         // 2. 应用布局结果
@@ -197,7 +197,7 @@ public final class TemplateXRenderEngine {
         let rootView = createViewTree(component)
         
         // 4. 更新视图
-        updateViewTree(component)
+        component.updateFlattenedFrames()
         
         // 5. 缓存渲染状态
         let viewId = generateViewIdentifier(rootView)
@@ -206,7 +206,6 @@ public final class TemplateXRenderEngine {
         return rootView
     }
     
-    /// 带性能监控的渲染（独立方法，避免闭包开销影响主路径）
     private func renderWithMonitoring(
         component: Component,
         containerSize: CGSize
@@ -214,7 +213,6 @@ public final class TemplateXRenderEngine {
         let session = PerformanceMonitor.shared.beginTrace("render", templateId: component.id)
         defer { session.end() }
         
-        // 1. 计算布局
         let layoutResults = session.measure("layout") {
             layoutEngine.calculateLayout(for: component, containerSize: containerSize)
         }
@@ -231,7 +229,7 @@ public final class TemplateXRenderEngine {
         
         // 4. 更新视图
         session.measure("updateView") {
-            updateViewTree(component)
+            component.updateFlattenedFrames()
         }
         
         // 5. 缓存渲染状态
@@ -335,15 +333,12 @@ public final class TemplateXRenderEngine {
         data: [String: Any],
         containerSize: CGSize
     ) {
-        // 绑定新数据
         bindData(data, to: component)
         
-        // 重新计算布局
         let layoutResults = layoutEngine.calculateLayout(for: component, containerSize: containerSize)
         applyLayoutResults(layoutResults, to: component)
         
-        // 更新视图
-        updateViewTree(component)
+        component.updateFlattenedFrames()
     }
     
     // MARK: - 组件管理
@@ -437,6 +432,7 @@ public final class TemplateXRenderEngine {
                     let insets = listComponent.contentInset
                     let listHeight = maxHeight + insets.top + insets.bottom
                     listComponent.style.height = .point(listHeight)
+                    listComponent.style.updateContentHash()
                     listComponent.cachedMaxItemHeight = maxHeight
                 }
             }
@@ -507,42 +503,19 @@ public final class TemplateXRenderEngine {
     ///   - component: 组件
     /// - Returns: 创建的视图
     private func createViewTree(_ component: Component) -> UIView {
-        // 检查解析错误
-        if let error = component.parseError {
-            let errorView = Self.createErrorView(for: error, componentType: component.type)
-            component.view = errorView
-            return errorView
-        }
-        
-        // 创建视图
-        let view: UIView
-        let createStart = CACurrentMediaTime()
-        if let existingView = component.view {
-            view = existingView
+        let views = component.createFlattenedViewTree()
+        // 根组件不应被剪枝（总是需要一个根 UIView）
+        // 如果根被剪枝，返回的是所有提升的子视图
+        // 需要包装到一个容器中
+        if views.count == 1 {
+            return views[0]
         } else {
-            view = component.createView()
-            // 统一设置 component.view，组件内部无需再手动设置
-            if component.view == nil {
-                component.view = view
-            }
+            let wrapper = UIView()
+            wrapper.accessibilityIdentifier = component.id
+            for v in views { wrapper.addSubview(v) }
+            component.view = wrapper
+            return wrapper
         }
-        let createTime = (CACurrentMediaTime() - createStart) * 1000
-        viewCreationStats.recordCreate(type: component.type, time: createTime)
-        
-        // 标记组件 ID
-        view.accessibilityIdentifier = component.id
-        
-        // 递归创建子视图
-        for child in component.children {
-            let childView = createViewTree(child)
-            if childView.superview !== view {
-                let addStart = CACurrentMediaTime()
-                view.addSubview(childView)
-                viewCreationStats.recordAddSubview(time: (CACurrentMediaTime() - addStart) * 1000)
-            }
-        }
-        
-        return view
     }
     
     /// 创建错误视图
@@ -604,14 +577,6 @@ public final class TemplateXRenderEngine {
         return error.localizedDescription
     }
     
-    /// 更新视图树
-    private func updateViewTree(_ component: Component) {
-        component.updateView()
-        
-        for child in component.children {
-            updateViewTree(child)
-        }
-    }
     
     // MARK: - 工具方法
     
@@ -830,7 +795,7 @@ extension TemplateXRenderEngine {
                         let view = self.createViewTree(prepared.component)
                         
                         // Update view
-                        self.updateViewTree(prepared.component)
+                        prepared.component.updateFlattenedFrames()
                         
                         // Cache
                         let viewId = self.generateViewIdentifier(view)
@@ -940,8 +905,9 @@ extension TemplateXRenderEngine {
         for task in tasks {
             if let prepared = preparedResults[task.id] {
                 applyLayoutResults(prepared.layoutResults, to: prepared.component)
+                
                 let view = createViewTree(prepared.component)
-                updateViewTree(prepared.component)
+                prepared.component.updateFlattenedFrames()
                 
                 let viewId = generateViewIdentifier(view)
                 renderedComponents[viewId] = prepared.component
@@ -1260,14 +1226,16 @@ extension TemplateXRenderEngine {
             let keysToRemove = heightCache.keys.filter { $0.hasPrefix(prefix) }
             for key in keysToRemove {
                 heightCache.removeValue(forKey: key)
-                if let index = heightCacheOrder.firstIndex(of: key) {
-                    heightCacheOrder.remove(at: index)
+                if let idx = heightCacheIndex.removeValue(forKey: key) {
+                    heightCacheOrder[idx] = nil
                 }
             }
             TXLogger.info("Cleared height cache for templateId: \(templateId), removed \(keysToRemove.count) entries")
         } else {
             heightCache.removeAll()
             heightCacheOrder.removeAll()
+            heightCacheIndex.removeAll()
+            heightCacheHead = 0
             TXLogger.info("Cleared all height cache")
         }
     }
@@ -1286,46 +1254,65 @@ extension TemplateXRenderEngine {
     
     /// 生成高度缓存 key
     /// 格式：templateId_width_dataId
+    /// 优化：Int 代替 String(format:)，hashValue 代替 AnyObject 桥接
     private func makeHeightCacheKey(templateId: String, data: [String: Any]?, containerWidth: CGFloat) -> String {
-        let widthKey = String(format: "%.0f", containerWidth)
+        let w = Int(containerWidth)
         
         // 尝试从 data 中获取 id 字段
         if let data = data {
             if let id = data["id"] as? String {
-                return "\(templateId)_\(widthKey)_\(id)"
+                return "\(templateId)_\(w)_\(id)"
             } else if let id = data["id"] as? Int {
-                return "\(templateId)_\(widthKey)_\(id)"
+                return "\(templateId)_\(w)_\(id)"
             } else if let id = data["_id"] as? String {
-                return "\(templateId)_\(widthKey)_\(id)"
+                return "\(templateId)_\(w)_\(id)"
             }
         }
         
-        // 没有 id，使用内存地址（不会缓存命中）
-        let ptr = data.map { "\(ObjectIdentifier($0 as AnyObject))" } ?? "nil"
-        return "\(templateId)_\(widthKey)_\(ptr)"
+        // 没有 id，使用 "no_id"（不可复用，但避免 AnyObject 桥接开销）
+        return "\(templateId)_\(w)_no_id"
     }
     
-    /// 设置高度缓存（LRU 策略）
     private func setHeightCache(key: String, height: CGFloat) {
-        // 如果已存在，更新访问顺序
         if heightCache[key] != nil {
-            if let index = heightCacheOrder.firstIndex(of: key) {
-                heightCacheOrder.remove(at: index)
+            if let oldIndex = heightCacheIndex[key] {
+                heightCacheOrder[oldIndex] = nil
             }
             heightCacheOrder.append(key)
+            heightCacheIndex[key] = heightCacheOrder.count - 1
             heightCache[key] = height
+            compactHeightCacheIfNeeded()
             return
         }
         
-        // 容量检查，移除最旧的
-        while heightCache.count >= heightCacheCapacity && !heightCacheOrder.isEmpty {
-            let oldest = heightCacheOrder.removeFirst()
-            heightCache.removeValue(forKey: oldest)
+        // 淘汰最旧条目（head pointer 前进，跳过 tombstone）
+        while heightCache.count >= heightCacheCapacity && heightCacheHead < heightCacheOrder.count {
+            let entry = heightCacheOrder[heightCacheHead]
+            heightCacheHead += 1
+            if let oldest = entry {
+                heightCacheIndex.removeValue(forKey: oldest)
+                heightCache.removeValue(forKey: oldest)
+                break
+            }
         }
         
-        // 插入新条目
         heightCache[key] = height
         heightCacheOrder.append(key)
+        heightCacheIndex[key] = heightCacheOrder.count - 1
+        compactHeightCacheIfNeeded()
+    }
+    
+    /// head 超过数组 50% 时，截掉已消费的前半段并重建 index
+    private func compactHeightCacheIfNeeded() {
+        guard heightCacheHead > heightCacheOrder.count / 2, heightCacheHead > 100 else { return }
+        heightCacheOrder.removeSubrange(0..<heightCacheHead)
+        heightCacheHead = 0
+        heightCacheIndex.removeAll(keepingCapacity: true)
+        for (i, key) in heightCacheOrder.enumerated() {
+            if let key = key {
+                heightCacheIndex[key] = i
+            }
+        }
     }
 }
 

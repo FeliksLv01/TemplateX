@@ -37,7 +37,6 @@ class MusicHomeDemoViewController: UIViewController {
     private var dataSource: [SectionData] = []
     private var loadingIndicator: UIActivityIndicatorView!
     
-    /// 模板缓存
     private var horizontalTemplate: [String: Any]?
     private var gridTemplate: [String: Any]?
     
@@ -109,9 +108,13 @@ class MusicHomeDemoViewController: UIViewController {
         collectionView.backgroundColor = .systemBackground
         collectionView.delegate = self
         collectionView.dataSource = self
-        collectionView.register(MusicHomeCell.self, forCellWithReuseIdentifier: MusicHomeCell.reuseIdentifier)
+        
+        // 按模板类型注册不同的 reuseIdentifier，确保同模板 Cell 只在同类间复用
+        for type in [SectionType.horizontal, .grid] {
+            collectionView.register(MusicHomeCell.self, forCellWithReuseIdentifier: type.rawValue)
+        }
+        
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        // 数据加载前隐藏
         collectionView.isHidden = true
         
         view.addSubview(collectionView)
@@ -170,6 +173,8 @@ class MusicHomeDemoViewController: UIViewController {
             return []
         }
         
+        let scale = Int(UIScreen.main.scale)
+        
         return sectionsArray.enumerated().compactMap { index, sectionDict -> SectionData? in
             guard let typeStr = sectionDict["type"] as? String,
                   let type = SectionType(jsonValue: typeStr),
@@ -178,7 +183,24 @@ class MusicHomeDemoViewController: UIViewController {
                 return nil
             }
             let id = sectionDict["id"] as? String ?? "section_\(index)"
-            return SectionData(id: id, type: type, title: title, items: items)
+            
+            let imagePixelSize: Int = {
+                switch type {
+                case .horizontal: return 150 * scale
+                case .grid:       return 80 * scale
+                }
+            }()
+            let paramSuffix = "?param=\(imagePixelSize)y\(imagePixelSize)"
+            
+            let processedItems = items.map { item -> [String: Any] in
+                guard let coverUrl = item["coverUrl"] as? String,
+                      !coverUrl.contains("?param=") else { return item }
+                var mutable = item
+                mutable["coverUrl"] = coverUrl + paramSuffix
+                return mutable
+            }
+            
+            return SectionData(id: id, type: type, title: title, items: processedItems)
         }
     }
 }
@@ -192,9 +214,10 @@ extension MusicHomeDemoViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MusicHomeCell.reuseIdentifier, for: indexPath) as! MusicHomeCell
-        
         let section = dataSource[indexPath.item]
+        let templateId = section.type.rawValue
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: templateId, for: indexPath) as! MusicHomeCell
+        
         let template = section.type == .horizontal ? horizontalTemplate : gridTemplate
         
         guard let template = template else {
@@ -207,12 +230,22 @@ extension MusicHomeDemoViewController: UICollectionViewDataSource {
                 "items": section.items
             ]
         ]
+        
+        let width = collectionView.bounds.width
+        let height = TemplateXRenderEngine.shared.calculateHeight(
+            json: template,
+            templateId: section.type.rawValue,
+            data: data,
+            containerWidth: width,
+            useCache: true
+        )
                 
         cell.configure(
             template: template,
             templateId: section.type.rawValue,
             data: data,
-            containerWidth: collectionView.bounds.width
+            containerWidth: width,
+            precomputedHeight: height
         )
         
         return cell

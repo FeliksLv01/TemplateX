@@ -8,10 +8,13 @@ TemplateX 是一个高性能的 iOS DSL 动态化渲染框架，支持通过 JSO
 
 - **JSON → UIView 渲染**：声明式 UI，模板驱动
 - **Flexbox 布局**：基于 Yoga C API，支持子线程布局计算
-- **数据绑定**：`${expression}` 表达式求值
+- **数据绑定**：`${expression}` 表达式求值（ANTLR4 解析）
 - **增量更新**：Diff + Patch 算法，最小化视图操作
-- **组件化**：可扩展的组件注册机制
-- **高性能**：组件树复用、布局缓存、异步渲染
+- **组件化**：泛型组件基类 `TemplateXComponent<V,P>`，Codable Props 自动解析
+- **Pipeline 渲染**：后台 parse+bind+layout，SyncFlush 同步刷新避免白屏
+- **视图拍平**：ViewFlattener 剪枝纯布局容器，减少 UIView 层级
+- **TemplateXView**：类似 Lynx LynxView 的容器视图，Builder 模式 + 布局尺寸模式
+- **高性能**：组件树复用、布局缓存、GapWorker 帧空闲预取
 
 ---
 
@@ -19,23 +22,37 @@ TemplateX 是一个高性能的 iOS DSL 动态化渲染框架，支持通过 JSO
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    RenderEngine                         │
-│                   (渲染引擎入口)                          │
+│              TemplateXEnv / TemplateXConfig              │
+│             (全局环境配置 / 渲染参数)                      │
 └────────────────┬────────────────────────────────────────┘
                  │
-    ┌────────────┼────────────┬──────────────┐
-    │            │            │              │
-    ▼            ▼            ▼              ▼
-┌────────┐  ┌─────────┐  ┌─────────┐   ┌──────────┐
-│Template│  │  Yoga   │  │  View   │   │   Diff   │
-│ Parser │  │ Layout  │  │ Create  │   │  Patcher │
-└────────┘  └─────────┘  └─────────┘   └──────────┘
-    │            │            │              │
-    ▼            ▼            ▼              ▼
-┌────────┐  ┌─────────┐  ┌─────────┐   ┌──────────┐
-│Component│ │YogaC API│  │Component│   │ViewDiffer│
-│Registry │ │NodePool │  │  Pool   │   │  Result  │
-└────────┘  └─────────┘  └─────────┘   └──────────┘
+┌────────────────▼────────────────────────────────────────┐
+│               TemplateXView (容器视图)                    │
+│    Builder 模式 | SyncFlush | 布局尺寸模式                │
+└────────────────┬────────────────────────────────────────┘
+                 │
+┌────────────────▼────────────────────────────────────────┐
+│              RenderPipeline (渲染管道)                    │
+│     后台 parse+bind+layout → UIOperationQueue → Flush   │
+└────────────────┬────────────────────────────────────────┘
+                 │
+┌────────────────▼────────────────────────────────────────┐
+│            TemplateXRenderEngine (渲染引擎)               │
+└────────────────┬────────────────────────────────────────┘
+                 │
+    ┌────────────┼────────────┬───────────────┐
+    │            │            │               │
+    ▼            ▼            ▼               ▼
+┌────────┐  ┌─────────┐  ┌──────────┐   ┌──────────┐
+│Template│  │  Yoga   │  │  View    │   │   Diff   │
+│ Parser │  │ Layout  │  │ Flatten  │   │  Patcher │
+└────────┘  └─────────┘  └──────────┘   └──────────┘
+    │            │            │               │
+    ▼            ▼            ▼               ▼
+┌────────┐  ┌─────────┐  ┌──────────┐   ┌──────────┐
+│Component│ │YogaC API│  │  View    │   │ViewDiffer│
+│Registry │ │NodePool │  │Flattener │   │  Result  │
+└────────┘  └─────────┘  └──────────┘   └──────────┘
 ```
 
 ---
@@ -49,8 +66,15 @@ TemplateX/                               # Git 仓库根目录
 │       ├── TemplateX.swift              # 入口 API
 │       ├── Core/
 │       │   ├── Engine/
-│       │   │   ├── RenderEngine.swift       # 核心渲染引擎
+│       │   │   ├── RenderEngine.swift       # 核心渲染引擎（TemplateXRenderEngine）
+│       │   │   ├── RenderPipeline.swift     # Lynx 式渲染管道（后台 parse+bind+layout → SyncFlush）
+│       │   │   ├── UIOperationQueue.swift   # UI 操作批处理队列（条件变量同步）
+│       │   │   ├── ViewFlattener.swift      # 视图拍平/剪枝（减少 UIView 层级）
 │       │   │   └── ListPreloadManager.swift # 列表预加载管理
+│       │   ├── Config/
+│       │   │   ├── TemplateXConfig.swift     # 配置对象（Pipeline/SyncFlush/线程策略/预设）
+│       │   │   ├── TemplateXEnv.swift        # 全局环境单例（类似 Lynx LynxEnv）
+│       │   │   └── TemplateXProvider.swift   # 模板提供者协议 + BundleTemplateProvider
 │       │   ├── Layout/
 │       │   │   ├── YogaLayoutEngine.swift   # Yoga 布局引擎封装
 │       │   │   ├── YogaCBridge.swift        # Yoga C API 桥接
@@ -68,10 +92,20 @@ TemplateX/                               # Git 仓库根目录
 │       │   ├── Binding/
 │       │   │   └── DataBindingManager.swift # 数据绑定管理
 │       │   ├── Expression/
-│       │   │   └── ExpressionEngine.swift   # 表达式引擎
+│       │   │   ├── ExpressionEngine.swift       # 表达式引擎
+│       │   │   ├── ExpressionEvaluator.swift    # 表达式树求值器
+│       │   │   ├── BuiltinFunctions.swift       # 内置函数
+│       │   │   ├── Generated/                   # ANTLR4 自动生成
+│       │   │   │   ├── TemplateXExprLexer.swift
+│       │   │   │   ├── TemplateXExprParser.swift
+│       │   │   │   ├── TemplateXExprVisitor.swift
+│       │   │   │   └── TemplateXExprBaseVisitor.swift
+│       │   │   └── Grammar/
+│       │   │       └── TemplateXExpr.g4         # ANTLR4 语法文件
 │       │   ├── Diff/
 │       │   │   ├── ViewDiffer.swift         # Diff 算法
-│       │   │   └── DiffPatcher.swift        # Patch 应用
+│       │   │   ├── DiffPatcher.swift        # Patch 应用
+│       │   │   └── DiffResult.swift         # Diff 操作类型 + 属性变化
 │       │   ├── Cache/
 │       │   │   └── LRUCache.swift           # LRU 缓存
 │       │   ├── Event/
@@ -80,17 +114,21 @@ TemplateX/                               # Git 仓库根目录
 │       │   └── Performance/
 │       │       └── PerformanceMonitor.swift # 性能监控
 │       ├── Components/
-│       │   ├── Component.swift              # 组件协议 + 基类 + 注册表
+│       │   ├── Component.swift              # 组件协议 + ComponentFlags + 注册表
+│       │   ├── TemplateXComponent.swift      # 泛型组件基类 + ComponentProps + @Default
+│       │   ├── StyleValues.swift             # 强类型值包装（ColorValue, FontWeightValue 等）
 │       │   ├── Views/
-│       │   │   ├── ViewComponent.swift      # 基础视图
-│       │   │   ├── TextComponent.swift      # 文本
-│       │   │   ├── ImageComponent.swift     # 图片
-│       │   │   ├── ButtonComponent.swift    # 按钮
-│       │   │   ├── InputComponent.swift     # 输入框
-│       │   │   ├── ScrollComponent.swift    # 滚动视图
-│       │   │   └── ListComponent.swift      # 列表
+│       │   │   ├── TemplateXView.swift          # 容器视图（类似 LynxView）
+│       │   │   ├── TemplateXViewBuilder.swift   # Builder 模式 + TemplateXViewSizeMode
+│       │   │   ├── TextComponent.swift          # 文本
+│       │   │   ├── ImageComponent.swift         # 图片
+│       │   │   ├── ButtonComponent.swift        # 按钮
+│       │   │   ├── InputComponent.swift         # 输入框
+│       │   │   ├── ScrollComponent.swift        # 滚动视图
+│       │   │   ├── ListComponent.swift          # 列表 + GridComponent
+│       │   │   └── VerticalGridFlowLayout.swift # 纵向优先网格布局
 │       │   └── Layouts/
-│       │       └── FlexLayoutComponent.swift # Flex 布局容器
+│       │       └── ContainerComponent.swift     # Flexbox 容器（type: "container"）
 │       └── Service/                         # Service 协议层
 │           ├── ServiceRegistry.swift        # DI 容器
 │           ├── ActionHandler/
@@ -120,26 +158,36 @@ TemplateX/                               # Git 仓库根目录
 
 ## 核心模块说明
 
-### 1. RenderEngine (渲染引擎)
+### 1. TemplateXRenderEngine (渲染引擎)
 
-**文件**: `Sources/Core/Engine/RenderEngine.swift`
+**文件**: `Sources/Core/Engine/RenderEngine.swift`（类名 `TemplateXRenderEngine`）
 
 核心职责：
 1. 解析模板 → 组件树
 2. 计算布局
 3. 创建/更新视图
 4. 支持增量更新（Diff）
+5. 模板缓存渲染（Cell 场景）
+6. 高度计算与批量并发
 
 ```swift
 // 同步渲染
-let view = RenderEngine.shared.render(
+let view = TemplateXRenderEngine.shared.render(
     json: template,
     data: data,
     containerSize: CGSize(width: 375, height: .nan)
 )
 
 // 增量更新
-RenderEngine.shared.update(view: view, data: newData, containerSize: size)
+TemplateXRenderEngine.shared.update(view: view, data: newData, containerSize: size)
+
+// Cell 缓存渲染
+let cellView = TemplateXRenderEngine.shared.renderWithCache(
+    json: template,
+    templateId: "my_cell",
+    data: itemData,
+    containerSize: cellSize
+)
 ```
 
 ### 2. YogaLayoutEngine (布局引擎)
@@ -180,35 +228,52 @@ component.releaseYogaNode()
 
 **文件**: `Sources/Components/Component.swift`
 
-组件协议和基类：
+组件协议：
 ```swift
 public protocol Component: AnyObject {
     var id: String { get }
     var type: String { get }
     var style: ComponentStyle { get set }
     var children: [Component] { get set }
+    var parent: Component? { get set }
     var view: UIView? { get set }
+    var layoutResult: LayoutResult { get set }
+    var bindings: [String: Any] { get set }
+    var events: [String: Any] { get set }
     
     // Yoga 剪枝优化
     var yogaNode: YGNodeRef? { get set }
     var lastLayoutStyle: ComponentStyle? { get set }
     func releaseYogaNode()
     
+    // 引擎内部使用
+    var parseError: Error? { get set }
+    var templateJSON: TXJSONNode? { get set }
+    var componentFlags: ComponentFlags { get set }
+    var forceApplyStyle: Bool { get set }
+    var isPruned: Bool { get set }
+    
+    // 生命周期
     func createView() -> UIView
     func updateView()
+    func needsUpdate(with other: Component) -> Bool
+    func addChild(_ child: Component)
+    func removeChild(_ child: Component)
     func clone() -> Component
+    func copyProps(from other: Component)
+    func reloadProps(from resolved: [String: Any])
 }
 ```
 
-内置组件：
-- `view` - 基础视图
-- `text` - 文本
-- `image` - 图片
-- `button` - 按钮
-- `input` - 输入框
-- `scroll` - 滚动视图
-- `list` - 列表
-- `flex` / `container` - Flex 布局容器
+内置组件（`ComponentRegistry.registerBuiltinComponents()`）：
+- `container` - Flexbox 布局容器（`ContainerComponent`）
+- `text` - 文本（`TextComponent`）
+- `image` - 图片（`ImageComponent`）
+- `scroll` - 滚动视图（`ScrollComponent`）
+- `list` - 列表（`ListComponent`）
+- `grid` - 网格列表（`GridComponent`，定义在 ListComponent.swift）
+- `button` - 按钮（`ButtonComponent`）
+- `input` - 输入框（`InputComponent`）
 
 #### ListComponent 属性详解
 
@@ -315,26 +380,47 @@ TemplateX.register(VideoComponent.self)
 ComponentRegistry.shared.register(VideoComponent.self)
 ```
 
-**自定义组件示例**：
+**自定义组件示例**（使用泛型基类 `TemplateXComponent<V,P>`）：
 
 ```swift
-public class VideoComponent: BaseComponent, ComponentFactory {
-    public static var typeIdentifier: String { "video" }
+// 1. 定义 Props（遵循 ComponentProps = Codable + Equatable）
+struct VideoProps: ComponentProps {
+    var src: String = ""
+    @Default<False> var autoPlay: Bool
+    @Default<True> var showControls: Bool
+}
+
+// 2. 继承泛型基类
+final class VideoComponent: TemplateXComponent<VideoPlayerView, VideoProps> {
+    override class var typeIdentifier: String { "video" }
     
-    public static func create(from json: TXJSONNode) -> Component {
-        let component = VideoComponent(id: json.string("id") ?? UUID().uuidString, type: typeIdentifier)
-        component.parseBaseParams(from: json)  // 解析通用样式
-        // 解析 video 特有的 props
-        component.videoUrl = json.child("props")?.string("src")
-        return component
+    // 工厂方法由基类自动提供（create(from:) → 自动 decode props）
+    // 如需自定义解析，可重写 didParseProps()
+    
+    override func createView() -> UIView {
+        let player = VideoPlayerView()
+        return player
     }
     
-    var videoUrl: String?
+    override func configureView(_ view: VideoPlayerView) {
+        // @dynamicMemberLookup 自动转发 props 属性
+        view.load(url: src)       // 等同于 props.src
+        view.showControls = showControls  // 等同于 props.showControls
+        if autoPlay { view.play() }
+    }
     
-    public override func createView() -> UIView { /* 返回播放器视图 */ }
-    public override func updateView() { /* 更新播放器状态 */ }
-    public override func clone() -> Component { /* 返回副本 */ }
+    override func clone() -> Component {
+        let cloned = VideoComponent(id: id, type: type)
+        cloned.style = style
+        cloned.bindings = bindings
+        cloned.events = events
+        cloned.props = props
+        return cloned
+    }
 }
+
+// 3. 注册
+TemplateX.register(VideoComponent.self)
 ```
 
 #### 自定义表达式函数
@@ -379,15 +465,244 @@ ExpressionEngine.shared.registerFunctions([func1, func2, func3])
 ### 6. Diff + Patch (增量更新)
 
 **文件**: 
-- `Sources/Core/Diff/ViewDiffer.swift`
-- `Sources/Core/Diff/DiffPatcher.swift`
+- `Sources/Core/Diff/ViewDiffer.swift` — Diff 算法
+- `Sources/Core/Diff/DiffPatcher.swift` — Patch 应用
+- `Sources/Core/Diff/DiffResult.swift` — Diff 操作类型 + 属性变化
 
 增量更新流程：
 1. 克隆旧组件树，绑定新数据
 2. Diff 算法比较新旧组件树
 3. Patch 应用差异到视图
 
-### 7. 事件系统 (Event System)
+**DiffOperation 类型**：
+- `insert` — 插入新组件
+- `delete` — 删除组件
+- `update` — 更新组件（属性变化，附带 `PropertyChanges`）
+- `move` — 移动组件（位置变化）
+- `replace` — 替换组件（类型变化）
+
+**PropertyChanges**：记录样式变化（`styleChanges`）和绑定数据变化（`bindingChanges`），支持判断是否需要重新布局（`needsRelayout`）。
+
+### 7. TemplateXView (容器视图)
+
+**文件**: 
+- `Sources/Components/Views/TemplateXView.swift` — 容器视图（类似 Lynx LynxView）
+- `Sources/Components/Views/TemplateXViewBuilder.swift` — Builder 模式 + TemplateXViewSizeMode
+
+类似 Lynx 的 LynxView，作为 TemplateX 渲染的顶层容器视图。
+
+核心特性：
+- **Builder 模式**：通过 `TemplateXViewBuilder` 配置（config、screenSize、providers 等）
+- **布局尺寸模式**：`TemplateXViewSizeMode`（`.exact` / `.atMost` / `.wrapContent`）
+- **SyncFlush**：在 `layoutSubviews` 时同步等待后台 Pipeline 完成
+- **异步模板加载**：`loadTemplate(url:data:)` 通过 TemplateProvider 加载
+- **布局属性**：`layoutWidthMode`、`layoutHeightMode`、`preferredLayoutWidth`、`preferredLayoutHeight`
+
+```swift
+// 使用 Builder 模式创建
+let templateView = TemplateXView { builder in
+    builder.config = TemplateXConfig { config in
+        config.enablePerformanceMonitor = true
+    }
+    builder.screenSize = view.bounds.size
+    builder.templateProvider = MyTemplateProvider()
+}
+
+// 设置布局模式
+templateView.layoutWidthMode = .exact
+templateView.layoutHeightMode = .atMost
+templateView.preferredLayoutWidth = 375
+templateView.preferredLayoutHeight = .nan
+
+// 加载模板
+templateView.loadTemplate(url: "home_card", data: data)
+```
+
+### 8. RenderPipeline (渲染管道)
+
+**文件**: 
+- `Sources/Core/Engine/RenderPipeline.swift` — Lynx 式渲染管道
+- `Sources/Core/Engine/UIOperationQueue.swift` — UI 操作批处理队列
+
+借鉴 Lynx 架构的渲染管道，后台线程执行 parse + bind + layout，通过 SyncFlush 同步刷新避免白屏。
+
+**管道状态**：`idle` → `preparing` → `ready` → `flushing` → `completed`
+
+**核心流程**：
+1. `start(json:data:containerSize:)` — 后台线程启动 parse + bind + layout
+2. UI 操作封装为闭包入队 `UIOperationQueue`
+3. `syncFlush()` — 主线程 `layoutSubviews` 时调用，NSCondition 等待后台完成
+4. 批量执行 UI 操作闭包
+
+**UIOperationQueue**：
+- UI 操作闭包入队，SyncFlush 时批量执行
+- `NSCondition` 条件变量同步
+- 支持高优先级操作队列（错误处理）
+- 超时保护（默认 100ms）
+
+**RenderPipelinePool**：管道实例池，管理和复用 `RenderPipeline` 实例。
+
+```swift
+let pipeline = RenderPipeline()
+
+// 1. 后台启动渲染
+pipeline.start(json: template, data: data, containerSize: size)
+
+// 2. layoutSubviews 时同步刷新
+pipeline.syncFlush()
+
+// 3. 获取结果
+if let view = pipeline.renderedView {
+    addSubview(view)
+}
+```
+
+### 9. ViewFlattener (视图拍平)
+
+**文件**: `Sources/Core/Engine/ViewFlattener.swift`
+
+优化 UIView 层级：识别纯布局容器（无视觉属性、无事件的 container），跳过创建 UIView，将子节点提升到最近非剪枝祖先上。
+
+**三棵树**：
+- **Component 树**：保持不变（数据绑定需要）
+- **Yoga 树**：保持不变（布局计算需要）
+- **UIView 树**：拍平（减少层级）
+
+**可剪枝条件**（必须全部满足）：
+1. 组件类型为 `container`
+2. 无事件绑定
+3. 无背景色（或透明）、无渐变、无边框、无圆角、无阴影
+4. 透明度为 1.0
+5. 不裁剪子视图
+6. display 不是 none，visibility 不是 hidden
+7. 不需要强制应用样式（`forceApplyStyle == false`）
+
+**坐标转换**：在 `YogaLayoutEngine.collectLayoutResults()` 中一次遍历完成——被剪枝容器的 Yoga 相对坐标累加到 `accumulatedOffset`，非剪枝组件的 `layoutResult.frame` 直接加上累积偏移，输出的 frame 已经是相对于最近非剪枝祖先的正确坐标。ViewFlattener 本身不做坐标计算，只负责剪枝判断（`isPrunable()`）和视图树构建。
+
+**所有渲染路径已集成**：RenderEngine（同步）、RenderPipeline（异步）、DiffPatcher（增量更新）、TemplateXView 均已统一使用单次遍历拍平。
+
+### 10. Config / Env (配置系统)
+
+**文件**:
+- `Sources/Core/Config/TemplateXConfig.swift` — 配置对象
+- `Sources/Core/Config/TemplateXEnv.swift` — 全局环境单例
+- `Sources/Core/Config/TemplateXProvider.swift` — 模板提供者协议
+
+#### TemplateXConfig
+
+渲染行为配置对象，支持 Builder 闭包初始化：
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| enablePipelineRendering | Bool | true | 是否启用 Pipeline 渲染 |
+| enableSyncFlush | Bool | true | 是否启用 SyncFlush |
+| syncFlushTimeoutMs | Int | 100 | SyncFlush 超时时间（ms） |
+| enableIncrementalLayout | Bool | true | 是否启用增量布局 |
+| enableLayoutCache | Bool | true | 是否启用布局缓存 |
+| enablePerformanceMonitor | Bool | false | 是否启用性能监控 |
+| enableVerboseLogging | Bool | false | 高频详细日志（⚠️影响性能） |
+| threadStrategy | ThreadStrategy | .layoutOnBackground | 渲染线程策略 |
+
+**预设配置**：
+- `.default` — 默认配置
+- `.highPerformance` — 高性能（更短超时、后台布局）
+- `.debug` — 调试（性能监控、详细日志、UI 线程）
+- `.simple` — 最简（无 Pipeline、无 SyncFlush、UI 线程）
+
+**线程策略**（`ThreadStrategy`）：
+- `.allOnUI` — 所有操作 UI 线程（最安全）
+- `.layoutOnBackground` — 布局后台，UI 操作主线程（推荐）
+- `.multiThread` — 多线程并发（最高性能）
+
+#### TemplateXEnv
+
+全局环境单例（类似 Lynx LynxEnv），多个 TemplateXView 共享配置：
+
+```swift
+// App 启动时配置
+TemplateXEnv.shared.config = TemplateXConfig { config in
+    config.enablePerformanceMonitor = true
+    config.enableSyncFlush = true
+}
+
+TemplateXEnv.shared.templateProvider = MyTemplateProvider()
+TemplateXEnv.shared.imageLoader = MyImageLoader()
+```
+
+#### TemplateXProvider
+
+- `TemplateXTemplateProvider` 协议 — 模板加载（`loadTemplate(url:completion:)`）
+- `BundleTemplateProvider` — 内置实现，从 App Bundle 加载 JSON 模板
+- `TemplateXResourceProvider` 协议 — 通用资源提供者
+
+### 11. TemplateXComponent 泛型基类
+
+**文件**: 
+- `Sources/Components/TemplateXComponent.swift` — 泛型组件基类
+- `Sources/Components/StyleValues.swift` — 强类型值包装
+
+#### TemplateXComponent<V: UIView, P: ComponentProps>
+
+所有内置组件的泛型基类，提供：
+
+- **`@dynamicMemberLookup`**：`component.text` 自动转发到 `component.props.text`
+- **自动 JSON 解析**：`create(from:)` 自动 decode props（Codable）
+- **自动 Diff 比较**：props 遵循 Equatable
+- **样式缓存**：`_previousStyle` / `_previousFrame` 跳过未变化的样式/frame
+- **手势处理**：自动绑定 `GestureHandler`
+
+```swift
+// 简单组件（无特有属性）
+final class ContainerComponent: TemplateXComponent<UIView, EmptyProps> {
+    override class var typeIdentifier: String { "container" }
+}
+
+// 复杂组件
+final class TextComponent: TemplateXComponent<UILabel, TextComponent.Props> {
+    struct Props: ComponentProps {
+        var text: String = ""
+        @Default<Empty> var textColor: String
+        @Default<ZeroFloat> var fontSize: CGFloat
+    }
+    override class var typeIdentifier: String { "text" }
+    override func configureView(_ view: UILabel) {
+        view.text = props.text
+    }
+}
+```
+
+#### ComponentProps 协议
+
+```swift
+public protocol ComponentProps: Codable, Equatable {
+    init()  // 创建默认属性
+}
+```
+
+#### @Default<Provider> Property Wrapper
+
+在 Codable 解码时，字段缺失或为 null 使用默认值：
+
+```swift
+struct Props: ComponentProps {
+    @Default<False> var disabled: Bool      // 默认 false
+    @Default<True> var enabled: Bool        // 默认 true
+    @Default<Empty> var text: String        // 默认 ""
+    @Default<TextInput> var inputType: String // 默认 "text"
+    @Default<Zero> var count: Int           // 默认 0
+    @Default<ZeroFloat> var offset: CGFloat // 默认 0
+}
+```
+
+#### StyleValues.swift
+
+强类型值包装，用于样式属性的类型安全解析：
+- `ColorValue` — 颜色值解析（hex、named）
+- `FontWeightValue` — 字重值解析
+- `TextAlignValue` — 文本对齐解析
+- 等其他样式值包装类型
+
+### 12. 事件系统 (Event System)
 
 **文件**:
 - `Sources/Core/Event/EventManager.swift` — 事件注册、分发、动作执行
@@ -561,6 +876,24 @@ TemplateX.registerActionHandler(AppActionHandler())
       - 二次布局（部分样式变化）：只计算 dirty 子树
     - **影响范围**：YogaLayoutEngine、Component
 
+ 12. **视图拍平优化（ViewFlattener + YogaLayoutEngine 单次遍历）**
+    - 识别纯布局容器（无视觉属性、无事件的 container）
+    - 跳过创建 UIView，子节点提升到最近非剪枝祖先
+    - 坐标偏移在 `YogaLayoutEngine.collectLayoutResults()` 中一次遍历完成（对标 Litho `collectResults()` 模型）
+    - 三棵树：Component 树不变、Yoga 树不变、UIView 树拍平
+    - 所有渲染路径已统一：RenderEngine、RenderPipeline、DiffPatcher、TemplateXView
+
+ 13. **Pipeline 渲染（RenderPipeline）**
+    - 后台线程执行 parse + bind + layout
+    - UIOperationQueue 封装 UI 操作入队
+    - SyncFlush：layoutSubviews 时 NSCondition 等待后台完成
+    - 超时保护（默认 100ms）
+
+ 14. **UIOperationQueue 批处理**
+    - UI 操作闭包入队，SyncFlush 时批量执行
+    - NSCondition 条件变量同步
+    - 高优先级操作队列（错误处理）
+
 ### 性能数据
 
 典型渲染耗时（6 个 Flexbox Demo，预热后）：
@@ -620,7 +953,7 @@ TXLogger（统一入口）
 
 **启用性能监控**：
 ```swift
-RenderEngine.shared.config.enablePerformanceMonitor = true
+TemplateXRenderEngine.shared.config.enablePerformanceMonitor = true
 ```
 
 **日志输出示例**：
@@ -663,6 +996,7 @@ s.dependency 'Antlr4', '~> 4.0'  # 表达式解析
 6. ~~**Input 组件池化**~~：已移除（依赖系统视图创建）
 7. ~~**GapWorker 帧空闲调度**~~：✅ 已完成，对标 Lynx 的 Cell 预取机制
 8. **Instruments 分析**：进一步定位瓶颈
+9. ~~**ViewFlattener 集成到 TemplateXView**~~：✅ 已完成，所有渲染路径统一使用 `collectLayoutResults()` 单次遍历拍平
 
 ---
 
@@ -788,7 +1122,7 @@ func collectionView(_ collectionView: UICollectionView, layout: UICollectionView
     var context: [String: Any] = itemData as? [String: Any] ?? ["item": itemData]
     context["index"] = indexPath.item
     
-    let height = RenderEngine.shared.calculateHeight(
+    let height = TemplateXRenderEngine.shared.calculateHeight(
         json: cellTemplate.rawDictionary,
         templateId: "my_cell_template",
         data: context,

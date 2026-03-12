@@ -34,7 +34,7 @@ final class TextMeasureContext {
 /// 1. 直接使用 Yoga C API，支持子线程调用
 /// 2. 从统一的 ComponentStyle 读取布局属性
 /// 3. 支持 CSS display 和 visibility 语义
-/// 4. 使用节点池优化内存分配
+/// 4. YGNode 跟随 Component 生命周期（Component deinit 时释放）
 /// 5. 支持增量布局（Yoga 剪枝优化）
 public final class YogaLayoutEngine {
     
@@ -45,7 +45,6 @@ public final class YogaLayoutEngine {
     // MARK: - 依赖
     
     private let bridge = YogaCBridge.shared
-    private let nodePool = YogaNodePool.shared
     
     // MARK: - 配置
     
@@ -96,10 +95,10 @@ public final class YogaLayoutEngine {
         var results: [String: LayoutResult] = [:]
         collectLayoutResults(component: component, nodeMap: nodeMap, results: &results)
         
-        // 4. 增量模式下不释放节点树（保留给下次复用）
-        //    全量模式下释放节点树
+        // 4. 增量模式下不释放节点树（保留给下次复用，Component deinit 时释放）
+        //    全量模式下释放节点树（buildYogaTree 不会将 node 绑定到 Component，需手动释放）
         if !enableIncrementalLayout {
-            nodePool.releaseTree(rootNode)
+            freeYogaNodeTree(rootNode)
         }
                 
         return results
@@ -178,8 +177,8 @@ public final class YogaLayoutEngine {
                     comp.lastLayoutStyle = comp.style
                 }
             } else {
-                // 新节点
-                node = nodePool.acquire()
+                // 新节点：直接创建（跟随 Component 生命周期，deinit 时释放）
+                node = bridge.createNode()
                 comp.yogaNode = node
                 bridge.applyStyle(comp.style, to: node)
                 comp.lastLayoutStyle = comp.style
@@ -187,9 +186,29 @@ public final class YogaLayoutEngine {
             
             nodeMap[comp.id] = node
             
-            // 设置文本测量函数
+            // 设置文本测量函数（增量模式下检测文本/样式变化才更新）
             if let textComponent = comp as? TextComponent {
-                setupTextMeasureFunc(node: node, textComponent: textComponent)
+                let needsNewContext: Bool
+                
+                if comp.yogaNode != nil, let ctxPtr = bridge.getContext(node) {
+                    // 已有 context：比较文本测量参数是否变化
+                    let oldCtx = Unmanaged<TextMeasureContext>.fromOpaque(ctxPtr).takeUnretainedValue()
+                    let newFontWeight = parseFontWeight(textComponent.style.fontWeight)
+                    needsNewContext = oldCtx.text != textComponent.text
+                        || oldCtx.fontSize != (textComponent.style.fontSize ?? 14)
+                        || oldCtx.fontWeight != newFontWeight
+                        || oldCtx.lineHeight != textComponent.style.lineHeight
+                        || oldCtx.letterSpacing != textComponent.style.letterSpacing
+                        || oldCtx.numberOfLines != (textComponent.style.numberOfLines ?? 0)
+                } else {
+                    // 新节点或无 context，必须创建
+                    needsNewContext = true
+                }
+                
+                if needsNewContext {
+                    setupTextMeasureFunc(node: node, textComponent: textComponent)
+                    bridge.markDirty(node)
+                }
             }
             
             // 建立父子关系
@@ -239,18 +258,15 @@ public final class YogaLayoutEngine {
         component: Component,
         nodeMap: inout [String: YGNodeRef]
     ) -> YGNodeRef {
-        let node = nodePool.acquire()
+        let node: YGNodeRef = bridge.createNode()
         nodeMap[component.id] = node
         
-        // 应用样式
         bridge.applyStyle(component.style, to: node)
         
-        // 设置文本测量函数
         if let textComponent = component as? TextComponent {
             setupTextMeasureFunc(node: node, textComponent: textComponent)
         }
         
-        // 递归构建子节点
         for (index, child) in component.children.enumerated() {
             let childNode = buildYogaTree(component: child, nodeMap: &nodeMap)
             bridge.insertChild(childNode, into: node, at: index)
@@ -262,6 +278,11 @@ public final class YogaLayoutEngine {
     // MARK: - 文本测量
     
     private func setupTextMeasureFunc(node: YGNodeRef, textComponent: TextComponent) {
+        // Release old context to prevent memory leak
+        if let oldPtr = bridge.getContext(node) {
+            Unmanaged<TextMeasureContext>.fromOpaque(oldPtr).release()
+        }
+        
         let context = TextMeasureContext(
             text: textComponent.text,
             fontSize: textComponent.style.fontSize ?? 14,
@@ -293,16 +314,23 @@ public final class YogaLayoutEngine {
         }
     }
     
-    // MARK: - 收集结果
+    // MARK: - 收集结果（集成视图拍平）
     
-    /// 收集布局结果
-    /// 
+    /// 收集布局结果（单次遍历，同时完成剪枝判断 + 坐标偏移累加）
+    ///
+    /// 对标 Litho collectResults() 模式：
+    /// - 判断组件是否可剪枝（isPrunable），标记 component.isPruned
+    /// - 被剪枝的组件：其 Yoga 相对坐标累加到 accumulatedOffset，传递给子节点
+    /// - 非剪枝的组件：frame.origin += accumulatedOffset，子节点从 .zero 重新开始
+    /// - 结果中的 frame 已经是相对于最近非剪枝祖先的正确坐标
+    ///
     /// 注意：在全量模式下会释放文本测量上下文
     /// 增量模式下上下文会在 releaseYogaNode 时释放
     private func collectLayoutResults(
         component: Component,
         nodeMap: [String: YGNodeRef],
-        results: inout [String: LayoutResult]
+        results: inout [String: LayoutResult],
+        accumulatedOffset: CGPoint = .zero
     ) {
         guard let node = nodeMap[component.id] else { return }
         
@@ -315,13 +343,35 @@ public final class YogaLayoutEngine {
             }
         }
         
-        var result = LayoutResult()
-        result.frame = bridge.getLayoutFrame(node)
-        results[component.id] = result
+        let relativeFrame = bridge.getLayoutFrame(node)
         
+        let prunable = component.isPrunable
+        component.isPruned = prunable
         
-        for child in component.children {
-            collectLayoutResults(component: child, nodeMap: nodeMap, results: &results)
+        if prunable {
+            var result = LayoutResult()
+            result.frame = relativeFrame
+            results[component.id] = result
+            
+            let newOffset = CGPoint(
+                x: accumulatedOffset.x + relativeFrame.origin.x,
+                y: accumulatedOffset.y + relativeFrame.origin.y
+            )
+            for child in component.children {
+                collectLayoutResults(component: child, nodeMap: nodeMap, results: &results, accumulatedOffset: newOffset)
+            }
+        } else {
+            var adjustedFrame = relativeFrame
+            adjustedFrame.origin.x += accumulatedOffset.x
+            adjustedFrame.origin.y += accumulatedOffset.y
+            
+            var result = LayoutResult()
+            result.frame = adjustedFrame
+            results[component.id] = result
+            
+            for child in component.children {
+                collectLayoutResults(component: child, nodeMap: nodeMap, results: &results, accumulatedOffset: .zero)
+            }
         }
     }
     
@@ -346,9 +396,9 @@ public final class YogaLayoutEngine {
     
     // MARK: - 预热
     
-    /// 预热布局引擎（预创建节点池）
-    public func warmUp(nodeCount: Int = 64) {
-        nodePool.warmUp(count: nodeCount)
+    /// 预热布局引擎（保留接口兼容，YGNode 已跟随 Component 生命周期，无需预热）
+    public func warmUp(nodeCount: Int = 0) {
+        // No-op: YGNode 跟随 Component 生命周期，不再使用节点池
     }
     
     // MARK: - Yoga 节点清理
@@ -372,13 +422,52 @@ public final class YogaLayoutEngine {
                     bridge.setContext(node, nil)
                 }
                 
-                nodePool.release(node)
+                // 从父节点移除
+                if let owner = YGNodeGetOwner(node) {
+                    YGNodeRemoveChild(owner, node)
+                }
+                // 移除所有子节点引用
+                YGNodeRemoveAllChildren(node)
+                // 释放节点
+                YGNodeFree(node)
                 comp.yogaNode = nil
             }
             comp.lastLayoutStyle = nil
             
             // 子组件入栈
             stack.append(contentsOf: comp.children)
+        }
+    }
+    
+    // MARK: - Yoga 节点树释放（全量模式）
+    
+    /// 释放整棵 YGNode 树（用于全量布局模式，节点未绑定到 Component）
+    ///
+    /// 后序遍历：先收集所有节点，再从叶子到根依次释放
+    /// 同时释放文本测量上下文（防御性检查，避免与 collectLayoutResults 双重释放）
+    private func freeYogaNodeTree(_ root: YGNodeRef) {
+        var stack: [YGNodeRef] = [root]
+        var toFree: [YGNodeRef] = []
+        
+        while let node = stack.popLast() {
+            toFree.append(node)
+            let childCount = Int(YGNodeGetChildCount(node))
+            for i in 0..<childCount {
+                if let child = YGNodeGetChild(node, size_t(i)) {
+                    stack.append(child)
+                }
+            }
+        }
+        
+        // 从叶子到根释放
+        for node in toFree.reversed() {
+            // 防御性释放上下文（collectLayoutResults 可能已释放）
+            if let contextPtr = YGNodeGetContext(node) {
+                Unmanaged<AnyObject>.fromOpaque(contextPtr).release()
+                YGNodeSetContext(node, nil)
+            }
+            YGNodeRemoveAllChildren(node)
+            YGNodeFree(node)
         }
     }
 }

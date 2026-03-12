@@ -28,6 +28,14 @@ final class TextComponent: TemplateXComponent<UILabel, TextComponent.Props> {
     private var _previousText: String?
     private var _previousStyle: ComponentStyle?
     
+    private var _cachedAttributedString: NSAttributedString?
+    private var _attrCacheText: String?
+    private var _attrCacheLineHeight: CGFloat?
+    private var _attrCacheLetterSpacing: CGFloat?
+    private var _attrCacheFont: UIFont?
+    private var _attrCacheColor: UIColor?
+    private var _attrCacheAlignment: NSTextAlignment?
+    
     // MARK: - View Lifecycle
     
     override func createView() -> UIView {
@@ -85,17 +93,30 @@ final class TextComponent: TemplateXComponent<UILabel, TextComponent.Props> {
     }
     
     private func applyAttributedText(to label: UILabel) {
+        let font = getFont()
+        let color = label.textColor ?? .black
+        let alignment = label.textAlignment
+        let lh = style.lineHeight
+        let ls = style.letterSpacing
+        
+        if let cached = _cachedAttributedString,
+           _attrCacheText == props.text,
+           _attrCacheLineHeight == lh,
+           _attrCacheLetterSpacing == ls,
+           _attrCacheFont === font,
+           _attrCacheColor == color,
+           _attrCacheAlignment == alignment {
+            label.attributedText = cached
+            return
+        }
+        
         var attributes: [NSAttributedString.Key: Any] = [
-            .font: getFont(),
-            .foregroundColor: label.textColor ?? .black
+            .font: font,
+            .foregroundColor: color
         ]
         
-        // 行高
-        if let lh = style.lineHeight {
+        if let lh = lh {
             let paragraphStyle = NSMutableParagraphStyle()
-            // lineHeight 解析：
-            // - 如果 <= 4，认为是倍数（如 1.3 表示 1.3 倍行高）
-            // - 如果 > 4，认为是像素值（如 20 表示 20pt 行高）
             let fontSize = style.fontSize ?? 14
             let actualLineHeight: CGFloat
             if lh <= 4 {
@@ -105,15 +126,23 @@ final class TextComponent: TemplateXComponent<UILabel, TextComponent.Props> {
             }
             paragraphStyle.minimumLineHeight = actualLineHeight
             paragraphStyle.maximumLineHeight = actualLineHeight
-            paragraphStyle.alignment = label.textAlignment
+            paragraphStyle.alignment = alignment
             attributes[.paragraphStyle] = paragraphStyle
         }
         
-        // 字间距
-        if let ls = style.letterSpacing {
+        if let ls = ls {
             attributes[.kern] = ls
         }
         
-        label.attributedText = NSAttributedString(string: props.text, attributes: attributes)
+        let attrString = NSAttributedString(string: props.text, attributes: attributes)
+        _cachedAttributedString = attrString
+        _attrCacheText = props.text
+        _attrCacheLineHeight = lh
+        _attrCacheLetterSpacing = ls
+        _attrCacheFont = font
+        _attrCacheColor = color
+        _attrCacheAlignment = alignment
+        
+        label.attributedText = attrString
     }
 }

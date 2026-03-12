@@ -32,27 +32,34 @@ class MusicHomeCell: UICollectionViewCell {
     
     // MARK: - Configure
     
+    /// - Parameters:
+    ///   - template: 模板 JSON
+    ///   - templateId: 模板标识符
+    ///   - data: 绑定数据
+    ///   - containerWidth: 容器宽度
+    ///   - precomputedHeight: 预计算高度（来自 sizeForItemAt，避免重复计算）
     func configure(
         template: [String: Any],
         templateId: String,
         data: [String: Any],
-        containerWidth: CGFloat
+        containerWidth: CGFloat,
+        precomputedHeight: CGFloat? = nil
     ) {
         // 检查是否需要重建 TemplateXView
         let needsRebuild = templateView == nil || currentTemplateId != templateId
         
+        // 使用预计算高度或按需计算
+        let height = precomputedHeight ?? TemplateXRenderEngine.shared.calculateHeight(
+            json: template,
+            templateId: templateId,
+            data: data,
+            containerWidth: containerWidth,
+            useCache: true
+        )
+        
         if needsRebuild {
             // 清理旧视图
             templateView?.removeFromSuperview()
-            
-            // 计算高度
-            let height = TemplateXRenderEngine.shared.calculateHeight(
-                json: template,
-                templateId: templateId,
-                data: data,
-                containerWidth: containerWidth,
-                useCache: true
-            )
             
             // 创建新的 TemplateXView
             let newTemplateView = TemplateXView { builder in
@@ -76,17 +83,10 @@ class MusicHomeCell: UICollectionViewCell {
             // 加载模板
             newTemplateView.loadTemplate(json: template, data: data)
         } else {
-            // 复用现有视图，只更新数据
-            templateView?.updateData(data)
+            // 复用现有视图，快速更新数据（跳过 clone + Diff）
+            templateView?.updateDataFast(data)
             
             // 更新 frame
-            let height = TemplateXRenderEngine.shared.calculateHeight(
-                json: template,
-                templateId: templateId,
-                data: data,
-                containerWidth: containerWidth,
-                useCache: true
-            )
             templateView?.frame = CGRect(x: 0, y: 0, width: containerWidth, height: max(height, 100))
         }
     }

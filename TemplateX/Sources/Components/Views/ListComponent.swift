@@ -744,7 +744,6 @@ private class ListDelegate: NSObject, UICollectionViewDelegate, UICollectionView
     }
     
     private func calculateItemWidth(collectionView: UICollectionView, component: ListComponent) -> CGFloat {
-        // 优先使用固定的 itemWidth
         if let fixedWidth = component.props.itemWidth {
             return fixedWidth
         }
@@ -833,6 +832,11 @@ class TemplateXCell: UICollectionViewCell {
         
         let needsRender = contentRootView == nil || currentTemplateId != templateId
         
+        // Use NaN height so Yoga computes content height unconstrained.
+        // Cell's actual size is controlled by sizeForItemAt; rootView fills via autoresizingMask.
+        // A fixed containerSize.height would trigger flexShrink and compress children.
+        let layoutSize = CGSize(width: containerSize.width, height: .nan)
+        
         if needsRender {
             contentRootView?.removeFromSuperview()
             
@@ -840,7 +844,7 @@ class TemplateXCell: UICollectionViewCell {
                 json: template.rawDictionary,
                 templateId: templateId,
                 data: context,
-                containerSize: containerSize
+                containerSize: layoutSize
             ) {
                 contentView.addSubview(view)
                 view.frame = contentView.bounds
@@ -855,7 +859,7 @@ class TemplateXCell: UICollectionViewCell {
                 TemplateXRenderEngine.shared.quickUpdate(
                     view: view,
                     data: context,
-                    containerSize: containerSize
+                    containerSize: layoutSize
                 )
             }
         }

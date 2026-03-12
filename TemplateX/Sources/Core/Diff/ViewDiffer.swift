@@ -185,22 +185,57 @@ public final class ViewDiffer {
         result: inout DiffResult,
         depth: Int
     ) {
+        // 快速路径：当子节点数量相同且 id/type 完全一致时，跳过快照创建
+        if oldChildren.count == newChildren.count {
+            var allMatch = true
+            for i in 0..<oldChildren.count {
+                if oldChildren[i].id != newChildren[i].id || oldChildren[i].type != newChildren[i].type {
+                    allMatch = false
+                    break
+                }
+            }
+            if allMatch {
+                for i in 0..<oldChildren.count {
+                    let changes = detectPropertyChanges(old: oldChildren[i], new: newChildren[i])
+                    if changes.hasChanges {
+                        result.addUpdate(oldChildren[i].id, newComponent: newChildren[i], changes: changes)
+                    }
+                    diffChildrenList(
+                        oldChildren: oldChildren[i].children,
+                        newChildren: newChildren[i].children,
+                        parentId: oldChildren[i].id,
+                        result: &result,
+                        depth: depth + 1
+                    )
+                }
+                return
+            }
+        }
+        
         var oldStart = 0
         var oldEnd = oldChildren.count - 1
         var newStart = 0
         var newEnd = newChildren.count - 1
         
-        // 创建快照用于比较
-        let oldSnapshots = oldChildren.map { ComponentSnapshot(from: $0) }
-        let newSnapshots = newChildren.map { ComponentSnapshot(from: $0) }
+        // 延迟创建快照缓存，按需计算
+        var snapshotCache: [ObjectIdentifier: ComponentSnapshot] = [:]
+        
+        func snapshot(for component: Component) -> ComponentSnapshot {
+            let key = ObjectIdentifier(component)
+            if let cached = snapshotCache[key] {
+                return cached
+            }
+            let snap = ComponentSnapshot(from: component)
+            snapshotCache[key] = snap
+            return snap
+        }
         
         // 1. 头头比较
         while oldStart <= oldEnd && newStart <= newEnd {
-            let oldSnap = oldSnapshots[oldStart]
-            let newSnap = newSnapshots[newStart]
+            let oldSnap = snapshot(for: oldChildren[oldStart])
+            let newSnap = snapshot(for: newChildren[newStart])
             
             if oldSnap.canMatch(newSnap) {
-                // 匹配成功，检查内容是否变化
                 if !oldSnap.contentEquals(newSnap) {
                     let changes = detectPropertyChanges(
                         old: oldChildren[oldStart],
@@ -210,7 +245,6 @@ public final class ViewDiffer {
                         result.addUpdate(oldChildren[oldStart].id, newComponent: newChildren[newStart], changes: changes)
                     }
                 }
-                // 递归比较子节点
                 diffChildrenList(
                     oldChildren: oldChildren[oldStart].children,
                     newChildren: newChildren[newStart].children,
@@ -227,8 +261,8 @@ public final class ViewDiffer {
         
         // 2. 尾尾比较
         while oldStart <= oldEnd && newStart <= newEnd {
-            let oldSnap = oldSnapshots[oldEnd]
-            let newSnap = newSnapshots[newEnd]
+            let oldSnap = snapshot(for: oldChildren[oldEnd])
+            let newSnap = snapshot(for: newChildren[newEnd])
             
             if oldSnap.canMatch(newSnap) {
                 if !oldSnap.contentEquals(newSnap) {
@@ -256,17 +290,14 @@ public final class ViewDiffer {
         
         // 3. 处理剩余节点
         if oldStart > oldEnd && newStart <= newEnd {
-            // 旧列表已处理完，剩余的新节点都是插入
             for i in newStart...newEnd {
                 result.addInsert(newChildren[i], at: i, parentId: parentId)
             }
         } else if newStart > newEnd && oldStart <= oldEnd {
-            // 新列表已处理完，剩余的旧节点都是删除
             for i in oldStart...oldEnd {
                 result.addDelete(oldChildren[i].id, parentId: parentId)
             }
         } else if oldStart <= oldEnd && newStart <= newEnd {
-            // 中间有复杂变化，使用 key map 处理
             processMiddleNodes(
                 oldChildren: oldChildren,
                 newChildren: newChildren,

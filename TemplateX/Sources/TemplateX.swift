@@ -144,28 +144,21 @@ public enum TemplateX {
     
     /// 预热配置
     public struct WarmUpOptions {
-        /// Yoga 节点池预热数量
-        public var yogaNodeCount: Int = 64
-        
         public init() {}
         
         /// 默认配置
         public static var `default`: WarmUpOptions { WarmUpOptions() }
         
         /// 最小配置
-        public static var minimal: WarmUpOptions {
-            var options = WarmUpOptions()
-            options.yogaNodeCount = 32
-            return options
-        }
+        public static var minimal: WarmUpOptions { WarmUpOptions() }
     }
     
     /// 预热引擎（建议在 App 启动时调用）
     /// 
     /// 预热内容：
     /// 1. ComponentRegistry 初始化（加载所有组件类元数据）
-    /// 2. Yoga 节点池预分配
-    /// 3. TemplateParser 单例初始化
+    /// 2. TemplateParser 单例初始化
+    /// 3. YogaLayoutEngine 单例初始化
     ///
     /// 使用示例：
     /// ```swift
@@ -188,8 +181,8 @@ public enum TemplateX {
         // 2. 触发 TemplateParser 单例初始化
         _ = TemplateParser.shared
         
-        // 3. 预热 Yoga 节点池
-        YogaLayoutEngine.shared.warmUp(nodeCount: options.yogaNodeCount)
+        // 3. 预热 Yoga 布局引擎
+        YogaLayoutEngine.shared.warmUp()
         
         // 4. 触发 TemplateXRenderEngine 单例初始化
         _ = TemplateXRenderEngine.shared

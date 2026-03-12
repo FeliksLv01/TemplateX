@@ -59,7 +59,7 @@ public final class DataBindingManager {
         // 保存绑定数据
         component.bindings = data
         
-        // 如果有原始 JSON，解析表达式
+        // 如果有原始 JSON，解析表达式（内部按需标记 needsViewUpdate）
         if let json = component.templateJSON {
             resolveExpressions(json: json, data: data, component: component)
         }
@@ -108,6 +108,8 @@ public final class DataBindingManager {
         data: [String: Any],
         component: any Component
     ) {
+        var dirty = false
+        
         // 处理 props 中的表达式 → 收集解析结果，统一通过 reloadProps 写回
         if let props = json.props {
             var resolvedProps: [String: Any] = [:]
@@ -115,11 +117,8 @@ public final class DataBindingManager {
                 if let strValue = value as? String, expressionEngine.containsBinding(strValue) {
                     if let resolved = expressionEngine.resolveBinding(strValue, context: data) {
                         if resolved is [Any] || resolved is [String: Any] {
-                            // 数组/字典保持原样，JSONSerialization 可正确序列化
                             resolvedProps[key] = resolved
                         } else {
-                            // 基本类型（Int/Double/Bool）转 String，
-                            // 确保与 String 类型的 Props 字段兼容
                             resolvedProps[key] = resolved is String ? resolved : "\(resolved)"
                         }
                     }
@@ -127,6 +126,7 @@ public final class DataBindingManager {
             }
             if !resolvedProps.isEmpty {
                 component.reloadProps(from: resolvedProps)
+                dirty = true
             }
         }
         
@@ -136,6 +136,7 @@ public final class DataBindingManager {
                 if let strValue = value as? String, expressionEngine.containsBinding(strValue) {
                     if let resolved = expressionEngine.resolveBinding(strValue, context: data) {
                         StyleParser.apply(key: key, value: resolved, to: &component.style)
+                        dirty = true
                     }
                 }
             }
@@ -147,8 +148,13 @@ public final class DataBindingManager {
                 if let strValue = value as? String, expressionEngine.containsBinding(strValue) {
                     let resolvedValue = expressionEngine.resolveBinding(strValue, context: data)
                     component.bindings[key] = resolvedValue
+                    dirty = true
                 }
             }
+        }
+        
+        if dirty {
+            component.needsViewUpdate = true
         }
     }
     

@@ -488,6 +488,7 @@ enum StyleParser {
             style.textColor = colorValue
         }
         
+        style.updateContentHash()
         return style
     }
     
@@ -641,6 +642,8 @@ enum StyleParser {
         case .lineBreakMode, .ellipsize:
             if let str = value as? String, let mode = lineBreakModeMap[str] { style.lineBreakMode = mode }
         }
+        
+        style.updateContentHash()
     }
     
     // MARK: - 私有辅助方法

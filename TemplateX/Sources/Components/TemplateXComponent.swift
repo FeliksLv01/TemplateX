@@ -148,13 +148,30 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: Component {
     public var bindings: [String: Any] = [:]
     public var events: [String: Any] = [:]
     
-    // MARK: - Yoga 剪枝优化
+    // MARK: - Yoga 节点（跟随 Component 生命周期）
     
     public var yogaNode: YGNodeRef?
     public var lastLayoutStyle: ComponentStyle?
     
     public func releaseYogaNode() {
         YogaLayoutEngine.shared.releaseYogaNodes(for: self)
+    }
+    
+    deinit {
+        // yogaNode 跟随 Component 生命周期，ARC 释放时自动清理
+        if let node = yogaNode {
+            // 释放文本测量上下文（如果有）
+            if let contextPtr = YGNodeGetContext(node) {
+                Unmanaged<AnyObject>.fromOpaque(contextPtr).release()
+                YGNodeSetContext(node, nil)
+            }
+            // 从父节点移除
+            if let owner = YGNodeGetOwner(node) {
+                YGNodeRemoveChild(owner, node)
+            }
+            YGNodeRemoveAllChildren(node)
+            YGNodeFree(node)
+        }
     }
     
     // MARK: - 引擎内部使用
@@ -170,6 +187,12 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: Component {
     
     /// 是否需要强制应用样式（视图复用时设置为 true）
     public var forceApplyStyle: Bool = false
+    
+    /// 是否被视图拍平剪枝（纯布局容器不创建 UIView）
+    public var isPruned: Bool = false
+    
+    /// 脏标记：数据绑定/Diff 后设为 true，updateView() 后重置
+    public var needsViewUpdate: Bool = true
     
     // MARK: - Props
     
@@ -297,6 +320,7 @@ open class TemplateXComponent<V: UIView, P: ComponentProps>: Component {
         setupEvents()
         guard let view = view as? V else { return }
         configureView(view)
+        needsViewUpdate = false
     }
     
     /// 配置视图（子类重写）

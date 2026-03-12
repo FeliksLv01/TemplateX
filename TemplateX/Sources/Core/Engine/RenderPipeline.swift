@@ -389,51 +389,53 @@ final class RenderPipeline {
     // MARK: - 生成 UI 操作
     
     /// 生成 UI 操作并入队
-    private func generateUIOperations(for component: Component, isRoot: Bool) {
-        // 创建视图操作
+    ///
+    /// frame 已由 YogaLayoutEngine.collectLayoutResults() 预计算（含拍平偏移），
+    /// 此方法只负责：创建视图、设置 frame、构建父子关系、调用 updateView()。
+    /// 被剪枝的组件跳过创建视图，子节点提升到最近非剪枝祖先。
+    private func generateUIOperations(for component: Component, isRoot: Bool, parentComponent: Component? = nil) {
+        // 被剪枝的组件：不创建 UIView，子节点提升到最近非剪枝祖先
+        if component.isPruned && !isRoot {
+            for child in component.children {
+                generateUIOperations(for: child, isRoot: false, parentComponent: parentComponent)
+            }
+            return
+        }
+        
         operationQueue.enqueue { [weak self] in
             guard let self = self else { return }
             
-            // 创建视图
             let view: UIView
             if let existingView = component.view {
                 view = existingView
             } else {
                 view = component.createView()
-                // 统一设置 component.view，组件内部无需再手动设置
                 if component.view == nil {
                     component.view = view
                 }
             }
             
-            // 设置属性
             view.accessibilityIdentifier = component.id
-            
-            // 设置 frame
             view.frame = component.layoutResult.frame
             
-            // 如果是根组件，保存引用
             if isRoot {
                 self.renderedView = view
             }
         }
         
-        // 递归处理子组件（先创建子视图）
-        for child in component.children {
-            generateUIOperations(for: child, isRoot: false)
-        }
-        
-        // 添加子视图操作（在子视图创建后）
-        for child in component.children {
+        if !isRoot, let parent = parentComponent {
             operationQueue.enqueue {
-                guard let parentView = component.view, let childView = child.view else { return }
+                guard let parentView = parent.view, let childView = component.view else { return }
                 if childView.superview !== parentView {
                     parentView.addSubview(childView)
                 }
             }
         }
         
-        // 更新视图属性操作
+        for child in component.children {
+            generateUIOperations(for: child, isRoot: false, parentComponent: component)
+        }
+        
         operationQueue.enqueue {
             component.updateView()
         }

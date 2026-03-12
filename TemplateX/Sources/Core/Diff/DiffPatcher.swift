@@ -88,8 +88,8 @@ public final class DiffPatcher {
         let layoutResults = layoutEngine.calculateLayout(for: rootComponent, containerSize: containerSize)
         applyLayoutResults(layoutResults, to: rootComponent)
         
-        // 更新整个视图树
-        updateViewTree(rootComponent)
+        // 更新整个视图树（frame 已由 collectLayoutResults 预计算）
+        rootComponent.updateFlattenedFrames()
     }
     
     /// 快速更新：只更新数据绑定，不改变结构
@@ -102,15 +102,14 @@ public final class DiffPatcher {
         to component: Component,
         containerSize: CGSize
     ) {
-        // 更新绑定
         DataBindingManager.shared.bind(data: data, to: component)
         
         // 重新计算布局
         let layoutResults = layoutEngine.calculateLayout(for: component, containerSize: containerSize)
         applyLayoutResults(layoutResults, to: component)
         
-        // 更新视图
-        updateViewTree(component)
+        // 更新视图（frame 已由 collectLayoutResults 预计算）
+        component.updateFlattenedFrames()
     }
     
     // MARK: - Private: 操作应用
@@ -219,31 +218,19 @@ public final class DiffPatcher {
     }
     
     /// 递归创建视图树（只创建视图，不计算布局）
+    /// 当启用视图拍平时，返回的视图可能是一个包装容器（内含被提升的子视图）
     private func createViewTreeOnly(_ component: Component) -> UIView {
-        // 检查解析错误
-        if let error = component.parseError {
-            let errorView = Self.createErrorView(for: error, componentType: component.type)
-            component.view = errorView
-            return errorView
+        let views = component.createFlattenedViewTree()
+        if views.count == 1 {
+            return views[0]
         }
-        
-        // 创建视图
-        let view = component.createView()
-        // 统一设置 component.view，组件内部无需再手动设置
-        if component.view == nil {
-            component.view = view
+        // 多视图场景（根节点被剪枝）：用透明包装容器
+        let wrapper = UIView()
+        wrapper.accessibilityIdentifier = component.id
+        for v in views {
+            wrapper.addSubview(v)
         }
-        
-        // 标记组件 ID
-        view.accessibilityIdentifier = component.id
-        
-        // 递归创建子视图
-        for child in component.children {
-            let childView = createViewTreeOnly(child)
-            view.addSubview(childView)
-        }
-        
-        return view
+        return wrapper
     }
     
     /// 创建错误视图
@@ -358,8 +345,9 @@ public final class DiffPatcher {
         // 3. 应用组件特有属性变化（由组件自己实现）
         component.copyProps(from: newComponent)
         
-        // 注意：布局在 apply() 最后统一处理，这里不单独计算
-        // 视图更新也在 apply() 最后的 updateViewTree 中统一处理
+        component.needsViewUpdate = true
+        
+        // 注意：布局和视图更新在 apply() 最后通过 updateFlattenedFrames 统一处理
     }
     
     // MARK: - Move
@@ -514,12 +502,6 @@ public final class DiffPatcher {
         }
     }
     
-    private func updateViewTree(_ component: Component) {
-        component.updateView()
-        for child in component.children {
-            updateViewTree(child)
-        }
-    }
 }
 
 // MARK: - 便捷扩展
