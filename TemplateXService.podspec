@@ -25,8 +25,8 @@ Pod::Spec.new do |s|
     img.source_files = 'TemplateXService/Image/**/*.swift'
     
     img.dependency 'TemplateX'
-    img.dependency 'SDWebImage', '~> 5.15'
-    img.dependency 'SDWebImageWebPCoder', '~> 0.14'
+    img.dependency 'SDWebImage', '5.21.7'
+    img.dependency 'SDWebImageWebPCoder', '0.15.0'
   end
   
   # MARK: - Log subspec（Console 日志实现）

@@ -299,9 +299,23 @@ public class TemplateXView: UIView {
         // 在主线程捕获容器尺寸，避免后台线程 sync 回主线程造成死锁
         let containerSize = effectiveContainerSize
         
+        // 尝试消费 layoutedComponentCache（主线程操作，因为 RenderEngine 缓存无锁保护）
+        var cachedComponent: Component?
+        if let templateId = templateId {
+            cachedComponent = TemplateXRenderEngine.shared.consumeLayoutedComponent(
+                templateId: templateId,
+                data: data,
+                containerWidth: containerSize.width
+            )
+        }
+        
         // 后台执行渲染准备
         backgroundQueue.async { [weak self] in
-            self?.prepareRenderInBackground(containerSize: containerSize)
+            if let component = cachedComponent {
+                self?.prepareRenderFromCachedComponent(component)
+            } else {
+                self?.prepareRenderInBackground(containerSize: containerSize)
+            }
         }
         
         // 触发 layoutSubviews
@@ -582,6 +596,17 @@ public class TemplateXView: UIView {
                 self?.onLoadError?(error)
             }
         }
+    }
+    
+    /// 从已布局的缓存组件树直接生成 UI 操作（跳过 parse+bind+layout）
+    private func prepareRenderFromCachedComponent(_ component: Component) {
+        generateUIOperations(for: component, isRoot: true)
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.rootComponent = component
+        }
+        
+        operationQueue.markReady()
     }
     
     /// 生成 UI 操作并入队

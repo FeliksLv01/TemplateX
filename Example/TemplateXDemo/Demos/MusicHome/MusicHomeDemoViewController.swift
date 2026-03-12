@@ -1,12 +1,12 @@
 import UIKit
 import TemplateX
+import MJRefresh
 
 /// 网易云音乐风格首页 Demo
 /// 演示 TemplateX 在复杂列表场景的能力：
 /// - 外层 UICollectionView 垂直滚动
 /// - 内层通过 DSL 定义横向滚动列表
-/// - 支持分页滚动的网格布局
-/// - 数据从 JSON 文件异步加载，模拟网络请求
+/// - 首屏数据直出（同步加载），上拉分页加载后续模块
 class MusicHomeDemoViewController: UIViewController {
     
     // MARK: - Types
@@ -29,16 +29,30 @@ class MusicHomeDemoViewController: UIViewController {
         let type: SectionType
         let title: String
         let items: [[String: Any]]
+        var isSkeleton: Bool = false
+        /// Pre-calculated height for skeleton sections (matches real content height)
+        var skeletonHeight: CGFloat = 0
     }
     
     // MARK: - Properties
     
     private var collectionView: UICollectionView!
     private var dataSource: [SectionData] = []
-    private var loadingIndicator: UIActivityIndicatorView!
     
+    /// All sections parsed from JSON (full dataset)
+    private var allSections: [SectionData] = []
     private var horizontalTemplate: [String: Any]?
     private var gridTemplate: [String: Any]?
+    
+    // MARK: - Pagination
+    
+    private let pageSize = 5
+    private var currentPage = 0
+    private var isLoading = false
+    private var hasMore: Bool { currentPage * pageSize < allSections.count }
+    
+    /// Distance from bottom to trigger next page (in points)
+    private let paginationThreshold: CGFloat = 800
     
     // MARK: - Lifecycle
     
@@ -46,16 +60,21 @@ class MusicHomeDemoViewController: UIViewController {
         super.viewDidLoad()
         
         view.backgroundColor = .systemBackground
-        
-        // 加载模板
         loadTemplates()
-        
-        // 设置 UI
         setupCollectionView()
-        setupLoadingIndicator()
         
-        // 异步加载数据（模拟网络请求）
-        loadDataAsync()
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            let sections = self.loadSectionsFromJSON()
+            
+            DispatchQueue.main.async {
+                self.allSections = sections
+                self.dataSource = Array(sections.prefix(self.pageSize))
+                self.currentPage = 1
+                self.collectionView.reloadData()
+                self.setupFooter()
+            }
+        }
     }
     
     // MARK: - Setup
@@ -109,13 +128,11 @@ class MusicHomeDemoViewController: UIViewController {
         collectionView.delegate = self
         collectionView.dataSource = self
         
-        // 按模板类型注册不同的 reuseIdentifier，确保同模板 Cell 只在同类间复用
         for type in [SectionType.horizontal, .grid] {
             collectionView.register(MusicHomeCell.self, forCellWithReuseIdentifier: type.rawValue)
         }
         
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.isHidden = true
         
         view.addSubview(collectionView)
         
@@ -127,45 +144,16 @@ class MusicHomeDemoViewController: UIViewController {
         ])
     }
     
-    private func setupLoadingIndicator() {
-        loadingIndicator = UIActivityIndicatorView(style: .large)
-        loadingIndicator.color = .systemGray
-        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
-        loadingIndicator.hidesWhenStopped = true
-        
-        view.addSubview(loadingIndicator)
-        
-        NSLayoutConstraint.activate([
-            loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
-        
-        loadingIndicator.startAnimating()
-    }
-    
     // MARK: - Data Loading
     
-    /// 异步加载 music_home_data.json，模拟网络请求延迟
-    private func loadDataAsync() {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            // 模拟网络延迟 0.5s
-            Thread.sleep(forTimeInterval: 0.5)
-            
-            guard let self = self else { return }
-            
-            // 加载并解析 JSON 数据文件
-            let sections = self.loadSectionsFromJSON()
-            
-            DispatchQueue.main.async {
-                self.dataSource = sections
-                self.loadingIndicator.stopAnimating()
-                self.collectionView.isHidden = false
-                self.collectionView.reloadData()
-            }
-        }
+    private func setupFooter() {
+        let footer = SimpleAutoFooter {}
+        footer.isAutomaticallyChangeAlpha = false
+        footer.triggerAutomaticallyRefreshPercent = 100
+        collectionView.mj_footer = footer
     }
     
-    /// 从 music_home_data.json 解析 section 数据
+    /// 从 music_home_data.json 解析全量 section 数据（同步）
     private func loadSectionsFromJSON() -> [SectionData] {
         guard let jsonDict = loadJSON(named: "music_home_data", inDirectory: "MusicHome"),
               let sectionsArray = jsonDict["sections"] as? [[String: Any]] else {
@@ -203,6 +191,64 @@ class MusicHomeDemoViewController: UIViewController {
             return SectionData(id: id, type: type, title: title, items: processedItems)
         }
     }
+    
+    // MARK: - Pagination
+    
+    private func loadNextPage() {
+        guard hasMore, !isLoading else { return }
+        isLoading = true
+        
+        let start = currentPage * pageSize
+        let end = min(start + pageSize, allSections.count)
+        let realSections = Array(allSections[start..<end])
+        let width = collectionView.bounds.width
+        
+        let skeletonStartIndex = dataSource.count
+        let skeletonSections = realSections.enumerated().map { i, real in
+            let template = real.type == .horizontal ? horizontalTemplate : gridTemplate
+            let data: [String: Any] = [
+                "section": ["title": real.title, "items": real.items]
+            ]
+            let height: CGFloat = template.map {
+                TemplateXRenderEngine.shared.calculateHeight(
+                    json: $0, templateId: real.type.rawValue,
+                    data: data, containerWidth: width, useCache: true
+                )
+            } ?? 210
+            
+            return SectionData(
+                id: "skeleton_\(start + i)",
+                type: real.type,
+                title: "",
+                items: [],
+                isSkeleton: true,
+                skeletonHeight: height
+            )
+        }
+        dataSource.append(contentsOf: skeletonSections)
+        collectionView.reloadData()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            guard let self = self else { return }
+            
+            for i in 0..<realSections.count {
+                self.dataSource[skeletonStartIndex + i] = realSections[i]
+            }
+            self.currentPage += 1
+            
+            let indexPaths = (0..<realSections.count).map {
+                IndexPath(item: skeletonStartIndex + $0, section: 0)
+            }
+            UIView.performWithoutAnimation {
+                self.collectionView.reloadItems(at: indexPaths)
+            }
+            
+            self.isLoading = false
+            if !self.hasMore {
+                self.collectionView.mj_footer?.endRefreshingWithNoMoreData()
+            }
+        }
+    }
 }
 
 // MARK: - UICollectionViewDataSource
@@ -217,6 +263,11 @@ extension MusicHomeDemoViewController: UICollectionViewDataSource {
         let section = dataSource[indexPath.item]
         let templateId = section.type.rawValue
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: templateId, for: indexPath) as! MusicHomeCell
+        
+        if section.isSkeleton {
+            cell.showSkeleton()
+            return cell
+        }
         
         let template = section.type == .horizontal ? horizontalTemplate : gridTemplate
         
@@ -256,12 +307,31 @@ extension MusicHomeDemoViewController: UICollectionViewDataSource {
 
 extension MusicHomeDemoViewController: UICollectionViewDelegateFlowLayout {
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let visibleHeight = scrollView.bounds.height
+        
+        guard contentHeight > 0 else { return }
+        
+        let distanceToBottom = contentHeight - offsetY - visibleHeight
+        if distanceToBottom < paginationThreshold {
+            loadNextPage()
+        }
+    }
+    
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let section = dataSource[indexPath.item]
+        let width = collectionView.bounds.width
+        
+        if section.isSkeleton {
+            return CGSize(width: width, height: max(section.skeletonHeight, 100))
+        }
+        
         let template = section.type == .horizontal ? horizontalTemplate : gridTemplate
         
         guard let template = template else {
-            return CGSize(width: collectionView.bounds.width, height: 100)
+            return CGSize(width: width, height: 100)
         }
         
         let data: [String: Any] = [
@@ -275,10 +345,42 @@ extension MusicHomeDemoViewController: UICollectionViewDelegateFlowLayout {
             json: template,
             templateId: section.type.rawValue,
             data: data,
-            containerWidth: collectionView.bounds.width,
+            containerWidth: width,
             useCache: true
         )
         
-        return CGSize(width: collectionView.bounds.width, height: max(height, 100))
+        return CGSize(width: width, height: max(height, 100))
     }
 }
+
+// MARK: - SimpleAutoFooter
+
+/// MJRefreshAutoFooter 轻量子类，只有一个 spinner，无状态文本，无 i18n bundle 加载
+final class SimpleAutoFooter: MJRefreshAutoFooter {
+    
+    private let spinner = UIActivityIndicatorView(style: .medium)
+    
+    override func prepare() {
+        super.prepare()
+        mj_h = 40
+        addSubview(spinner)
+        spinner.hidesWhenStopped = true
+    }
+    
+    override func placeSubviews() {
+        super.placeSubviews()
+        spinner.center = CGPoint(x: bounds.midX, y: bounds.midY)
+    }
+    
+    override var state: MJRefreshState {
+        didSet {
+            switch state {
+            case .refreshing:
+                spinner.startAnimating()
+            default:
+                spinner.stopAnimating()
+            }
+        }
+    }
+}
+

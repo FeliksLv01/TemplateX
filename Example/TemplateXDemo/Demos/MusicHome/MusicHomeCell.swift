@@ -1,7 +1,6 @@
 import UIKit
 import TemplateX
 
-/// 音乐首页 Cell - 包含 TemplateXView 渲染的模板
 class MusicHomeCell: UICollectionViewCell {
     
     static let reuseIdentifier = "MusicHomeCell"
@@ -10,6 +9,7 @@ class MusicHomeCell: UICollectionViewCell {
     
     private var templateView: TemplateXView?
     private var currentTemplateId: String?
+    private var skeletonOverlay: ShimmerView?
     
     // MARK: - Init
     
@@ -27,17 +27,10 @@ class MusicHomeCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        // 不清理 templateView，复用时更新数据
     }
     
     // MARK: - Configure
     
-    /// - Parameters:
-    ///   - template: 模板 JSON
-    ///   - templateId: 模板标识符
-    ///   - data: 绑定数据
-    ///   - containerWidth: 容器宽度
-    ///   - precomputedHeight: 预计算高度（来自 sizeForItemAt，避免重复计算）
     func configure(
         template: [String: Any],
         templateId: String,
@@ -45,10 +38,10 @@ class MusicHomeCell: UICollectionViewCell {
         containerWidth: CGFloat,
         precomputedHeight: CGFloat? = nil
     ) {
-        // 检查是否需要重建 TemplateXView
+        hideSkeleton()
+        
         let needsRebuild = templateView == nil || currentTemplateId != templateId
         
-        // 使用预计算高度或按需计算
         let height = precomputedHeight ?? TemplateXRenderEngine.shared.calculateHeight(
             json: template,
             templateId: templateId,
@@ -58,10 +51,8 @@ class MusicHomeCell: UICollectionViewCell {
         )
         
         if needsRebuild {
-            // 清理旧视图
             templateView?.removeFromSuperview()
             
-            // 创建新的 TemplateXView
             let newTemplateView = TemplateXView { builder in
                 builder.config = TemplateXConfig { config in
                     config.enablePerformanceMonitor = false
@@ -80,14 +71,106 @@ class MusicHomeCell: UICollectionViewCell {
             self.templateView = newTemplateView
             self.currentTemplateId = templateId
             
-            // 加载模板
             newTemplateView.loadTemplate(json: template, data: data)
         } else {
-            // 复用现有视图，快速更新数据（跳过 clone + Diff）
             templateView?.updateDataFast(data)
-            
-            // 更新 frame
             templateView?.frame = CGRect(x: 0, y: 0, width: containerWidth, height: max(height, 100))
         }
+    }
+    
+    // MARK: - Skeleton
+    
+    func showSkeleton() {
+        templateView?.isHidden = true
+        
+        if skeletonOverlay == nil {
+            let overlay = ShimmerView()
+            contentView.addSubview(overlay)
+            skeletonOverlay = overlay
+        }
+        skeletonOverlay?.frame = contentView.bounds
+        skeletonOverlay?.isHidden = false
+        skeletonOverlay?.startAnimating()
+    }
+    
+    func hideSkeleton() {
+        skeletonOverlay?.stopAnimating()
+        skeletonOverlay?.isHidden = true
+        templateView?.isHidden = false
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        skeletonOverlay?.frame = contentView.bounds
+    }
+}
+
+// MARK: - ShimmerView
+
+private final class ShimmerView: UIView {
+    
+    private let gradientLayer = CAGradientLayer()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        isUserInteractionEnabled = false
+        setupBlocks()
+        setupGradient()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupBlocks() {
+        let shimmerColor = UIColor.systemGray5
+        let configs: [(CGRect, CGFloat)] = [
+            (CGRect(x: 16, y: 12, width: 120, height: 18), 4),
+            (CGRect(x: 16, y: 46, width: 127, height: 127), 8),
+            (CGRect(x: 153, y: 46, width: 127, height: 127), 8),
+            (CGRect(x: 290, y: 46, width: 127, height: 127), 8),
+            (CGRect(x: 16, y: 181, width: 100, height: 13), 3),
+            (CGRect(x: 153, y: 181, width: 90, height: 13), 3),
+            (CGRect(x: 290, y: 181, width: 110, height: 13), 3),
+        ]
+        for (rect, radius) in configs {
+            let block = UIView(frame: rect)
+            block.backgroundColor = shimmerColor
+            block.layer.cornerRadius = radius
+            addSubview(block)
+        }
+    }
+    
+    private func setupGradient() {
+        gradientLayer.colors = [
+            UIColor.white.withAlphaComponent(0).cgColor,
+            UIColor.white.withAlphaComponent(0.4).cgColor,
+            UIColor.white.withAlphaComponent(0).cgColor,
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)
+        gradientLayer.locations = [0, 0.5, 1]
+        layer.addSublayer(gradientLayer)
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        gradientLayer.frame = CGRect(x: -bounds.width, y: 0, width: bounds.width * 3, height: bounds.height)
+    }
+    
+    func startAnimating() {
+        gradientLayer.removeAnimation(forKey: "shimmer")
+        let animation = CABasicAnimation(keyPath: "transform.translation.x")
+        animation.fromValue = -bounds.width
+        animation.toValue = bounds.width
+        animation.duration = 1.2
+        animation.repeatCount = .infinity
+        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        gradientLayer.add(animation, forKey: "shimmer")
+    }
+    
+    func stopAnimating() {
+        gradientLayer.removeAnimation(forKey: "shimmer")
     }
 }

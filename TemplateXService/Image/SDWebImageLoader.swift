@@ -35,17 +35,8 @@ public final class SDWebImageLoader: TemplateXImageLoader {
         into imageView: UIImageView,
         completion: ((UIImage?) -> Void)?
     ) {
-        // 本地图片（Assets）
-        if let localImage = UIImage(named: url) {
-            imageView.image = localImage
-            completion?(localImage)
-            return
-        }
-        
-        // 占位图
         let placeholderImage = placeholder.flatMap { UIImage(named: $0) }
         
-        // 网络图片
         guard let imageURL = URL(string: url) else {
             imageView.image = placeholderImage
             completion?(nil)

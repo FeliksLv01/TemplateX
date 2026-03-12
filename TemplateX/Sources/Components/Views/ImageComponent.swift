@@ -7,26 +7,25 @@ final class ImageComponent: TemplateXComponent<UIImageView, ImageComponent.Props
     
     // MARK: - Props
     
+    enum SourceType: String, Codable, Equatable {
+        case network
+        case local
+    }
+    
     struct Props: ComponentProps {
-        /// 图片 URL
         var src: String = ""
-        /// 图片 URL（别名）
         var url: String?
-        /// 图片 URL（别名）
         var source: String?
-        /// 占位图
         var placeholder: String?
-        /// 缩放模式
         var scaleType: ContentModeValue?
-        /// 缩放模式（别名）
         var contentMode: ContentModeValue?
-        /// 着色
         var tintColor: ColorValue?
+        var sourceType: SourceType?
         
-        /// 获取实际图片 URL（兼容多种 key）
         var imageUrl: String { url ?? source ?? src }
         
-        /// 获取缩放模式
+        var resolvedSourceType: SourceType { sourceType ?? .network }
+        
         var resolvedContentMode: UIView.ContentMode {
             scaleType?.mode ?? contentMode?.mode ?? .scaleAspectFill
         }
@@ -87,15 +86,23 @@ final class ImageComponent: TemplateXComponent<UIImageView, ImageComponent.Props
     // MARK: - Private
     
     private func loadImage(into imageView: UIImageView) {
-        guard !props.imageUrl.isEmpty else { return }
+        let imageUrl = props.imageUrl
+        guard !imageUrl.isEmpty else { return }
         
-        ServiceRegistry.shared.imageLoader.loadImage(
-            url: props.imageUrl,
-            placeholder: props.placeholder,
-            into: imageView
-        ) { [weak imageView, weak self] image in
-            guard let imageView = imageView, let image = image else { return }
-            imageView.image = self?.applyTintIfNeeded(image) ?? image
+        switch props.resolvedSourceType {
+        case .local:
+            let image = UIImage(named: imageUrl)
+            imageView.image = applyTintIfNeeded(image ?? UIImage())
+            
+        case .network:
+            ServiceRegistry.shared.imageLoader.loadImage(
+                url: imageUrl,
+                placeholder: props.placeholder,
+                into: imageView
+            ) { [weak imageView, weak self] image in
+                guard let imageView = imageView, let image = image else { return }
+                imageView.image = self?.applyTintIfNeeded(image) ?? image
+            }
         }
     }
     

@@ -84,6 +84,14 @@ public final class TemplateXRenderEngine {
     /// 用于 Cell 场景，避免重复 parse，通过 clone + bind 复用
     private var componentTemplateCache: [String: Component] = [:]
     
+    /// 已布局组件树缓存 (cacheKey → Component)
+    /// calculateHeight 完成后缓存已绑定数据+已布局的组件树，
+    /// renderWithCache / TemplateXView 可直接消费，跳过 clone+bind+layout。
+    /// 一次性消费（取走后移除），避免同一组件树被多个视图共享导致状态污染。
+    /// cacheKey 与 heightCache 一致：templateId_width_dataId
+    private var layoutedComponentCache: [String: Component] = [:]
+    private let layoutedComponentCacheCapacity: Int = 50
+    
     /// 高度缓存 (cacheKey → height)
     /// cacheKey = "\(templateId)_\(containerWidth)_\(dataId)"
     /// LRU 策略：tombstone 数组 + index 字典，O(1) 查找/更新
@@ -988,6 +996,24 @@ extension TemplateXRenderEngine {
     ) -> UIView? {
         let totalStart = CACurrentMediaTime()
         
+        // 0. 尝试消费 layoutedComponentCache（calculateHeight 已完成 clone+bind+layout）
+        if let layoutedComponent = consumeLayoutedComponent(
+            templateId: templateId,
+            data: data,
+            containerWidth: containerSize.width
+        ) {
+            // 命中：组件树已绑定数据+已布局，直接创建视图
+            viewCreationStats.reset()
+            let rootView = createViewTree(layoutedComponent)
+            layoutedComponent.updateFlattenedFrames()
+            let viewId = generateViewIdentifier(rootView)
+            renderedComponents[viewId] = layoutedComponent
+            
+            let totalTime = (CACurrentMediaTime() - totalStart) * 1000
+            TXLogger.trace("renderWithCache(layoutedCache hit): total=\(String(format: "%.2f", totalTime))ms, templateId=\(templateId)")
+            return rootView
+        }
+        
         // 1. 获取或创建模板原型
         let prototypeStart = CACurrentMediaTime()
         let prototype: Component
@@ -1075,16 +1101,22 @@ extension TemplateXRenderEngine {
         let containerSize = CGSize(width: containerWidth, height: .nan)
         let layoutResults = layoutEngine.calculateLayout(for: component, containerSize: containerSize)
         
-        // 5. 获取根组件高度（包含 margin）
+        // 5. 应用布局结果到组件树（后续 createView 需要）
+        applyLayoutResults(layoutResults, to: component)
+        
+        // 6. 获取根组件高度（包含 margin）
         let frameHeight = layoutResults[component.id]?.frame.height ?? 0
         let marginTop = component.style.margin.top
         let marginBottom = component.style.margin.bottom
         let height = frameHeight + marginTop + marginBottom
         
-        // 6. 缓存结果
+        // 7. 缓存结果
         if useCache {
             setHeightCache(key: cacheKey, height: height)
         }
+        
+        // 8. 缓存已布局的组件树，供后续 renderWithCache / TemplateXView 消费
+        cacheLayoutedComponent(component, forKey: cacheKey)
         
         return height
     }
@@ -1211,9 +1243,15 @@ extension TemplateXRenderEngine {
     public func clearTemplateCache(templateId: String? = nil) {
         if let templateId = templateId {
             componentTemplateCache.removeValue(forKey: templateId)
+            let prefix = "\(templateId)_"
+            let layoutedKeysToRemove = layoutedComponentCache.keys.filter { $0.hasPrefix(prefix) }
+            for key in layoutedKeysToRemove {
+                layoutedComponentCache.removeValue(forKey: key)
+            }
             TXLogger.info("Cleared template cache for: \(templateId)")
         } else {
             componentTemplateCache.removeAll()
+            layoutedComponentCache.removeAll()
             TXLogger.info("Cleared all template cache")
         }
     }
@@ -1248,6 +1286,40 @@ extension TemplateXRenderEngine {
     /// 获取高度缓存数量
     public var heightCacheCount: Int {
         return heightCache.count
+    }
+    
+    // MARK: - 已布局组件树缓存
+    
+    /// 消费已布局的组件树（一次性，取走后从缓存移除）
+    /// TemplateXView 在 prepareRenderInBackground 中调用，跳过 parse+bind+layout
+    public func consumeLayoutedComponent(
+        templateId: String,
+        data: [String: Any]?,
+        containerWidth: CGFloat
+    ) -> Component? {
+        let cacheKey = makeHeightCacheKey(templateId: templateId, data: data, containerWidth: containerWidth)
+        return layoutedComponentCache.removeValue(forKey: cacheKey)
+    }
+    
+    /// 获取模板原型的克隆（跳过 parse）
+    public func cloneTemplatePrototype(templateId: String, json: [String: Any]) -> Component? {
+        let prototype: Component
+        if let cached = componentTemplateCache[templateId] {
+            prototype = cached
+        } else {
+            guard let parsed = templateParser.parse(json: json) else { return nil }
+            componentTemplateCache[templateId] = parsed
+            prototype = parsed
+        }
+        return prototype.cloneTree()
+    }
+    
+    private func cacheLayoutedComponent(_ component: Component, forKey key: String) {
+        // 简单容量控制：超出时清空
+        if layoutedComponentCache.count >= layoutedComponentCacheCapacity {
+            layoutedComponentCache.removeAll()
+        }
+        layoutedComponentCache[key] = component
     }
     
     // MARK: - 高度缓存辅助方法
