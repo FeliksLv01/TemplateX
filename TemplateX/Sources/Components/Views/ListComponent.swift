@@ -679,6 +679,7 @@ private class ListDelegate: NSObject, UICollectionViewDelegate, UICollectionView
             var maxHeight: CGFloat = 0
             
             // 遍历所有数据计算高度，取最大值
+            // 注意：不使用缓存，因为每个 item 内容不同（文本长度影响高度）
             for (index, itemData) in component.dataSource.enumerated() {
                 var context: [String: Any] = ["item": itemData, "index": index]
                 if let dictData = itemData as? [String: Any] {
@@ -692,7 +693,7 @@ private class ListDelegate: NSObject, UICollectionViewDelegate, UICollectionView
                     templateId: templateId,
                     data: context,
                     containerWidth: itemWidth,
-                    useCache: true
+                    useCache: false
                 )
                 maxHeight = max(maxHeight, height)
             }

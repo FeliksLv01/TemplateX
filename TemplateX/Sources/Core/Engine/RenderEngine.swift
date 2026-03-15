@@ -417,6 +417,7 @@ public final class TemplateXRenderEngine {
                 var maxHeight: CGFloat = 0
                 
                 // 遍历所有数据计算高度，取最大值
+                // 注意：不使用缓存，因为每个 item 内容不同（文本长度影响高度）
                 for (index, itemData) in listComponent.dataSource.enumerated() {
                     var context: [String: Any] = ["item": itemData, "index": index]
                     if let dictData = itemData as? [String: Any] {
@@ -430,7 +431,7 @@ public final class TemplateXRenderEngine {
                         templateId: templateId,
                         data: context,
                         containerWidth: itemWidth,
-                        useCache: true
+                        useCache: false
                     )
                     maxHeight = max(maxHeight, height)
                 }
@@ -1330,7 +1331,7 @@ extension TemplateXRenderEngine {
     private func makeHeightCacheKey(templateId: String, data: [String: Any]?, containerWidth: CGFloat) -> String {
         let w = Int(containerWidth)
         
-        // 尝试从 data 中获取 id 字段
+        // 尝试从 data 中获取唯一标识
         if let data = data {
             if let id = data["id"] as? String {
                 return "\(templateId)_\(w)_\(id)"
@@ -1338,11 +1339,14 @@ extension TemplateXRenderEngine {
                 return "\(templateId)_\(w)_\(id)"
             } else if let id = data["_id"] as? String {
                 return "\(templateId)_\(w)_\(id)"
+            } else if let index = data["index"] as? Int {
+                // 无 id 时使用 index 作为 fallback，避免不同 item 共用同一个缓存
+                return "\(templateId)_\(w)_idx\(index)"
             }
         }
         
-        // 没有 id，使用 "no_id"（不可复用，但避免 AnyObject 桥接开销）
-        return "\(templateId)_\(w)_no_id"
+        // 没有任何标识，禁用缓存（返回唯一 key）
+        return "\(templateId)_\(w)_\(UUID().uuidString)"
     }
     
     private func setHeightCache(key: String, height: CGFloat) {

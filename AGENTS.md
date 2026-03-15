@@ -144,8 +144,6 @@ TemplateX/                               # Git 仓库根目录
 │   │   └── SDWebImageLoader.swift       # SDWebImage 实现
 │   └── Log/
 │       └── ConsoleLogProvider.swift     # Console 日志实现
-├── Compiler/                            # XML 编译器（开发工具，不打包到库）
-│   └── ...                              
 ├── Example/
 │   └── TemplateXDemo/                   # 示例 App
 ├── Tests/
@@ -768,7 +766,7 @@ EventManager.dispatch(context)
 }
 ```
 
-**注意**：事件 key 为 `onTap`（不是 `onClick`）。Compiler 中 `AttributeMapper` 同时映射 `onClick` 和 `onTap` → `"tap"`，保持向后兼容。
+**注意**：事件 key 为 `onTap`（不是 `onClick`）。模板中 `onClick` 和 `onTap` 均映射为 `"tap"` 事件，保持向后兼容。
 
 #### 表达式求值
 
